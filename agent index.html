@@ -1,0 +1,2446 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FMCG AI RTM Workbench v5</title>
+<style>
+  :root {
+    --primary: #4A90D9; --primary-light: #E8F1FA; --primary-dark: #357ABD;
+    --success: #52C41A; --warning: #FAAD14; --danger: #FF4D4F;
+    --text: #333; --text-secondary: #666; --text-muted: #999;
+    --border: #E8E8E8; --bg: #F5F7FA; --bg-card: #fff; --bg-hover: #F9F9F9;
+    --radius: 12px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
+    --sidebar: 300px;
+    --topbar-h: 60px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif; background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; }
+
+  /* Top Bar */
+  .topbar { height: var(--topbar-h); background: var(--bg-card); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; position: fixed; top: 0; left: 0; right: 0; z-index: 200; }
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
+  .topbar-logo { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 700; color: var(--primary); }
+  .topbar-center { display: flex; align-items: center; }
+  .role-dropdown { position: relative; }
+  .role-dropdown-btn { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-card); cursor: pointer; font-size: 14px; min-height: 44px; }
+  .role-dropdown-btn:hover { border-color: var(--primary); }
+  .role-dropdown-menu { position: absolute; top: calc(100% + 4px); left: 50%; transform: translateX(-50%); width: 360px; max-height: 480px; overflow-y: auto; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); display: none; z-index: 300; }
+  .role-dropdown-menu.show { display: block; }
+  .role-group-label { padding: 8px 16px; font-size: 12px; color: var(--text-muted); font-weight: 600; background: var(--bg); position: sticky; top: 0; }
+  .role-option { display: flex; align-items: center; gap: 10px; padding: 10px 16px; cursor: pointer; transition: background .15s; border-bottom: 1px solid #f5f5f5; min-height: 44px; }
+  .role-option:hover { background: var(--primary-light); }
+  .role-option.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+  .role-abbr { width: 40px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; background: var(--primary-light); color: var(--primary); flex-shrink: 0; }
+  .role-name { font-size: 14px; }
+  .role-level { margin-left: auto; font-size: 12px; color: var(--text-muted); }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .topbar-btn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-card); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-secondary); position: relative; }
+  .topbar-btn:hover { background: var(--bg-hover); }
+  .badge { position: absolute; top: -2px; right: -2px; width: 18px; height: 18px; background: var(--danger); color: #fff; font-size: 11px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .user-info { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+  .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; }
+
+  /* Layout */
+  .layout { display: flex; height: 100vh; padding-top: var(--topbar-h); overflow-x: hidden; }
+  .sidebar { width: var(--sidebar); background: var(--bg-card); border-right: 1px solid var(--border); display: flex; flex-direction: column; height: 100%; transition: transform .3s; z-index: 150; }
+  .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 149; display: none; }
+  .sidebar-overlay.show { display: block; }
+
+  /* Sidebar Header */
+  .sidebar-header { padding: 16px; border-bottom: 1px solid var(--border); }
+  .new-chat-btn { width: 100%; padding: 12px; background: var(--primary); color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; }
+  .new-chat-btn:hover { background: var(--primary-dark); }
+
+  /* Sidebar Nav */
+  .sidebar-nav { padding: 8px; }
+  .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; color: var(--text-secondary); transition: all .15s; min-height: 44px; }
+  .nav-item:hover { background: var(--bg-hover); color: var(--text); }
+  .nav-item.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+  .nav-icon { flex-shrink: 0; }
+  .nav-expand { margin-left: auto; font-size: 11px; transition: transform .2s; }
+  .nav-expand.rotated { transform: rotate(90deg); }
+
+  /* Sidebar Content: Agent/Skill Lists */
+  .sidebar-content { flex: 1; overflow-y: auto; padding: 0 12px 16px; }
+  .sidebar-content.hidden { display: none; }
+  .sidebar-search { position: sticky; top: 0; background: var(--bg-card); padding: 8px 0; z-index: 10; }
+  .sidebar-search input { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; min-height: 36px; }
+  .sidebar-search input:focus { border-color: var(--primary); }
+  .sidebar-filters { display: flex; gap: 4px; margin-bottom: 8px; flex-wrap: wrap; }
+  .filter-tab { padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; color: var(--text-muted); border: 1px solid transparent; min-height: 28px; }
+  .filter-tab:hover { background: var(--bg-hover); }
+  .filter-tab.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+  .role-filter { margin-bottom: 8px; }
+  .role-filter select { width: 100%; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; outline: none; min-height: 36px; }
+  .item-card { padding: 10px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 6px; cursor: pointer; transition: all .15s; }
+  .item-card:hover { border-color: var(--primary); box-shadow: var(--shadow); }
+  .item-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .item-id { font-size: 11px; font-weight: 700; color: var(--primary); background: var(--primary-light); padding: 2px 6px; border-radius: 4px; }
+  .item-name { font-size: 13px; font-weight: 600; }
+  .item-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .item-meta { display: flex; gap: 6px; margin-top: 6px; }
+  .status-badge { font-size: 11px; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+  .status-core { background: #E6F7FF; color: #1890FF; }
+  .status-new { background: #F6FFED; color: var(--success); }
+  .status-default { background: #FFF7E6; color: var(--warning); }
+
+  /* Center Chat */
+  .center { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; overflow-x: hidden; }
+  .chat-area { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 20px; }
+  .welcome { text-align: center; padding: 40px 20px; }
+  .welcome h2 { font-size: 22px; margin-bottom: 8px; color: var(--text); }
+  .welcome p { font-size: 14px; color: var(--text-secondary); margin-bottom: 24px; }
+  .quick-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 600px; margin: 0 auto; }
+  .quick-btn { padding: 8px 14px; border: 1px solid var(--border); border-radius: 20px; background: var(--bg-card); font-size: 13px; cursor: pointer; color: var(--text-secondary); transition: all .15s; min-height: 36px; }
+  .quick-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+
+  /* Messages */
+  .messages { display: flex; flex-direction: column; gap: 16px; max-width: 800px; margin: 0 auto; width: 100%; }
+  .msg { display: flex; gap: 10px; max-width: 90%; }
+  .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+  .msg-avatar { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; }
+  .msg-avatar.ai { background: var(--primary-light); color: var(--primary); }
+  .msg-avatar.user { background: var(--primary); color: #fff; }
+  .msg-bubble { padding: 12px 16px; border-radius: var(--radius); font-size: 14px; line-height: 1.6; word-break: break-word; }
+  .msg.ai .msg-bubble { background: var(--bg-card); border: 1px solid var(--border); border-top-left-radius: 4px; }
+  .msg.user .msg-bubble { background: var(--primary); color: #fff; border-top-right-radius: 4px; }
+  .msg-time { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+  /* Parameter Config Card */
+  .param-card { background: var(--bg-card); border: 2px solid var(--primary); border-radius: var(--radius); padding: 20px; margin: 8px 0; max-width: 640px; }
+  .param-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+  .param-card-title { font-size: 15px; font-weight: 700; color: var(--primary); }
+  .param-card-subtitle { font-size: 12px; color: var(--text-secondary); margin-left: auto; }
+  .param-field { margin-bottom: 14px; }
+  .param-label { display: block; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .param-hint { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+  .param-input, .param-select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; min-height: 44px; font-family: inherit; background: var(--bg-card); }
+  .param-input:focus, .param-select:focus { border-color: var(--primary); }
+  .param-checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; }
+  .param-checkbox-item { display: flex; align-items: center; gap: 6px; font-size: 13px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; min-height: 36px; }
+  .param-checkbox-item.selected { border-color: var(--primary); background: var(--primary-light); color: var(--primary); font-weight: 600; }
+  .param-checkbox-item input { display: none; }
+  .param-meta { background: var(--bg); padding: 10px 14px; border-radius: 8px; font-size: 12px; color: var(--text-secondary); margin: 12px 0; }
+  .param-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .btn { padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; min-height: 44px; transition: all .15s; }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-secondary { background: var(--bg); color: var(--text-secondary); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--bg-hover); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* Result Card */
+  .result-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin: 8px 0; max-width: 640px; }
+  .result-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .result-title { font-size: 15px; font-weight: 700; }
+  .result-status { padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+  .status-success { background: #F6FFED; color: var(--success); }
+  .result-body { font-size: 14px; line-height: 1.7; color: var(--text); }
+  .result-section { margin-bottom: 12px; }
+  .result-section-title { font-weight: 700; margin-bottom: 6px; color: var(--text); }
+  .result-data-source { font-size: 12px; color: var(--text-muted); background: var(--bg); padding: 8px 12px; border-radius: 6px; margin-top: 12px; }
+  .loading-spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-right: 8px; vertical-align: middle; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Input Bar */
+  .input-bar { padding: 12px 20px; background: var(--bg-card); border-top: 1px solid var(--border); display: flex; gap: 8px; align-items: flex-end; max-width: 800px; margin: 0 auto; width: 100%; }
+  .input-wrapper { flex: 1; position: relative; }
+  .input-textarea { width: 100%; padding: 12px 44px 12px 16px; border: 1px solid var(--border); border-radius: 12px; font-size: 14px; outline: none; resize: none; max-height: 120px; min-height: 48px; font-family: inherit; line-height: 1.5; }
+  .input-textarea:focus { border-color: var(--primary); }
+  .at-btn { position: absolute; right: 10px; bottom: 10px; width: 32px; height: 32px; border: none; background: var(--bg-hover); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-secondary); font-size: 16px; font-weight: 700; }
+  .at-btn:hover { background: var(--primary-light); color: var(--primary); }
+  .send-btn { width: 48px; height: 48px; border: none; background: var(--primary); color: #fff; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+  .send-btn:hover { background: var(--primary-dark); }
+  .send-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* @ Mention Popup */
+  .mention-popup { position: absolute; bottom: calc(100% + 8px); left: 0; right: 0; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); max-height: 320px; overflow-y: auto; z-index: 100; display: none; }
+  .mention-popup.show { display: block; }
+  .mention-search { padding: 8px 12px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg-card); z-index: 10; }
+  .mention-search input { width: 100%; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; outline: none; min-height: 32px; }
+  .mention-tabs { display: flex; border-bottom: 1px solid var(--border); }
+  .mention-tab { flex: 1; padding: 8px; text-align: center; font-size: 13px; cursor: pointer; color: var(--text-muted); border-bottom: 2px solid transparent; min-height: 36px; }
+  .mention-tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+  .mention-item { display: flex; align-items: center; gap: 8px; padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #f5f5f5; }
+  .mention-item:hover { background: var(--primary-light); }
+  .mention-item-id { font-size: 11px; font-weight: 700; color: var(--primary); background: var(--primary-light); padding: 2px 6px; border-radius: 4px; flex-shrink: 0; }
+  .mention-item-info { flex: 1; min-width: 0; }
+  .mention-item-name { font-size: 13px; font-weight: 600; }
+  .mention-item-desc { font-size: 11px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* Right Panel */
+  .right-panel { width: 280px; background: var(--bg-card); border-left: 1px solid var(--border); padding: 16px; overflow-y: auto; }
+  .panel-title { font-size: 15px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+  .info-card { background: var(--bg); border-radius: 10px; padding: 12px; margin-bottom: 10px; font-size: 13px; }
+  .info-card-title { font-weight: 600; margin-bottom: 6px; }
+  .info-card-body { color: var(--text-secondary); line-height: 1.5; }
+  .stat-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .stat-label { color: var(--text-secondary); }
+  .stat-value { font-weight: 600; }
+  .chip-list { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+  .chip { padding: 3px 8px; border-radius: 6px; font-size: 11px; background: var(--primary-light); color: var(--primary); font-weight: 600; }
+
+  /* Mobile Parameter Modal */
+  .param-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 400; display: none; align-items: flex-end; justify-content: center; }
+  .param-modal-overlay.show { display: flex; }
+  .param-modal { background: var(--bg-card); width: 100%; max-height: 90vh; border-radius: 20px 20px 0 0; overflow-y: auto; padding: 20px; }
+  .param-modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+  .param-modal-title { font-size: 16px; font-weight: 700; }
+  .param-modal-close { width: 36px; height: 36px; border: none; background: var(--bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; color: var(--text-secondary); }
+
+  /* Section Title */
+  .section-title { font-size: 16px; font-weight: 700; margin: 20px 0 10px; color: var(--text); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #bbb; }
+
+  /* Mobile Responsive */
+  @media (max-width: 1200px) {
+    .right-panel { display: none; }
+  }
+  @media (max-width: 768px) {
+    :root { --sidebar: 280px; }
+    .sidebar { position: fixed; left: 0; top: var(--topbar-h); height: calc(100% - var(--topbar-h)); transform: translateX(-100%); }
+    .sidebar.show { transform: translateX(0); }
+    .topbar { padding: 0 12px; }
+    .topbar-logo { display: none; }
+    .topbar-center { display: flex; flex: 1; justify-content: center; }
+    .role-dropdown-btn { padding: 6px 12px; font-size: 13px; max-width: 220px; }
+    .role-dropdown-btn span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-info span { display: none; }
+    .role-dropdown-menu { position: fixed; top: var(--topbar-h); left: 50%; right: auto; transform: translateX(-50%); width: 92vw; max-width: 360px; }
+    .welcome h2 { font-size: 18px; }
+    .param-card, .result-card { max-width: 100%; padding: 14px; }
+    .chat-area { padding: 12px; }
+    .input-bar { padding: 8px 12px; }
+    .param-checkbox-group { gap: 6px; }
+    .param-checkbox-item { font-size: 12px; padding: 4px 8px; }
+    .messages { max-width: 100%; }
+    .msg { max-width: 95%; }
+    .hamburger { display: flex !important; }
+  }
+  @media (min-width: 769px) {
+    .hamburger { display: none !important; }
+  }
+  .hamburger { width: 40px; height: 40px; border: 1px solid var(--border); background: var(--bg-card); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-right: 8px; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="hamburger" id="hamburgerBtn" onclick="toggleSidebar()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="topbar-logo">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4A90D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      FMCG AI RTM Workbench
+    </div>
+  </div>
+  <div class="topbar-center">
+    <div class="role-dropdown">
+      <button class="role-dropdown-btn" id="roleDropdownBtn" onclick="toggleRoleDropdown()">
+        <span id="currentRoleLabel">选择角色</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="role-dropdown-menu" id="roleDropdownMenu"></div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <button class="topbar-btn">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span class="badge">3</span>
+    </button>
+    <div class="user-info">
+      <div class="user-avatar" id="userAvatar">VP</div>
+      <span id="userName">销售VP</span>
+    </div>
+  </div>
+</div>
+
+<!-- Layout -->
+<div class="layout">
+  <!-- Sidebar Overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay" data-action="toggleSidebar"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <button class="new-chat-btn" onclick="newChat()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        新建会话
+      </button>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav">
+      <div class="nav-item active" onclick="showSection('chat', this)">
+        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        会话中心
+      </div>
+      <div class="nav-item" id="navAgents" onclick="toggleAgentList()">
+        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        全部Agent
+        <span class="nav-expand" id="navAgentExpand">&#9654;</span>
+      </div>
+      <div class="nav-item" id="navSkills" onclick="toggleSkillList()">
+        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        全部Skill
+        <span class="nav-expand" id="navSkillExpand">&#9654;</span>
+      </div>
+      <div class="nav-item" onclick="showSection('warroom', this)">
+        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        作战室
+      </div>
+      <div class="nav-item" onclick="showSection('cluster', this)">
+        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Agent集群
+      </div>
+      <div class="nav-item" onclick="showSection('output', this)">
+        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        输出中心
+      </div>
+    </nav>
+    <!-- Agent List Panel -->
+    <div class="sidebar-content hidden" id="agentListPanel">
+      <div class="sidebar-search"><input type="text" placeholder="搜索Agent..." id="agentSearchInput"></div>
+      <div class="sidebar-filters">
+        <span class="filter-tab active" data-filter="all" data-type="agent">全部</span>
+        <span class="filter-tab" data-filter="core" data-type="agent">核心</span>
+        <span class="filter-tab" data-filter="new" data-type="agent">新增</span>
+      </div>
+      <div style="padding:8px 12px;font-size:12px;color:var(--text-muted);" id="agentCount">29 个Agent</div>
+      <div id="agentListContent"></div>
+    </div>
+    <!-- Skill List Panel -->
+    <div class="sidebar-content hidden" id="skillListPanel">
+      <div class="sidebar-search"><input type="text" placeholder="搜索Skill..." id="skillSearchInput"></div>
+      <div class="sidebar-filters">
+        <span class="filter-tab active" data-filter="all" data-type="skill">全部</span>
+        <span class="filter-tab" data-filter="core" data-type="skill">核心</span>
+        <span class="filter-tab" data-filter="new" data-type="skill">新增</span>
+      </div>
+      <div style="padding:8px 12px;font-size:12px;color:var(--text-muted);" id="skillCount">40 个Skill</div>
+      <div id="skillListContent"></div>
+    </div>
+  </aside>
+
+  <!-- Center Chat -->
+  <div class="center" id="centerArea">
+    <div class="chat-area" id="chatArea">
+      <div class="messages" id="messagesContainer">
+        <div class="welcome" id="welcomeMsg" style="display:none;">
+          <h2 id="welcomeTitle">您好，销售VP/总监</h2>
+          <p id="welcomeSubtitle">FMCG AI RTM Workbench 为您提供智能决策支持。可使用 @ 调用Agent和Skill。</p>
+          <div class="quick-actions" id="quickActions">
+            <button class="quick-btn" data-action="A7" data-type="agent">查看智能预警</button>
+            <button class="quick-btn" data-action="A5" data-type="agent">沙盘推演</button>
+            <button class="quick-btn" data-action="A6" data-type="agent">组织效能诊断</button>
+            <button class="quick-btn" data-action="S6" data-type="skill">经营周报</button>
+          </div>
+        </div>
+        <div class="msg ai" id="msg_demo">
+          <div class="msg-avatar ai"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+          <div>
+            <div class="msg-bubble">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="background:#E8F1FA;color:#4A90D9;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:600;">Agent</span><span style="font-size:14px;font-weight:600;">A5 沙盘推演</span></div>
+              <div class="param-card" id="paramCard_demo">
+                <div class="param-card-header"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1890FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><span class="param-card-title">A5 沙盘推演 - 参数配置</span><span class="param-card-subtitle" style="background:#C6EFCE;color:#52C41A;">核心Agent</span></div>
+                <div class="param-field"><label class="param-label">策略类型</label><select class="param-select"><option>促销策略</option><option>价格策略</option><option>渠道策略</option><option>新品上市</option><option>竞争应对</option></select></div>
+                <div class="param-field"><label class="param-label">具体方案</label><select class="param-select"><option>买二送一</option><option>降价10%</option><option>满100减20</option><option>新渠道进入</option></select></div>
+                <div class="param-field"><label class="param-label">市场范围</label><select class="param-select"><option>华东区</option><option>全国</option><option>华南区</option><option>华北大区</option></select></div>
+                <div class="param-field"><label class="param-label">模拟周期(月)</label><input type="number" class="param-input" value="3" min="1" max="12"></div>
+                <div class="param-field"><label class="param-label">蒙特卡洛迭代次数</label><select class="param-select"><option>5000次</option><option>1000次</option><option>10000次</option></select></div>
+                <div class="param-meta"><div><strong>数据来源(内部):</strong> ERP(历史价格/成本) / TPM(促销历史/费用) / DMS(销量/份额) / CRM(消费者数据)</div><div><strong>数据来源(外部):</strong> 竞品价格-爬虫采集(低成本) / 行业报告-购买尼尔森/凯度(中高成本)</div><div><strong>预计耗时:</strong> 约 3-5 秒</div></div>
+                <div class="param-actions"><button class="btn btn-secondary" data-action="cancelDemo">取消</button><button class="btn btn-primary" data-action="executeDemo" data-item="A5" data-name="沙盘推演" data-type="agent">确认执行</button></div>
+              </div>
+            </div>
+            <div class="msg-time">刚刚</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="input-bar">
+      <div class="input-wrapper" id="inputWrapper">
+        <textarea class="input-textarea" id="chatInput" placeholder="输入消息，使用 @ 调用Agent或Skill..." rows="1"></textarea>
+        <button class="at-btn" onclick="toggleMention()">@</button>
+        <div class="mention-popup" id="mentionPopup">
+          <div class="mention-search"><input type="text" placeholder="搜索Agent或Skill..." id="mentionSearch"></div>
+          <div class="mention-tabs">
+            <div class="mention-tab active" data-mention-tab="agents">Agents</div>
+            <div class="mention-tab" data-mention-tab="skills">Skills</div>
+          </div>
+          <div id="mentionList"></div>
+        </div>
+      </div>
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()" disabled>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Right Panel -->
+  <aside class="right-panel" id="rightPanel">
+    <div class="panel-title">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      角色概览
+    </div>
+    <div id="rightPanelContent"></div>
+  </aside>
+</div>
+
+<!-- Mobile Parameter Modal -->
+<div class="param-modal-overlay" id="paramModalOverlay">
+  <div class="param-modal" id="paramModal"></div>
+</div>
+
+<script>
+// Debug: catch all errors
+window.onerror = function(msg, url, line, col, err) {
+  console.error('JS ERROR:', msg, 'at line', line, 'col', col);
+};
+// ==================== DATA ARRAYS ====================
+
+const roles = [
+  {id:'executive', name:'销售VP/总监', abbr:'VP', level:'决策层', tag:'executive'},
+  {id:'regional', name:'区域销售经理', abbr:'区域', level:'管理层', tag:'regional'},
+  {id:'brand', name:'品牌经理', abbr:'品牌', level:'管理层', tag:'brand'},
+  {id:'channel', name:'渠道经理', abbr:'渠道', level:'管理层', tag:'channel'},
+  {id:'tpm', name:'TPM/促销经理', abbr:'TPM', level:'管理层', tag:'tpm'},
+  {id:'analyst', name:'数据分析师', abbr:'分析', level:'支持层', tag:'analyst'},
+  {id:'salesrep', name:'业务员/DSR', abbr:'业务', level:'执行层', tag:'salesrep'},
+  {id:'supervisor', name:'督导', abbr:'督导', level:'执行层', tag:'supervisor'},
+  {id:'promoter', name:'导购/促销员', abbr:'导购', level:'执行层', tag:'promoter'},
+  {id:'distributor', name:'经销商老板', abbr:'经销', level:'经营层', tag:'distributor'},
+  {id:'subdistributor', name:'分销商业务', abbr:'分销', level:'执行层', tag:'subdistributor'},
+  {id:'store', name:'门店老板/店长', abbr:'门店', level:'经营层', tag:'store'}
+];
+
+const agents = [
+  {id:'A1', name:'潜力门店挖掘', desc:'XGBoost/LightGBM排序,输出Top潜力门店及推荐理由', status:'core', roleTags:['executive','regional','brand','channel','tpm','analyst','distributor','subdistributor'],
+    params:[
+      {name:'range', label:'分析范围', type:'select', options:['全国','华东大区','华南大区','华北大区','华西大区','指定城市'], default:'华东大区'},
+      {name:'city', label:'城市(如选指定城市)', type:'text', placeholder:'如:上海,南京,杭州', showIf:'range=指定城市'},
+      {name:'storeType', label:'门店类型', type:'multi-select', options:['GT传统渠道','CVS便利连锁','餐饮渠道','电商渠道','全部'], default:['全部']},
+      {name:'topN', label:'Top N门店', type:'number', default:20, min:5, max:100},
+      {name:'dimensions', label:'筛选维度', type:'multi-select', options:['销量增长','品类渗透','竞品距离','周边客流','铺货率'], default:['销量增长','品类渗透','竞品距离']}
+    ],
+    dataSources:{internal:'DMS(门店主数据/历史销量)/SFA(拜访记录)/TPM(促销响应)', external:'高德/百度地图API-POI数据/竞品门店位置-爬虫/交通流量数据'},
+    output:'Top N潜力门店列表(含潜力评分0-100) + 多维分析 + LLM推荐理由'
+  },
+  {id:'A2', name:'补货预测', desc:'Prophet/DeepAR/TFT时序预测,SKU级补货建议', status:'core', roleTags:['all'],
+    params:[
+      {name:'scope', label:'预测范围', type:'select', options:['全部门店','指定区域','指定门店'], default:'指定区域'},
+      {name:'region', label:'选择区域', type:'select', options:['华东区','华南区','华北区','华西区'], default:'华东区', showIf:'scope=指定区域'},
+      {name:'skuCategory', label:'SKU品类', type:'select', options:['全部','气泡茶','矿泉水','果汁','功能性饮料','碳酸饮料'], default:'气泡茶'},
+      {name:'forecastDays', label:'预测天数', type:'select', options:['7天','14天','30天'], default:'7天'},
+      {name:'safetyStock', label:'安全库存线(可选)', type:'number', placeholder:'默认使用系统设置值', optional:true}
+    ],
+    dataSources:{internal:'ERP(历史90天日销量/当前库存)/TPM(促销日历)/DMS(门店主数据)', external:'天气API-和风/OpenWeather/节假日API'},
+    output:'未来7/14/30天SKU级销量预测 + 建议补货量 + 库存风险等级(绿/黄/红) + LLM解释'
+  },
+  {id:'A3', name:'路径规划', desc:'OR-Tools VRPTW求解器,最优拜访路线', status:'core', roleTags:['regional','salesrep','supervisor','subdistributor','distributor'],
+    params:[
+      {name:'date', label:'规划日期', type:'date', default:'2026-06-10'},
+      {name:'assignee', label:'业务员/车辆', type:'select', options:['自动分配','张三-华东A线','李四-华东B线','王五-华东C线','全部业务员'], default:'自动分配'},
+      {name:'vehicleType', label:'交通工具', type:'select', options:['汽车','电动车','步行'], default:'汽车'},
+      {name:'maxStores', label:'最多拜访门店数', type:'number', default:15, min:5, max:30},
+      {name:'priority', label:'优先级考虑', type:'multi-select', options:['高潜力门店','库存预警门店','新品推广门店','客情维护'], default:['高潜力门店','库存预警门店']}
+    ],
+    dataSources:{internal:'SFA(门店经纬度/拜访时间窗/历史拜访耗时)/A1潜力挖掘(优先级得分)', external:'高德/百度路线规划API-实时路况+行驶时间矩阵'},
+    output:'最优拜访路线序列(含门店顺序/预计到达时间) + 预计总耗时 + 行驶距离 + LLM通俗路线描述'
+  },
+  {id:'A4', name:'核销费效', desc:'YOLOv8+Uplift Model,陈列审核+促销ROI计算', status:'core', roleTags:['executive','regional','brand','channel','tpm','analyst','supervisor','salesrep','promoter','distributor','subdistributor','store'],
+    params:[
+      {name:'activityId', label:'促销活动', type:'select', options:['气泡茶清凉一夏','矿泉水买二送一','果汁新品上市','全家中秋促销','自定义活动'], default:'气泡茶清凉一夏'},
+      {name:'checkType', label:'审核类型', type:'select', options:['照片合规审核','ROI费效计算','两者都执行'], default:'两者都执行'},
+      {name:'storeScope', label:'门店范围', type:'select', options:['全部参与门店','随机抽样20%','指定门店'], default:'随机抽样20%'},
+      {name:'upliftMethod', label:'增量计算方式', type:'select', options:['Uplift Model(ML)','PSM倾向得分匹配','双重差分DID'], default:'Uplift Model(ML)'}
+    ],
+    dataSources:{internal:'SFA(陈列照片)/TPM(活动明细/费用)/DMS(门店销量处理组vs对照组)/ERP(费用数据)', external:'负样本作弊图片-内部积累/公开零售货架图-开源数据集'},
+    output:'合规判定 + 排面识别结果 + 增量销量(Uplift) + ROI + LLM综合报告'
+  },
+  {id:'A5', name:'沙盘推演', desc:'蒙特卡洛/ABM仿真,策略效果模拟', status:'core', roleTags:['executive','regional','brand','channel','tpm','analyst','distributor'],
+    params:[
+      {name:'strategy', label:'策略类型', type:'select', options:['价格策略','促销策略','渠道策略','新品上市','竞争应对'], default:'促销策略'},
+      {name:'scenario', label:'具体方案', type:'select', options:['降价10%','买二送一','满100减20','新渠道进入','竞品降价应对'], default:'买二送一'},
+      {name:'marketScope', label:'市场范围', type:'select', options:['全国','华东区','华南区','华北大区','指定城市'], default:'华东区'},
+      {name:'simPeriod', label:'模拟周期(月)', type:'number', default:3, min:1, max:12},
+      {name:'iterations', label:'蒙特卡洛迭代次数', type:'select', options:['1000次','5000次','10000次'], default:'5000次'}
+    ],
+    dataSources:{internal:'ERP(历史价格/成本)/TPM(促销历史/费用)/DMS(销量/份额)/CRM(消费者数据)', external:'竞品价格-爬虫/行业通胀率/品类增长率-尼尔森/凯度报告'},
+    output:'概率化预测 + 敏感性分析 + 多方案对比 + 情景分析 + LLM故事线报告'
+  },
+  {id:'A6', name:'组织效能诊断', desc:'ML评分模型,销售组织健康度量化', status:'new', roleTags:['executive','regional'],
+    params:[
+      {name:'orgScope', label:'组织范围', type:'select', options:['全公司','指定大区','指定城市'], default:'全公司'},
+      {name:'region', label:'大区', type:'select', options:['华东','华南','华北','华西'], default:'华东', showIf:'orgScope=指定大区'},
+      {name:'metrics', label:'诊断维度', type:'multi-select', options:['拜访效率','订单转化','人员流失','目标达成','费用控制'], default:['拜访效率','订单转化','目标达成']},
+      {name:'comparePeriod', label:'对比周期', type:'select', options:['环比(上月)','同比(去年同月)','季度对比'], default:'同比(去年同月)'}
+    ],
+    dataSources:{internal:'SFA(签到/拜访/订单)/HR系统(人员数据)/ERP(销量数据)/TPM(费用)', external:'无'},
+    output:'组织效能评分(0-100) + 各维度雷达图 + 低效组织单元识别 + 最佳实践提取 + LLM改进建议'
+  },
+  {id:'A7', name:'智能预警', desc:'多Agent聚合,分级预警', status:'new', roleTags:['executive','regional','brand','channel','tpm'],
+    params:[
+      {name:'warningScope', label:'预警范围', type:'select', options:['全公司','指定区域','指定品牌'], default:'全公司'},
+      {name:'warnRegion', label:'选择区域', type:'select', options:['华东','华南','华北','华西','华中','东北'], default:'华东', showIf:'warningScope=指定区域'},
+      {name:'warnBrand', label:'选择品牌/品类', type:'select', options:['气泡茶','矿泉水','果汁','功能性饮料','碳酸饮料'], default:'气泡茶', showIf:'warningScope=指定品牌'},
+      {name:'severity', label:'最低预警级别', type:'select', options:['红色(紧急)','黄色(重要)','蓝色(提示)'], default:'蓝色(提示)'},
+      {name:'categories', label:'预警类别', type:'multi-select', options:['销量异常','库存预警','费效恶化','竞品动态','人员流失','数据延迟'], default:['销量异常','库存预警','费效恶化']},
+      {name:'autoNotify', label:'自动通知', type:'select', options:['开启(实时推送)','关闭(手动查看)'], default:'开启(实时推送)'}
+    ],
+    dataSources:{internal:'所有内部系统数据汇总(DMS/SFA/TPM/ERP/WMS)', external:'无'},
+    output:'分级预警列表(红/黄/蓝) + 预警内容 + 关联Agent + 建议行动 + LLM高管通知摘要'
+  },
+  {id:'A8', name:'绩效教练', desc:'ML行为分析,个性化辅导', status:'new', roleTags:['regional'],
+    params:[
+      {name:'targetPerson', label:'辅导对象', type:'select', options:['张三(华东A线)','李四(华东B线)','王五(华东C线)','全部业务员'], default:'张三(华东A线)'},
+      {name:'period', label:'分析周期', type:'select', options:['最近1周','最近1月','最近3月'], default:'最近1月'},
+      {name:'focusArea', label:'辅导重点', type:'multi-select', options:['拜访质量','订单转化','客情维护','新品推广','费用合规'], default:['拜访质量','订单转化']}
+    ],
+    dataSources:{internal:'SFA(拜访数据)/DMS(订单数据)/TPM(核销数据)', external:'无'},
+    output:'个人绩效评分 + 能力短板识别 + 高绩效者行为模式 + LLM个性化辅导话术 + 改进行动计划'
+  },
+  {id:'A9', name:'临期/滞销处理', desc:'规则+ML,临期品处理方案', status:'new', roleTags:['regional','brand','channel','tpm','distributor','subdistributor','store'],
+    params:[
+      {name:'alertDays', label:'临期预警天数', type:'number', default:60, min:7, max:180},
+      {name:'skuScope', label:'SKU范围', type:'select', options:['全部SKU','指定品类','指定SKU'], default:'全部SKU'},
+      {name:'category', label:'品类', type:'select', options:['气泡茶','矿泉水','果汁','功能性饮料'], default:'气泡茶', showIf:'skuScope=指定品类'},
+      {name:'actions', label:'处理方式', type:'multi-select', options:['内部调拨','打折促销','退货处理','组合销售','员工内购'], default:['内部调拨','打折促销']}
+    ],
+    dataSources:{internal:'WMS(生产日期/保质期/库存)/ERP(历史周转/成本)/TPM(促销政策)', external:'无'},
+    output:'临期/滞销品清单 + 处理方案优先级 + 预期损耗减少金额 + 执行计划'
+  },
+  {id:'A10', name:'新品上市追踪', desc:'时序+分类,新品全链路追踪预警', status:'new', roleTags:['brand','regional','channel'],
+    params:[
+      {name:'product', label:'追踪新品', type:'select', options:['气泡茶零糖版','气泡茶白桃味','矿泉水550ml升级装','果汁100%芒果'], default:'气泡茶零糖版'},
+      {name:'trackMetrics', label:'追踪指标', type:'multi-select', options:['分销率','首购率','复购率','NPS','陈列达标率','日销量趋势'], default:['分销率','首购率','复购率','日销量趋势']},
+      {name:'compareBaseline', label:'对比基线', type:'select', options:['历史新品平均表现','同品类现有产品','预设目标'], default:'历史新品平均表现'}
+    ],
+    dataSources:{internal:'DMS(分销/销量)/SFA(陈列/NPS)/B2B(首购/复购)/CRM(消费者反馈)', external:'无'},
+    output:'新品健康度评分 + 关键指标追踪仪表板 + 风险预警 + LLM风险提示 + 改进建议'
+  },
+  {id:'A11', name:'品类趋势洞察', desc:'NLP+时序,外部消费趋势', status:'new', roleTags:['brand','channel','analyst'],
+    params:[
+      {name:'category', label:'目标品类', type:'select', options:['气泡茶','矿泉水','果汁','功能性饮料','全部饮品'], default:'气泡茶'},
+      {name:'dataSources', label:'洞察来源', type:'multi-select', options:['社交媒体(微博/小红书/抖音)','电商评论(天猫/京东)','搜索指数','Nielsen/IRI数据'], default:['社交媒体','电商评论']},
+      {name:'timeWindow', label:'时间窗口', type:'select', options:['最近3个月','最近6个月','最近1年'], default:'最近6个月'},
+      {name:'topics', label:'关注维度', type:'multi-select', options:['口味趋势','包装偏好','价格敏感度','消费场景','健康诉求'], default:['口味趋势','消费场景','健康诉求']}
+    ],
+    dataSources:{internal:'CRM(消费者反馈)', external:'Nielsen/IRI数据/社交媒体数据-爬虫/API/搜索指数-百度指数'},
+    output:'品类趋势报告 + 消费者需求变化 + 机会识别 + LLM趋势洞察摘要 + 新品方向建议'
+  },
+  {id:'A12', name:'渠道客户画像', desc:'ML聚类,渠道客户360度画像', status:'new', roleTags:['channel','regional'],
+    params:[
+      {name:'channelType', label:'渠道类型', type:'select', options:['GT传统渠道','CVS便利连锁','餐饮渠道','电商渠道','全部渠道'], default:'CVS便利连锁'},
+      {name:'clientScope', label:'客户范围', type:'select', options:['全部客户','Top50客户','指定客户'], default:'Top50客户'},
+      {name:'dimensions', label:'画像维度', type:'multi-select', options:['交易规模','增长潜力','合作深度','信用等级','流失风险'], default:['交易规模','增长潜力','流失风险']}
+    ],
+    dataSources:{internal:'DMS(交易数据)/SFA(拜访/投诉)/ERP(付款数据)/CRM(沟通记录)', external:'无'},
+    output:'客户360画像 + 客户分层(A/B/C/D) + 流失风险评分 + 精准客户管理建议'
+  },
+  {id:'A13', name:'渠道价格监测', desc:'爬虫+规则,终端成交价监测', status:'new', roleTags:['channel','brand','tpm','regional'],
+    params:[
+      {name:'monitorScope', label:'监测范围', type:'select', options:['全国','指定大区','指定渠道'], default:'华东区'},
+      {name:'skuList', label:'监测SKU', type:'multi-select', options:['气泡茶330ml','气泡茶500ml','矿泉水550ml','矿泉水1.5L','果汁250ml'], default:['气泡茶330ml','矿泉水550ml']},
+      {name:'checkItems', label:'检查项', type:'multi-select', options:['实际成交价vs建议价','促销价格合规','竞品价格','价格带分布','窜货嫌疑'], default:['实际成交价vs建议价','促销价格合规','窜货嫌疑']}
+    ],
+    dataSources:{internal:'TPM(建议零售价/促销价)/ERP(出货价)', external:'各门店实际成交价-爬虫/竞品价格-爬虫'},
+    output:'乱价门店清单 + 价格偏离度 + 区域乱价热力图 + 促销价格合规率 + 窜货预警'
+  },
+  {id:'A14', name:'促销日历优化', desc:'优化算法,年度促销排期', status:'new', roleTags:['tpm','brand','regional'],
+    params:[
+      {name:'planPeriod', label:'规划周期', type:'select', options:['年度','季度','月度'], default:'季度'},
+      {name:'year', label:'年份', type:'select', options:['2026','2027'], default:'2026'},
+      {name:'category', label:'品类', type:'select', options:['全部品类','气泡茶','矿泉水','果汁'], default:'全部品类'},
+      {name:'constraints', label:'约束条件', type:'multi-select', options:['总预算上限','每月最多2个活动','不与竞品同期','避开春节'], default:['每月最多2个活动','不与竞品同期']},
+      {name:'budget', label:'总预算(万元)', type:'number', default:500, min:50}
+    ],
+    dataSources:{internal:'TPM(历史促销ROI)/DMS(品类季节性曲线)/ERP(预算)', external:'竞品促销节奏-爬虫/情报/节假日日历'},
+    output:'最优促销日历 + 排期甘特图 + 预期ROI + 资源分配建议 + LLM排期说明'
+  },
+  {id:'A15', name:'费用审计', desc:'规则+异常检测,促销费用合规审计', status:'new', roleTags:['tpm','executive','analyst'],
+    params:[
+      {name:'auditScope', label:'审计范围', type:'select', options:['全部活动','指定活动','指定区域'], default:'全部活动'},
+      {name:'activityId', label:'活动名称', type:'select', options:['气泡茶清凉一夏','矿泉水买二送一','全家中秋促销'], default:'气泡茶清凉一夏'},
+      {name:'auditType', label:'审计类型', type:'multi-select', options:['照片真实性','时间合规性','费用合理性','重复申报','超预算检查'], default:['照片真实性','费用合理性','重复申报']}
+    ],
+    dataSources:{internal:'TPM(核销数据)/SFA(照片/时间戳)/ERP(预算/合同条款)', external:'无'},
+    output:'审计报告 + 异常清单(含证据) + 节约金额预估 + 整改建议'
+  },
+  {id:'A16', name:'数据质量监控', desc:'规则+统计,数据质量自动检测', status:'new', roleTags:['analyst'],
+    params:[
+      {name:'dataSource', label:'数据源', type:'multi-select', options:['DMS','SFA','TPM','ERP','WMS','B2B'], default:['DMS','SFA','TPM']},
+      {name:'checkItems', label:'检查项', type:'multi-select', options:['数据完整性','字段一致性','异常值','重复记录','延迟上传'], default:['数据完整性','异常值','重复记录']},
+      {name:'alertThreshold', label:'告警阈值(问题数)', type:'number', default:10, min:1}
+    ],
+    dataSources:{internal:'所有内部系统数据', external:'无'},
+    output:'数据质量评分 + 问题清单 + 告警 + 修复建议 + 质量趋势图'
+  },
+  {id:'A17', name:'AutoML调参', desc:'AutoML框架,模型自动调参', status:'new', roleTags:['analyst'],
+    params:[
+      {name:'targetModel', label:'目标模型', type:'select', options:['A1潜力门店挖掘','A2补货预测','A4核销费效','全部模型'], default:'A2补货预测'},
+      {name:'optimization', label:'优化目标', type:'select', options:['准确率最大化','推理速度优先','平衡型'], default:'平衡型'},
+      {name:'searchSpace', label:'搜索空间', type:'select', options:['快速(100次迭代)','标准(500次)','深度(2000次)'], default:'标准(500次)'}
+    ],
+    dataSources:{internal:'Agent训练数据/历史超参数/模型性能指标', external:'无'},
+    output:'最优超参数配置 + 模型对比报告 + 性能提升预估 + 自动部署建议'
+  },
+  {id:'A18', name:'智能订单推荐', desc:'ML推荐,最优订单组合', status:'new', roleTags:['salesrep','subdistributor'],
+    params:[
+      {name:'storeId', label:'目标门店', type:'select', options:['全家-南京西路店','罗森-淮海中路店','7-Eleven-西湖大道店','喜士多-解放路店'], default:'全家-南京西路店'},
+      {name:'recommendType', label:'推荐类型', type:'select', options:['补货推荐','新品推荐','促销组合','全面提升'], default:'补货推荐'},
+      {name:'maxSku', label:'最多推荐SKU数', type:'number', default:10, min:3, max:30}
+    ],
+    dataSources:{internal:'DMS(门店历史订单/SKU销量)/ERP(当前库存/促销政策)/A2补货预测(预测结果)', external:'无'},
+    output:'推荐订单(SKU清单+建议数量+预期毛利) + 推荐理由 + 历史同类推荐成功率'
+  },
+  {id:'A19', name:'客情记忆', desc:'LLM+NLP+知识图谱,客情自动记录', status:'new', roleTags:['salesrep','subdistributor'],
+    params:[
+      {name:'storeId', label:'目标门店', type:'select', options:['全家-南京西路店','罗森-淮海中路店','7-Eleven-西湖大道店'], default:'全家-南京西路店'},
+      {name:'action', label:'操作', type:'select', options:['查看客情','添加记录','生成拜访开场白'], default:'查看客情'}
+    ],
+    dataSources:{internal:'SFA(历史拜访记录/语音转文字/反馈)/CRM(客户沟通)', external:'无'},
+    output:'客情知识图谱 + 下次拜访提醒 + 个性化开场白生成'
+  },
+  {id:'A20', name:'巡店质量评分', desc:'CV+ML,终端执行质量标准化评分', status:'new', roleTags:['supervisor'],
+    params:[
+      {name:'storeId', label:'门店', type:'select', options:['全家-南京西路店','罗森-淮海中路店','7-Eleven-西湖大道店','全部待巡门店'], default:'全家-南京西路店'},
+      {name:'photoUpload', label:'上传照片', type:'file', accept:'image/*', hint:'请上传货架/堆头/端架照片'},
+      {name:'checkStandard', label:'检查标准', type:'select', options:['通用标准','气泡茶专项','促销期标准'], default:'通用标准'}
+    ],
+    dataSources:{internal:'SFA(上传照片)/品类管理部(陈列标准)', external:'无'},
+    output:'门店执行质量评分(0-100) + 各维度得分 + 问题清单 + 排名 + 优秀案例对比'
+  },
+  {id:'A21', name:'问题整改追踪', desc:'工作流引擎,整改闭环追踪', status:'new', roleTags:['supervisor','regional'],
+    params:[
+      {name:'viewMode', label:'查看模式', type:'select', options:['全部问题','待整改','进行中','已验收','超期'], default:'全部问题'},
+      {name:'storeId', label:'责任门店', type:'select', options:['全部门店','全家-南京西路店','罗森-淮海中路店'], default:'全部门店'}
+    ],
+    dataSources:{internal:'A20巡店评分(问题)/SFA(整改反馈)', external:'无'},
+    output:'整改闭环状态看板 + 超期预警 + LLM整改通知 + 整改进度趋势'
+  },
+  {id:'A22', name:'个人销量追踪', desc:'实时计算,销量与提成追踪', status:'new', roleTags:['promoter'],
+    params:[
+      {name:'promoterId', label:'导购姓名', type:'select', options:['本人(小美)','小丽','小芳','全部导购'], default:'本人(小美)'},
+      {name:'timeRange', label:'时间范围', type:'select', options:['今日','本周','本月'], default:'今日'}
+    ],
+    dataSources:{internal:'POS(实时销量)/HR系统(目标/提成规则)', external:'无'},
+    output:'实时销量看板 + 目标达成率 + 提成预估 + 同事排名 + 里程碑激励消息'
+  },
+  {id:'A23', name:'智能排班', desc:'优化算法,导购排班优化', status:'new', roleTags:['promoter','regional'],
+    params:[
+      {name:'storeId', label:'门店', type:'select', options:['全家-南京西路店','罗森-淮海中路店'], default:'全家-南京西路店'},
+      {name:'weekStart', label:'排班周起始', type:'date', default:'2026-06-09'},
+      {name:'objective', label:'优化目标', type:'select', options:['高峰覆盖最大化','人力成本最低','平衡型'], default:'平衡型'}
+    ],
+    dataSources:{internal:'POS(交易时间分布/高峰时段)/SFA(导购能力评分)/HR(人力成本)', external:'无'},
+    output:'最优排班表 + 高峰覆盖率 + 人力成本 + 公平性评估'
+  },
+  {id:'A24', name:'进销存优化', desc:'ML+优化,经销商进销存策略', status:'new', roleTags:['distributor'],
+    params:[
+      {name:'distributorId', label:'经销商', type:'select', options:['华东总经销-王总','华南总经销-李总'], default:'华东总经销-王总'},
+      {name:'optimizeTarget', label:'优化目标', type:'select', options:['利润最大化','库存最小化','缺货率最低','综合最优'], default:'综合最优'},
+      {name:'forecastHorizon', label:'预测周期(周)', type:'number', default:4, min:1, max:12}
+    ],
+    dataSources:{internal:'ERP(进货成本/库存持有成本)/WMS(库存)/TPM(返利政策)/A2补货预测(下游需求)', external:'无'},
+    output:'最优进销存策略 + 建议订货量/时机/供应商 + 安全库存调整 + 预期利润提升'
+  },
+  {id:'A25', name:'客户信用评估', desc:'ML评分,下游客户信用评估', status:'new', roleTags:['distributor'],
+    params:[
+      {name:'clientScope', label:'客户范围', type:'select', options:['全部下游客户','指定客户','新客评估'], default:'全部下游客户'},
+      {name:'clientId', label:'客户名称', type:'text', placeholder:'如:全家-南京西路(如选指定)', showIf:'clientScope=指定客户'}
+    ],
+    dataSources:{internal:'ERP(交易历史/付款记录/欠款)/DMS(客户规模/门店数)', external:'无'},
+    output:'信用评分(0-100) + 信用等级(A/B/C/D) + 建议信用额度 + 坏账风险预警'
+  },
+  {id:'A26', name:'智能配载', desc:'组合优化,车辆最优配载', status:'new', roleTags:['subdistributor','distributor'],
+    params:[
+      {name:'vehicleId', label:'配送车辆', type:'select', options:['沪A12345(货车3吨)','沪B67890(货车1.5吨)'], default:'沪A12345(货车3吨)'},
+      {name:'deliveryDate', label:'配送日期', type:'date', default:'2026-06-10'},
+      {name:'optimizeFor', label:'优化目标', type:'select', options:['车辆利用率最大','配送时间最短','综合最优'], default:'车辆利用率最大'}
+    ],
+    dataSources:{internal:'ERP(订单数据-SKU/数量/体积)/WMS(车辆信息-载重/容积)', external:'无'},
+    output:'最优配载方案 + 车辆利用率 + 配送路线 + 预计完成时间'
+  },
+  {id:'A27', name:'账款追踪', desc:'规则引擎,账款到期提醒与催收', status:'new', roleTags:['distributor','subdistributor'],
+    params:[
+      {name:'viewMode', label:'查看模式', type:'select', options:['即将到期(7天内)','已逾期','全部账款','高危账款(逾期30天+)'], default:'即将到期(7天内)'},
+      {name:'clientId', label:'客户筛选', type:'select', options:['全部客户','指定客户'], default:'全部客户'}
+    ],
+    dataSources:{internal:'ERP(应收账款/账期/付款历史/催收记录)', external:'无'},
+    output:'账款到期提醒清单 + 逾期告警 + LLM催款话术 + 升级建议'
+  },
+  {id:'A28', name:'智能选品', desc:'ML推荐,基于门店特征的SKU推荐', status:'new', roleTags:['store'],
+    params:[
+      {name:'myStore', label:'我的门店', type:'text', default:'全家-南京西路店', readonly:true},
+      {name:'recommendBasis', label:'推荐依据', type:'multi-select', options:['周边人群画像','历史销售','季节因素','促销匹配','品类关联'], default:['周边人群画像','历史销售','季节因素']},
+      {name:'maxRecommend', label:'推荐SKU数', type:'number', default:15, min:5, max:50}
+    ],
+    dataSources:{internal:'DMS(门店位置/历史销售/当前库存)/ERP(成本/利润)/A2补货预测(需求预测)', external:'周边人群画像-高德/百度地图(付费)'},
+    output:'推荐SKU组合 + 建议进货量 + 预期周转天数 + 预期毛利 + LLM选品理由'
+  },
+  {id:'A29', name:'定价建议', desc:'ML+规则,终端零售价优化', status:'new', roleTags:['store'],
+    params:[
+      {name:'skuId', label:'商品', type:'select', options:['气泡茶330ml','矿泉水550ml','果汁250ml','全部在售SKU'], default:'气泡茶330ml'},
+      {name:'myCost', label:'我的进货价(元)', type:'number', default:2.5, step:0.1},
+      {name:'competitorPrice', label:'周边竞品售价(元,可选)', type:'number', placeholder:'自动抓取竞品价格', optional:true}
+    ],
+    dataSources:{internal:'ERP(进货成本)/DMS(历史不同价格下销量)/TPM(品类利润率目标)', external:'周边竞品价格-爬虫采集(低成本)'},
+    output:'建议零售价 + 价格弹性系数 + 预期销量 + 预期利润 + 风险提示'
+  }
+];
+
+const skills = [
+  {id:'S1', name:'SFA拜访任务包', desc:'生成拜访目标+话术+清单', status:'core', roleTags:['regional','salesrep'],
+    params:[
+      {name:'region', label:'区域', type:'select', options:['华东区','华南区','华北区','华西区'], default:'华东区'},
+      {name:'date', label:'拜访日期', type:'date', default:'2026-06-10'},
+      {name:'storeCount', label:'目标门店数', type:'number', default:15, min:5, max:30},
+      {name:'assignee', label:'分配业务员', type:'select', options:['自动分配','张三-华东A线','李四-华东B线','王五-华东C线'], default:'自动分配'},
+      {name:'focus', label:'拜访重点', type:'multi-select', options:['补货','陈列','客情','新品推广'], default:['补货','新品推广']}
+    ],
+    dataSources:{internal:'DMS(门店数据/SKU销量)/SFA(历史拜访记录)/A2补货预测(预测结果)/天气API', external:'天气API(低成本)'},
+    output:'拜访任务JSON: 目标门店列表(含地址/联系人) + 每家店拜访目的 + 推荐话术 + 检查清单 + 预计成交SKU/数量'
+  },
+  {id:'S2', name:'TPM促销Brief', desc:'生成促销方案+预算+ROI预估', status:'core', roleTags:['tpm','brand','regional'],
+    params:[
+      {name:'goal', label:'促销目标', type:'multi-select', options:['提升销量','拉新','清库存','品牌曝光','竞品反击'], default:['提升销量']},
+      {name:'targetAudience', label:'目标人群', type:'text', placeholder:'如:18-35岁白领女性'},
+      {name:'type', label:'促销类型', type:'select', options:['折扣','买赠','满减','搭赠','组合'], default:'买赠'},
+      {name:'mechanic', label:'促销机制', type:'text', default:'第二件半价'},
+      {name:'period', label:'时间范围', type:'daterange', start:'2026-06-15', end:'2026-07-15'},
+      {name:'storeCount', label:'覆盖门店数', type:'number', default:500, min:10},
+      {name:'budget', label:'预算(万元)', type:'number', default:50, min:1}
+    ],
+    dataSources:{internal:'品类知识库/TPM(历史12月促销数据/ROI)/ERP(预算)/A2补货预测/DMS(目标门店清单)', external:'外部节假日/竞品动态-爬虫(低成本)'},
+    output:'完整促销Brief: 活动背景/目标/机制/物料清单/话术/门店执行标准/KPI/预算分配/时间表/ROI预估'
+  },
+  {id:'S3', name:'B2B店主文案', desc:'生成个性化店主推送文案', status:'core', roleTags:['regional','brand','channel','tpm','salesrep','subdistributor','store'],
+    params:[
+      {name:'trigger', label:'触发场景', type:'select', options:['库存告急补货提醒','新品到货推广','促销活动通知','沉睡客户唤醒','节日问候'], default:'库存告急补货提醒'},
+      {name:'storeId', label:'目标门店', type:'select', options:['全家-南京西路店','罗森-淮海中路店','7-Eleven-西湖大道店','全部门店'], default:'全家-南京西路店'},
+      {name:'style', label:'文案风格', type:'select', options:['正式商务','亲切随和','促销紧迫','幽默风趣'], default:'亲切随和'},
+      {name:'channel', label:'推送渠道', type:'select', options:['微信','短信','App Push','全部渠道'], default:'微信'}
+    ],
+    dataSources:{internal:'CRM(店主画像)/B2B(行为数据:登录/浏览/加购/下单)/DMS(库存状态)/TPM(促销匹配)', external:'无'},
+    output:'个性化文案: 标题 + 正文 + 行动号召 + 适用渠道 + A/B版本(可选)'
+  },
+  {id:'S4', name:'C端营销内容包', desc:'生成小红书/抖音/朋友圈文案', status:'core', roleTags:['brand','tpm','promoter','store'],
+    params:[
+      {name:'product', label:'产品', type:'select', options:['气泡茶330ml','气泡茶零糖版','矿泉水550ml','果汁100%芒果'], default:'气泡茶330ml'},
+      {name:'platforms', label:'目标平台', type:'multi-select', options:['小红书','抖音','朋友圈','微博','B站'], default:['小红书','抖音','朋友圈']},
+      {name:'theme', label:'营销主题', type:'select', options:['夏日清凉','健康生活','年轻潮饮','家庭分享','运动补水'], default:'夏日清凉'},
+      {name:'contentType', label:'内容类型', type:'multi-select', options:['图文笔记','短视频脚本','海报文案','话题标签','直播话术'], default:['图文笔记','短视频脚本']},
+      {name:'kolRef', label:'参考KOL风格', type:'text', placeholder:'如:头部博主A的风格', optional:true}
+    ],
+    dataSources:{internal:'品牌部(产品卖点/品牌调性/素材库)/TPM(促销信息)', external:'社媒热搜词-爬虫/API(低成本)'},
+    output:'多平台内容包: 小红书笔记 + 抖音脚本 + 朋友圈文案 + 海报文案 + 话题标签 + 发布时间建议'
+  },
+  {id:'S5', name:'机会门店分析', desc:'生成机会门店深度分析报告', status:'core', roleTags:['executive','regional','brand','channel','tpm'],
+    params:[
+      {name:'analysisScope', label:'分析范围', type:'select', options:['全国','大区','城市','指定门店'], default:'大区'},
+      {name:'region', label:'大区', type:'select', options:['华东','华南','华北','华西'], default:'华东'},
+      {name:'dimensions', label:'分析维度', type:'multi-select', options:['销量增长','品类渗透','竞品压力','陈列改善','促销响应'], default:['销量增长','品类渗透','竞品压力']},
+      {name:'reportFormat', label:'报告格式', type:'select', options:['简洁版(1页)','标准版(3-5页)','详细版(10页+)'], default:'标准版(3-5页)'}
+    ],
+    dataSources:{internal:'A1潜力挖掘(分析结果)/DMS(多维数据)/SFA(归因数据)', external:'无'},
+    output:'结构化分析报告: 门店概况 + 机会点 + 风险点 + 问题根因 + 差异化策略建议 + 预期收益'
+  },
+  {id:'S6', name:'经营周报', desc:'自动生成经营周报', status:'core', roleTags:['all'],
+    params:[
+      {name:'week', label:'周报周期', type:'select', options:['本周','上周','自定义'], default:'本周'},
+      {name:'region', label:'区域', type:'select', options:['全公司','华东区','华南区','华北区','华西区'], default:'全公司'},
+      {name:'focus', label:'重点关注', type:'multi-select', options:['销量达成','费用控制','竞品动态','新品表现','渠道拓展'], default:['销量达成','费用控制']}
+    ],
+    dataSources:{internal:'ERP(销量)/TPM(费用)/DMS(渠道数据)/SFA(人员数据)', external:'无'},
+    output:'经营周报(含图表): 核心指标 + 异常说明 + 行动建议 + 下周计划'
+  },
+  {id:'S7', name:'竞品应对话术', desc:'生成竞品应对策略与分层话术', status:'core', roleTags:['all'],
+    params:[
+      {name:'competitor', label:'竞品', type:'select', options:['元气森林','农夫山泉','可口可乐','百事'], default:'元气森林'},
+      {name:'action', label:'竞品动作', type:'select', options:['降价促销','买赠活动','新品上市','加大陈列'], default:'降价促销'},
+      {name:'scenario', label:'使用场景', type:'select', options:['门店谈判','消费者沟通','内部会议'], default:'门店谈判'},
+      {name:'style', label:'话术风格', type:'select', options:['强硬','温和','专业'], default:'专业'}
+    ],
+    dataSources:{internal:'品牌部(本品卖点)/市场部(竞品监测)/TPM(促销政策)', external:'竞品动态-情报(低成本)'},
+    output:'竞品应对策略: 竞品分析 + 本品优势对比 + 分层话术(高管/经理/一线版) + 反击方案'
+  },
+  {id:'S8', name:'一线日报汇总', desc:'汇总一线人员日报', status:'core', roleTags:['regional','salesrep','supervisor'],
+    params:[
+      {name:'date', label:'日期', type:'date', default:'2026-06-09'},
+      {name:'scope', label:'汇总范围', type:'select', options:['全部','指定区域','指定人员'], default:'指定区域'},
+      {name:'region', label:'区域', type:'select', options:['华东区','华南区','华北区','华西区'], default:'华东区', showIf:'scope=指定区域'}
+    ],
+    dataSources:{internal:'SFA(日报数据)/DMS(订单数据)', external:'无'},
+    output:'一线日报汇总: 拜访汇总 + 订单汇总 + 问题反馈 + 明日计划 + 异常提醒'
+  },
+  {id:'S9', name:'高管问答助手', desc:'自然语言查询全局经营数据', status:'new', roleTags:['executive'],
+    params:[
+      {name:'query', label:'你想问什么', type:'select', options:['华东区上月哪个品类下滑最厉害,为什么?','哪个大区的费用率最高?','气泡茶新品上市进展如何?','哪些经销商回款风险大?'], default:'华东区上月哪个品类下滑最厉害,为什么?'},
+      {name:'region', label:'区域范围', type:'select', options:['全国','华东','华南','华北','华西'], default:'华东'},
+      {name:'period', label:'时间范围', type:'select', options:['本月','上月','本季度','本年度'], default:'上月'}
+    ],
+    dataSources:{internal:'所有内部系统(LLM自动路由到对应Agent)', external:'无'},
+    output:'综合回答: 数据事实 + 趋势分析 + 根因推断 + 关联Agent推荐'
+  },
+  {id:'S10', name:'订单趋势分析', desc:'门店订单趋势与异常分析', status:'core', roleTags:['regional','brand','channel','analyst','salesrep','subdistributor'],
+    params:[
+      {name:'storeId', label:'门店', type:'select', options:['全家-南京西路店','罗森-淮海中路店','7-Eleven-西湖大道店','全部'], default:'全家-南京西路店'},
+      {name:'period', label:'时间范围', type:'select', options:['最近30天','最近90天','最近半年'], default:'最近90天'},
+      {name:'granularity', label:'粒度', type:'select', options:['日','周','月'], default:'周'}
+    ],
+    dataSources:{internal:'ERP(订单数据)/DMS(门店数据)/TPM(促销日历)', external:'无'},
+    output:'订单趋势图 + 异常检测 + 同比环比 + 预测趋势 + 根因分析'
+  },
+  {id:'S11', name:'竞品动态追踪', desc:'竞品价格/促销/新品动态追踪', status:'new', roleTags:['brand','channel','tpm','analyst','regional'],
+    params:[
+      {name:'competitor', label:'竞品品牌', type:'select', options:['康师傅','统一','农夫山泉','元气森林','可口可乐','百事'], default:'元气森林'},
+      {name:'trackItems', label:'追踪项', type:'multi-select', options:['价格变动','促销活动','新品上市','渠道扩张','广告投放'], default:['价格变动','促销活动','新品上市']},
+      {name:'region', label:'区域', type:'select', options:['全国','华东','华南','华北'], default:'华东'}
+    ],
+    dataSources:{internal:'SFA(竞品报告)/DMS(市场份额)', external:'竞品信息-爬虫/公开报告/API'},
+    output:'竞品动态周报: 价格变动 + 促销汇总 + 新品信息 + 渠道动态 + 威胁评级'
+  },
+  {id:'S12', name:'合规巡检报告', desc:'合规性自动巡检报告', status:'new', roleTags:['executive','tpm','analyst','supervisor'],
+    params:[
+      {name:'period', label:'巡检周期', type:'select', options:['本周','本月','上季度'], default:'本月'},
+      {name:'checkItems', label:'检查项', type:'multi-select', options:['费用合规','照片合规','时间合规','价格合规','窜货检查'], default:['费用合规','照片合规']},
+      {name:'scope', label:'范围', type:'select', options:['全公司','指定区域'], default:'全公司'}
+    ],
+    dataSources:{internal:'TPM(核销数据)/SFA(拜访数据)/ERP(价格数据)', external:'无'},
+    output:'合规巡检报告: 合规率 + 异常清单 + 整改建议 + 风险提示'
+  },
+  {id:'S13', name:'费用预算编制', desc:'智能费用预算编制辅助', status:'new', roleTags:['tpm','executive','regional'],
+    params:[
+      {name:'year', label:'预算年度', type:'select', options:['2026','2027'], default:'2027'},
+      {name:'category', label:'费用类别', type:'multi-select', options:['促销费用','陈列费用','人员费用','物流费用','广告费用'], default:['促销费用','陈列费用']},
+      {name:'baseMethod', label:'编制基准', type:'select', options:['历史数据 extrapolation','目标倒推','零基预算'], default:'历史数据 extrapolation'}
+    ],
+    dataSources:{internal:'ERP(历史费用)/TPM(ROI数据)/DMS(销售目标)', external:'无'},
+    output:'费用预算表 + 分配建议 + ROI预估 + 风险情景 + 审批流程'
+  },
+  {id:'S14', name:'陈列标准生成', desc:'自动生成陈列标准与检查表', status:'new', roleTags:['brand','tpm','supervisor'],
+    params:[
+      {name:'product', label:'产品', type:'select', options:['气泡茶330ml','气泡茶500ml','矿泉水550ml','全部'], default:'气泡茶330ml'},
+      {name:'channel', label:'渠道类型', type:'select', options:['CVS便利','GT传统','商超','餐饮'], default:'CVS便利'},
+      {name:'standardType', label:'标准类型', type:'multi-select', options:['货架陈列','堆头陈列','端架陈列','冰柜陈列'], default:['货架陈列','堆头陈列']}
+    ],
+    dataSources:{internal:'品类管理部(标准模板)/SFA(历史陈列照片)', external:'无'},
+    output:'陈列标准文档 + 检查表 + 示意图 + 评分标准'
+  },
+  {id:'S15', name:'培训内容生成', desc:'生成个性化培训材料', status:'new', roleTags:['regional','supervisor','promoter'],
+    params:[
+      {name:'topic', label:'培训主题', type:'select', options:['新品知识','销售技巧','陈列标准','客情维护','费用合规'], default:'新品知识'},
+      {name:'audience', label:'受众', type:'select', options:['业务员','导购','督导','经销商'], default:'业务员'},
+      {name:'format', label:'输出格式', type:'multi-select', options:['PPT大纲','话术脚本','测试题','手册'], default:['话术脚本','测试题']}
+    ],
+    dataSources:{internal:'品类知识库/品牌部(产品资料)/HR(培训记录)', external:'无'},
+    output:'培训材料包: PPT + 话术 + 测试题 + 培训计划'
+  },
+  {id:'S16', name:'DSR赋能助手', desc:'业务员日常工作赋能', status:'new', roleTags:['salesrep'],
+    params:[
+      {name:'taskType', label:'任务类型', type:'select', options:['拜访准备','现场销售','订单录入','问题上报'], default:'拜访准备'},
+      {name:'storeId', label:'当前门店', type:'select', options:['全家-南京西路店','罗森-淮海中路店','7-Eleven-西湖大道店'], default:'全家-南京西路店'}
+    ],
+    dataSources:{internal:'DMS(门店数据)/ERP(库存/价格)/SFA(历史拜访)', external:'无'},
+    output:'赋能内容: 门店信息 + 推荐话术 + 订单建议 + 注意事项'
+  },
+  {id:'S17', name:'督导任务生成', desc:'生成督导巡店任务计划', status:'new', roleTags:['supervisor','regional'],
+    params:[
+      {name:'weekStart', label:'周起始日', type:'date', default:'2026-06-09'},
+      {name:'area', label:'督导区域', type:'select', options:['华东A区','华东B区','华东C区'], default:'华东A区'},
+      {name:'focus', label:'检查重点', type:'multi-select', options:['陈列执行','促销执行','价格合规','人员状态','库存情况'], default:['陈列执行','促销执行']}
+    ],
+    dataSources:{internal:'SFA(门店清单)/TPM(活动日历)/A20巡店评分(历史)', external:'无'},
+    output:'督导周计划: 巡店路线 + 检查清单 + 重点关注 + 预计耗时'
+  },
+  {id:'S18', name:'导购话术生成', desc:'生成促销导购话术', status:'new', roleTags:['promoter'],
+    params:[
+      {name:'product', label:'主推产品', type:'select', options:['气泡茶330ml','气泡茶零糖版','矿泉水550ml'], default:'气泡茶330ml'},
+      {name:'scenario', label:'场景', type:'select', options:['日常推荐','促销活动','新品介绍','异议处理'], default:'日常推荐'},
+      {name:'style', label:'话术风格', type:'select', options:['热情推荐','专业介绍','故事营销'], default:'热情推荐'}
+    ],
+    dataSources:{internal:'品牌部(产品卖点)/TPM(促销信息)', external:'无'},
+    output:'导购话术: 开场白 + 产品介绍 + 促单话术 + 异议处理 + 成交感谢'
+  },
+  {id:'S19', name:'经销商对账', desc:'自动对账与差异分析', status:'new', roleTags:['distributor','subdistributor'],
+    params:[
+      {name:'period', label:'对账周期', type:'select', options:['本月','上月','本季度'], default:'本月'},
+      {name:'distributorId', label:'经销商', type:'select', options:['华东总经销-王总','华南总经销-李总'], default:'华东总经销-王总'}
+    ],
+    dataSources:{internal:'ERP(出货/回款/费用)/DMS(订单数据)', external:'无'},
+    output:'对账单 + 差异分析 + 未清项 + 调整建议'
+  },
+  {id:'S20', name:'门店动销分析', desc:'门店动销率与周转分析', status:'new', roleTags:['store','distributor','subdistributor','channel'],
+    params:[
+      {name:'storeId', label:'门店', type:'select', options:['全家-南京西路店','罗森-淮海中路店','全部'], default:'全家-南京西路店'},
+      {name:'period', label:'分析周期', type:'select', options:['最近30天','最近90天'], default:'最近30天'},
+      {name:'skuScope', label:'SKU范围', type:'select', options:['全部','气泡茶','矿泉水','果汁'], default:'全部'}
+    ],
+    dataSources:{internal:'POS(销售数据)/ERP(库存数据)/DMS(门店数据)', external:'无'},
+    output:'动销分析: 动销率 + 周转天数 + 畅销/滞销排行 + 补货建议'
+  },
+  {id:'S21', name:'库存周转优化', desc:'库存周转优化建议', status:'new', roleTags:['distributor','subdistributor','store'],
+    params:[
+      {name:'scope', label:'范围', type:'select', options:['全仓','指定品类','指定SKU'], default:'全仓'},
+      {name:'targetTurnover', label:'目标周转天数', type:'number', default:15, min:7, max:60}
+    ],
+    dataSources:{internal:'WMS(库存数据)/ERP(出入库数据)/DMS(销售预测)', external:'无'},
+    output:'周转优化方案: 当前周转 + 目标差距 + 优化建议 + 预期效果'
+  },
+  {id:'S22', name:'现场异议处理', desc:'门店异议即时回应话术', status:'new', roleTags:['salesrep','supervisor','promoter','subdistributor'],
+    params:[
+      {name:'objection', label:'店主异议', type:'select', options:['你们气泡水比元气森林贵,卖不动','这个没位置摆','上次进的还没卖完','你们促销力度不够'], default:'你们气泡水比元气森林贵,卖不动'},
+      {name:'storeType', label:'门店类型', type:'select', options:['便利店CVS','士多GT','餐饮','商超'], default:'便利店CVS'},
+      {name:'style', label:'话术风格', type:'select', options:['专业','亲切','坚定'], default:'亲切'}
+    ],
+    dataSources:{internal:'品牌部(卖点)/TPM(促销政策)/DMS(竞品信息)', external:'无'},
+    output:'即时回应话术 + 证据材料 + 替代方案 + 升级路径'
+  },
+  {id:'S23', name:'人员效能报表', desc:'销售人员效能分析报表', status:'new', roleTags:['regional','executive','analyst'],
+    params:[
+      {name:'period', label:'周期', type:'select', options:['本月','上季度','本年度'], default:'本月'},
+      {name:'scope', label:'范围', type:'select', options:['全部','指定大区','指定团队'], default:'全部'}
+    ],
+    dataSources:{internal:'SFA(拜访数据)/ERP(销售数据)/HR(人员数据)', external:'无'},
+    output:'效能报表: 人均产出 + 拜访效率 + 转化率 + 排名 + 改进建议'
+  },
+  {id:'S24', name:'KA客户管理', desc:'重点客户(KA)管理工具', status:'new', roleTags:['channel','regional','brand'],
+    params:[
+      {name:'client', label:'KA客户', type:'select', options:['全家','罗森','7-Eleven','喜士多','华润万家'], default:'全家'},
+      {name:'action', label:'操作', type:'select', options:['客户概览','合同管理','促销谈判','问题处理'], default:'客户概览'}
+    ],
+    dataSources:{internal:'CRM(客户数据)/ERP(交易数据)/TPM(活动数据)', external:'无'},
+    output:'KA客户管理: 客户概览 + 交易分析 + 合同状态 + 行动计划'
+  },
+  {id:'S25', name:'物料管理', desc:'促销物料管理', status:'new', roleTags:['tpm','supervisor','promoter'],
+    params:[
+      {name:'activity', label:'活动', type:'select', options:['气泡茶清凉一夏','矿泉水买二送一','全部'], default:'气泡茶清凉一夏'},
+      {name:'action', label:'操作', type:'select', options:['库存查询','分配计划','核销记录'], default:'库存查询'}
+    ],
+    dataSources:{internal:'WMS(物料库存)/TPM(活动计划)/SFA(核销记录)', external:'无'},
+    output:'物料管理: 库存清单 + 分配计划 + 核销状态 + 预警'
+  },
+  {id:'S26', name:'退货处理助手', desc:'退货流程处理辅助', status:'new', roleTags:['distributor','subdistributor','store','salesrep'],
+    params:[
+      {name:'storeId', label:'门店', type:'select', options:['全家-南京西路店','罗森-淮海中路店','全部'], default:'全家-南京西路店'},
+      {name:'reason', label:'退货原因', type:'select', options:['临期','破损','滞销','质量问题','订单错误'], default:'临期'}
+    ],
+    dataSources:{internal:'ERP(退货记录)/WMS(库存数据)/DMS(门店数据)', external:'无'},
+    output:'退货处理: 退货申请 + 审核建议 + 处理流程 + 预计金额'
+  },
+  {id:'S27', name:'新客开发计划', desc:'新客户开发计划生成', status:'new', roleTags:['channel','salesrep','regional'],
+    params:[
+      {name:'area', label:'开发区域', type:'select', options:['华东A区','华东B区','华东C区'], default:'华东A区'},
+      {name:'targetCount', label:'目标开发数', type:'number', default:10, min:1, max:50},
+      {name:'channelType', label:'目标渠道', type:'select', options:['GT传统','CVS便利','餐饮','全部'], default:'GT传统'}
+    ],
+    dataSources:{internal:'DMS(潜客名单)/SFA(拜访记录)/A1潜力挖掘(分析结果)', external:'无'},
+    output:'新客开发计划: 目标客户清单 + 开发策略 + 拜访计划 + 预期收益'
+  },
+  {id:'S28', name:'天气关联分析', desc:'天气与销量关联分析', status:'new', roleTags:['brand','tpm','analyst','regional'],
+    params:[
+      {name:'product', label:'产品', type:'select', options:['气泡茶','矿泉水','果汁','全部'], default:'气泡茶'},
+      {name:'region', label:'区域', type:'select', options:['华东','华南','华北','全国'], default:'华东'},
+      {name:'weatherType', label:'天气类型', type:'multi-select', options:['高温','降雨','寒潮','晴天','湿度'], default:['高温','降雨']}
+    ],
+    dataSources:{internal:'ERP(历史销量)', external:'天气API-历史数据'},
+    output:'天气关联分析: 相关系数 + 影响量化 + 预测模型 + 促销时机建议'
+  },
+  {id:'S29', name:'即时激励看板', desc:'导购个人实时业绩看板', status:'new', roleTags:['promoter','supervisor'],
+    params:[
+      {name:'promoterId', label:'导购', type:'select', options:['小美','小李','小张'], default:'小美'},
+      {name:'view', label:'看板视角', type:'select', options:['今日','本周','本月'], default:'今日'}
+    ],
+    dataSources:{internal:'POS(销量)/HR(目标/提成规则)', external:'无'},
+    output:'个人实时看板: 今日销量/达成率/提成预估/排名/里程碑/激励消息'
+  },
+  {id:'S30', name:'返点返利计算', desc:'经销商返点返利自动计算', status:'new', roleTags:['distributor','tpm','executive'],
+    params:[
+      {name:'distributorId', label:'经销商', type:'select', options:['华东总经销-王总','华南总经销-李总'], default:'华东总经销-王总'},
+      {name:'period', label:'计算周期', type:'select', options:['月度','季度','年度'], default:'季度'},
+      {name:'policyId', label:'返利政策', type:'select', options:['2026Q2阶梯返利','2026年度目标返利'], default:'2026Q2阶梯返利'}
+    ],
+    dataSources:{internal:'ERP(销售数据)/TPM(返利政策)/DMS(目标达成)', external:'无'},
+    output:'返利计算: 应得返利 + 达成率 + 明细 + 对比上期'
+  },
+  {id:'S31', name:'铺货率分析', desc:'SKU铺货率追踪与提升', status:'new', roleTags:['brand','channel','regional'],
+    params:[
+      {name:'sku', label:'SKU', type:'select', options:['气泡茶330ml','气泡茶零糖版','全部气泡茶','全部SKU'], default:'气泡茶330ml'},
+      {name:'region', label:'区域', type:'select', options:['华东','华南','华北','全国'], default:'华东'},
+      {name:'channel', label:'渠道', type:'select', options:['全部','GT传统','CVS便利','商超'], default:'全部'}
+    ],
+    dataSources:{internal:'DMS(分销数据)/ERP(销售数据)', external:'无'},
+    output:'铺货率分析: 当前铺货率 + 趋势 + 缺口门店 + 提升计划'
+  },
+  {id:'S32', name:'经营利润分析', desc:'利润结构分析与改进建议', status:'new', roleTags:['distributor','executive','analyst'],
+    params:[
+      {name:'scope', label:'分析对象', type:'select', options:['整体','分品类','分客户','分SKU'], default:'分品类'},
+      {name:'period', label:'时间范围', type:'select', options:['本月','上季度','本年度','同比'], default:'本月'},
+      {name:'subject', label:'经销商', type:'select', options:['华东总经销-王总','华南总经销-李总'], default:'华东总经销-王总'}
+    ],
+    dataSources:{internal:'ERP(成本/收入/费用)/DMS(SKU/客户销量)', external:'无'},
+    output:'利润分析报告: 毛利/净利/品类利润贡献/客户利润贡献/费用结构/改进建议'
+  },
+  {id:'S33', name:'促销执行监控', desc:'促销活动执行实时监控', status:'new', roleTags:['tpm','supervisor','regional'],
+    params:[
+      {name:'activityId', label:'活动', type:'select', options:['气泡茶清凉一夏','矿泉水买二送一'], default:'气泡茶清凉一夏'},
+      {name:'monitorItems', label:'监控项', type:'multi-select', options:['执行进度','销量响应','费用消耗','门店覆盖','照片合规'], default:['执行进度','销量响应','费用消耗']}
+    ],
+    dataSources:{internal:'TPM(活动数据)/SFA(执行数据)/ERP(销售数据)', external:'无'},
+    output:'执行监控: 进度 + 销量响应 + 费用消耗 + 预警 + 调整建议'
+  },
+  {id:'S34', name:'人员排班优化', desc:'非导购人员排班优化', status:'new', roleTags:['regional','supervisor'],
+    params:[
+      {name:'team', label:'团队', type:'select', options:['华东A组','华东B组','华东C组'], default:'华东A组'},
+      {name:'weekStart', label:'周起始', type:'date', default:'2026-06-09'}
+    ],
+    dataSources:{internal:'SFA(拜访数据)/HR(人员数据)', external:'无'},
+    output:'排班优化: 最优路线 + 人员分配 + 工作量平衡 + 效率提升预估'
+  },
+  {id:'S35', name:'合同管理', desc:'合同管理与到期预警', status:'new', roleTags:['channel','regional','executive'],
+    params:[
+      {name:'contractType', label:'合同类型', type:'select', options:['经销合同','KA合同','促销合同','全部'], default:'全部'},
+      {name:'status', label:'状态筛选', type:'select', options:['全部','即将到期(30天)','已过期','正常'], default:'即将到期(30天)'}
+    ],
+    dataSources:{internal:'CRM(合同数据)/ERP(交易数据)', external:'无'},
+    output:'合同管理: 合同清单 + 到期预警 + 续约建议 + 风险提示'
+  },
+  {id:'S36', name:'目标分解', desc:'销售目标层层分解', status:'new', roleTags:['executive','regional'],
+    params:[
+      {name:'year', label:'年度', type:'select', options:['2026','2027'], default:'2026'},
+      {name:'target', label:'总目标(万元)', type:'number', default:10000, min:1000},
+      {name:'method', label:'分解方法', type:'select', options:['历史占比','潜力加权','手动调整'], default:'历史占比'}
+    ],
+    dataSources:{internal:'ERP(历史销售)/DMS(渠道数据)/HR(人员数据)', external:'无'},
+    output:'目标分解: 大区/城市/人员目标 + 分解逻辑 + 可行性分析 + 调整建议'
+  },
+  {id:'S37', name:'积分商城管理', desc:'导购积分商城管理', status:'new', roleTags:['promoter','tpm','regional'],
+    params:[
+      {name:'action', label:'操作', type:'select', options:['积分查询','兑换管理','排行查看'], default:'积分查询'},
+      {name:'promoterId', label:'导购', type:'select', options:['本人(小美)','全部'], default:'本人(小美)'}
+    ],
+    dataSources:{internal:'HR(积分规则)/SFA(销量数据)', external:'无'},
+    output:'积分商城: 积分余额 + 兑换记录 + 排行榜 + 可兑换商品'
+  },
+  {id:'S38', name:'扫码核销', desc:'促销活动扫码核销', status:'new', roleTags:['promoter','salesrep','store'],
+    params:[
+      {name:'activity', label:'活动', type:'select', options:['气泡茶清凉一夏','矿泉水买二送一'], default:'气泡茶清凉一夏'},
+      {name:'method', label:'核销方式', type:'select', options:['扫码核销','手动录入','批量核销'], default:'扫码核销'}
+    ],
+    dataSources:{internal:'TPM(活动数据)/SFA(核销记录)', external:'无'},
+    output:'核销结果: 核销成功 + 累计核销 + 剩余配额 + 异常提醒'
+  },
+  {id:'S39', name:'需求预测协同', desc:'上下游需求预测协同', status:'new', roleTags:['distributor','subdistributor','channel'],
+    params:[
+      {name:'scope', label:'范围', type:'select', options:['我的下游','全部','指定客户'], default:'我的下游'},
+      {name:'forecastPeriod', label:'预测周期', type:'select', options:['下周','下月','下季度'], default:'下月'}
+    ],
+    dataSources:{internal:'ERP(历史销量)/DMS(客户数据)/A2补货预测', external:'无'},
+    output:'协同预测: 下游需求汇总 + 汇总vs实际 + 差异分析 + 订货建议'
+  },
+  {id:'S40', name:'门店报修', desc:'设备/物料报修处理', status:'new', roleTags:['store','promoter','supervisor'],
+    params:[
+      {name:'storeId', label:'门店', type:'select', options:['全家-南京西路店','罗森-淮海中路店'], default:'全家-南京西路店'},
+      {name:'repairType', label:'报修类型', type:'select', options:['冰柜故障','货架损坏','物料缺失','其他'], default:'冰柜故障'},
+      {name:'urgency', label:'紧急程度', type:'select', options:['紧急','一般','低'], default:'一般'}
+    ],
+    dataSources:{internal:'SFA(报修记录)/WMS(物料库存)', external:'无'},
+    output:'报修工单: 工单号 + 处理状态 + 预计处理时间 + 处理记录'
+  }
+];
+
+// ==================== STATE ====================
+let currentRole = null;
+let currentFilter = {agents:'all', skills:'all'};
+let mentionTab = 'agents';
+let agentListExpanded = false;
+let skillListExpanded = false;
+let selectedItemForParam = null;
+let chatHistory = [];
+let isMobile = window.innerWidth < 768;
+
+// ==================== INIT ====================
+document.addEventListener('DOMContentLoaded', () => {
+  renderRoleDropdown();
+  // Auto-select first role and update UI
+  const firstRole = roles[0];
+  currentRole = firstRole;
+  document.getElementById('currentRoleLabel').textContent = firstRole.abbr + ' - ' + firstRole.name;
+  document.getElementById('userAvatar').textContent = firstRole.abbr;
+  document.getElementById('userName').textContent = firstRole.name;
+  // Update welcome message
+  document.getElementById('welcomeTitle').textContent = '\u60a8\u597d\uff0c' + firstRole.name;
+  document.getElementById('welcomeSubtitle').textContent = 'FMCG AI RTM Workbench \u4e3a\u60a8\u63d0\u4f9b\u667a\u80fd\u51b3\u7b56\u652f\u6301\u3002\u53ef\u4f7f\u7528 @ \u8c03\u7528Agent\u548cSkill\u3002';
+  const qaItems = getQuickActions(firstRole);
+  document.getElementById('quickActions').innerHTML = qaItems.map(function(q){return '<button class="quick-btn" data-action="'+q.id+'" data-type="'+q.type+'">'+q.text+'</button>'}).join('');
+  bindQuickActions();
+  renderRightPanel();
+  renderAgentList();
+  renderSkillList();
+  setupEventListeners();
+  bindRightPanelChips();
+  window.addEventListener('resize', () => {
+    isMobile = window.innerWidth < 768;
+  });
+  document.addEventListener('click', (e) => {
+    const dropdown = document.getElementById('roleDropdownMenu');
+    const btn = document.getElementById('roleDropdownBtn');
+    if (dropdown && !dropdown.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+      dropdown.classList.remove('show');
+    }
+    const mentionPopup = document.getElementById('mentionPopup');
+    const atBtn = document.querySelector('.at-btn');
+    const inputWrapper = document.getElementById('inputWrapper');
+    if (mentionPopup && !mentionPopup.contains(e.target) && e.target !== atBtn && (!inputWrapper || !inputWrapper.contains(e.target))) {
+      mentionPopup.classList.remove('show');
+    }
+  });
+});
+
+function setupEventListeners() {
+  // 1. Chat input: enable/disable send button + @ mention detection + auto resize
+  const input = document.getElementById('chatInput');
+  if (input) {
+    input.addEventListener('input', function() {
+      document.getElementById('sendBtn').disabled = !this.value.trim();
+      autoResize(this);
+      // Detect @ for mention
+      var val = this.value;
+      var atIndex = val.lastIndexOf('@');
+      if (atIndex >= 0 && atIndex === val.length - 1) {
+        showMentionPopup();
+      }
+    });
+    input.addEventListener('keydown', function(e) {
+      handleKeydown(e);
+    });
+  }
+  // 1b. Mention search input
+  var mentionSearch = document.getElementById('mentionSearch');
+  if (mentionSearch) {
+    mentionSearch.addEventListener('input', filterMention);
+  }
+  // 1c. Agent/Skill sidebar search inputs
+  var agentSearch = document.getElementById('agentSearchInput');
+  if (agentSearch) {
+    agentSearch.addEventListener('input', filterAgents);
+  }
+  var skillSearch = document.getElementById('skillSearchInput');
+  if (skillSearch) {
+    skillSearch.addEventListener('input', filterSkills);
+  }
+
+  // 2. Document-level event delegation for all data-action elements
+  document.addEventListener('click', function(e) {
+    const el = e.target.closest('[data-action]');
+    if (!el) return;
+    var action = el.dataset.action;
+    switch(action) {
+      case 'toggleSidebar': toggleSidebar(); break;
+      case 'toggleRoleDropdown': toggleRoleDropdown(); break;
+      case 'newChat': newChat(); break;
+      case 'toggleAgentList': toggleAgentList(); break;
+      case 'toggleSkillList': toggleSkillList(); break;
+      case 'toggleMention': toggleMention(); break;
+      case 'sendMessage': sendMessage(); break;
+      case 'showSection':
+        var section = el.dataset.section;
+        document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+        el.classList.add('active');
+        document.getElementById('agentListPanel').classList.add('hidden');
+        document.getElementById('skillListPanel').classList.add('hidden');
+        if (section === 'chat') { /* default */ }
+        else if (section === 'warroom') { addAIMessage('\u4f5c\u6218\u5ba4\u529f\u80fd\u6b63\u5728\u5f00\u53d1\u4e2d...'); }
+        else if (section === 'cluster') { addAIMessage('Agent\u96c6\u7fa4\u7ba1\u7406\u529f\u80fd\u6b63\u5728\u5f00\u53d1\u4e2d...'); }
+        else if (section === 'output') { addAIMessage('\u8f93\u51fa\u4e2d\u5fc3\u529f\u80fd\u6b63\u5728\u5f00\u53d1\u4e2d...'); }
+        else if (section === 'forecast') { openParamPanel(agents.find(function(a){return a.id==='A2'}), 'agent'); }
+        if (isMobile) toggleSidebar();
+        break;
+      case 'cancelDemo':
+        var cd = document.getElementById('paramCard_demo');
+        if (cd) cd.style.opacity = '0.5';
+        break;
+      case 'executeDemo':
+        var edItem = el.dataset.item;
+        var edName = el.dataset.name;
+        var edType = el.dataset.type;
+        simulateExecution(edItem, edName, edType);
+        break;
+    }
+  });
+
+  // 3. Filter tabs - event delegation
+  document.addEventListener('click', function(e) {
+    var tab = e.target.closest('.filter-tab[data-filter]');
+    if (!tab) return;
+    var filter = tab.dataset.filter;
+    var type = tab.dataset.type;
+    if (!type) return;
+    var parent = tab.parentElement;
+    parent.querySelectorAll('.filter-tab').forEach(function(t) { t.classList.remove('active'); });
+    tab.classList.add('active');
+    if (type === 'agent') { currentFilter.agents = filter; renderAgentList(); }
+    else { currentFilter.skills = filter; renderSkillList(); }
+  });
+
+  // 4. Agent/Skill cards in sidebar - event delegation
+  document.addEventListener('click', function(e) {
+    var card = e.target.closest('[data-open-agent]');
+    if (card) { var a = agents.find(function(x){return x.id===card.dataset.openAgent}); if(a) { openParamPanel(a,'agent'); closeSidebar(); } return; }
+    card = e.target.closest('[data-open-skill]');
+    if (card) { var s = skills.find(function(x){return x.id===card.dataset.openSkill}); if(s) { openParamPanel(s,'skill'); closeSidebar(); } return; }
+  });
+
+  // 5. Param form buttons (cancel/execute) - event delegation
+  document.addEventListener('click', function(e) {
+    var cancelBtn = e.target.closest('.param-cancel-btn');
+    if (cancelBtn) { var cid = cancelBtn.dataset.cancelCard; if(cid) { var c=document.getElementById(cid); if(c) c.style.display='none'; } return; }
+    var execBtn = e.target.closest('.param-execute-btn');
+    if (execBtn) { executeItem(execBtn.dataset.execId, execBtn.dataset.execStatus, execBtn.dataset.execMsgid, execBtn.dataset.execType); return; }
+  });
+
+  // 6. Mention popup items - event delegation
+  document.addEventListener('click', function(e) {
+    var item = e.target.closest('[data-mention-id]');
+    if (!item) return;
+    var id = item.dataset.mentionId;
+    var type = item.dataset.mentionType;
+    selectMention(id, type);
+  });
+
+  // 7. Mention tabs
+  document.addEventListener('click', function(e) {
+    var tab = e.target.closest('[data-mention-tab]');
+    if (!tab) return;
+    var tabName = tab.dataset.mentionTab;
+    document.querySelectorAll('.mention-tab').forEach(function(t) { t.classList.remove('active'); });
+    tab.classList.add('active');
+    mentionTab = tabName;
+    renderMentionList();
+  });
+
+  // 8. Quick action buttons
+  bindQuickActions();
+
+  // 9. Param form controls (event delegation for dynamic content)
+  document.addEventListener('change', function(e) {
+    var sel = e.target.closest('.param-select[data-param]');
+    if (sel) { handleParamChange(sel); return; }
+    var cb = e.target.closest('input[type="checkbox"][data-param]');
+    if (cb) { toggleMultiSelect(cb); return; }
+  });
+}
+
+function bindQuickActions() {
+  const qa = document.getElementById('quickActions');
+  if (!qa) return;
+  qa.addEventListener('click', function(e) {
+    const btn = e.target.closest('.quick-btn');
+    if (!btn) return;
+    const id = btn.dataset.action;
+    const type = btn.dataset.type;
+    if (id && type) {
+      const arr = type === 'agent' ? agents : skills;
+      const item = arr.find(function(x) { return x.id === id; });
+      if (item) openParamPanel(item, type);
+    }
+  });
+}
+
+function bindRightPanelChips() {
+  const rp = document.getElementById('rightPanelContent');
+  if (!rp) return;
+  rp.addEventListener('click', function(e) {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    const aid = chip.dataset.aid;
+    const sid = chip.dataset.sid;
+    if (aid) { var a = agents.find(function(x){return x.id===aid}); if(a) openParamPanel(a,'agent'); }
+    if (sid) { var s = skills.find(function(x){return x.id===sid}); if(s) openParamPanel(s,'skill'); }
+  });
+}
+
+// ==================== ROLE MANAGEMENT ====================
+function renderRoleDropdown() {
+  const menu = document.getElementById('roleDropdownMenu');
+  const groups = {};
+  roles.forEach(r => { if(!groups[r.level]) groups[r.level] = []; groups[r.level].push(r); });
+  menu.innerHTML = '';
+  Object.entries(groups).forEach(([level, rs]) => {
+    const label = document.createElement('div');
+    label.className = 'role-group-label';
+    label.textContent = level;
+    menu.appendChild(label);
+    rs.forEach(r => {
+      const opt = document.createElement('div');
+      opt.className = 'role-option' + (currentRole && currentRole.id === r.id ? ' active' : '');
+      opt.dataset.roleId = r.id;
+      opt.innerHTML = '<span class="role-abbr">'+r.abbr+'</span><span class="role-name">'+r.name+'</span><span class="role-level">'+r.level+'</span>';
+      opt.addEventListener('click', function() { selectRole(r); toggleRoleDropdown(); });
+      menu.appendChild(opt);
+    });
+  });
+}
+
+function toggleRoleDropdown() {
+  document.getElementById('roleDropdownMenu').classList.toggle('show');
+}
+
+function selectRole(role) {
+  currentRole = role;
+  document.getElementById('currentRoleLabel').textContent = role.abbr + ' - ' + role.name;
+  document.getElementById('userAvatar').textContent = role.abbr;
+  document.getElementById('userName').textContent = role.name;
+  document.querySelectorAll('.role-option').forEach(el => {
+    el.classList.toggle('active', el.dataset.roleId === role.id);
+  });
+  updateWelcome();
+  renderRightPanel();
+  renderAgentList();
+  renderSkillList();
+  resetChat();
+}
+
+function resetChat() {
+  const container = document.getElementById('messagesContainer');
+  if (!container) return;
+  container.querySelectorAll('.msg').forEach(function(el){ el.remove(); });
+  const w = document.getElementById('welcomeMsg');
+  if (w) w.style.display = '';
+}
+
+function updateWelcome() {
+  const title = document.getElementById('welcomeTitle');
+  const subtitle = document.getElementById('welcomeSubtitle');
+  const qa = document.getElementById('quickActions');
+  if (!currentRole) return;
+  title.textContent = '您好，' + currentRole.name;
+  subtitle.textContent = 'FMCG AI RTM Workbench 为您提供智能决策支持。可使用 @ 调用Agent和Skill。';
+  const items = getQuickActions(currentRole);
+  qa.innerHTML = items.map(function(q) { return '<button class="quick-btn" data-action="' + q.id + '" data-type="' + q.type + '">' + q.text + '</button>'; }).join('');
+}
+
+function getQuickActions(role) {
+  const map = {
+    executive: [{id:'A7',type:'agent',text:'查看智能预警'},{id:'A5',type:'agent',text:'沙盘推演'},{id:'A6',type:'agent',text:'组织效能诊断'},{id:'S6',type:'skill',text:'经营周报'},{id:'S7',type:'skill',text:'竞品应对话术'},{id:'S9',type:'skill',text:'高管问答助手'}],
+    regional: [{id:'A2',type:'agent',text:'补货预测'},{id:'A3',type:'agent',text:'路径规划'},{id:'A8',type:'agent',text:'绩效教练'},{id:'S1',type:'skill',text:'拜访任务包'},{id:'S6',type:'skill',text:'经营周报'}],
+    brand: [{id:'A10',type:'agent',text:'新品追踪'},{id:'A11',type:'agent',text:'品类趋势'},{id:'S4',type:'skill',text:'营销内容包'},{id:'S2',type:'skill',text:'促销Brief'}],
+    channel: [{id:'A12',type:'agent',text:'客户画像'},{id:'A13',type:'agent',text:'价格监测'},{id:'S5',type:'skill',text:'机会门店分析'},{id:'S24',type:'skill',text:'KA客户管理'}],
+    tpm: [{id:'A4',type:'agent',text:'核销费效'},{id:'A14',type:'agent',text:'促销日历'},{id:'A15',type:'agent',text:'费用审计'},{id:'S2',type:'skill',text:'促销Brief'},{id:'S3',type:'skill',text:'店主文案'}],
+    analyst: [{id:'A1',type:'agent',text:'潜力门店挖掘'},{id:'A16',type:'agent',text:'数据质量'},{id:'A17',type:'agent',text:'AutoML'},{id:'S10',type:'skill',text:'订单趋势分析'}],
+    salesrep: [{id:'A3',type:'agent',text:'路径规划'},{id:'A18',type:'agent',text:'订单推荐'},{id:'A19',type:'agent',text:'客情记忆'},{id:'S1',type:'skill',text:'拜访任务包'},{id:'S22',type:'skill',text:'现场异议处理'},{id:'S16',type:'skill',text:'DSR助手'}],
+    supervisor: [{id:'A20',type:'agent',text:'巡店评分'},{id:'A21',type:'agent',text:'整改追踪'},{id:'S17',type:'skill',text:'督导任务'},{id:'S14',type:'skill',text:'陈列标准'}],
+    promoter: [{id:'A22',type:'agent',text:'销量追踪'},{id:'A23',type:'agent',text:'智能排班'},{id:'S18',type:'skill',text:'导购话术'},{id:'S29',type:'skill',text:'即时激励看板'}],
+    distributor: [{id:'A24',type:'agent',text:'进销存优化'},{id:'A25',type:'agent',text:'信用评估'},{id:'A27',type:'agent',text:'账款追踪'},{id:'S32',type:'skill',text:'经营利润分析'},{id:'S19',type:'skill',text:'经销商对账'}],
+    subdistributor: [{id:'A18',type:'agent',text:'订单推荐'},{id:'A26',type:'agent',text:'智能配载'},{id:'A27',type:'agent',text:'账款追踪'},{id:'S26',type:'skill',text:'退货处理'}],
+    store: [{id:'A28',type:'agent',text:'智能选品'},{id:'A29',type:'agent',text:'定价建议'},{id:'S20',type:'skill',text:'动销分析'},{id:'S21',type:'skill',text:'库存优化'}]
+  };
+  return map[role.id] || [{id:'A2',type:'agent',text:'补货预测'},{id:'S6',type:'skill',text:'经营周报'}];
+}
+
+function quickAction(id, type) {
+  console.log('quickAction called', id, type);
+  const arr = type === 'agent' ? agents : skills;
+  const item = arr.find(x => x.id === id);
+  console.log('found item', item && item.id);
+  if (item) {
+    openParamPanel(item, type);
+  } else {
+    alert('Item not found: ' + id);
+  }
+}
+
+// ==================== SIDEBAR NAV ====================
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('show');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('show');
+  document.getElementById('sidebarOverlay').classList.remove('show');
+}
+
+function showSection(section, el) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+  document.getElementById('agentListPanel').classList.add('hidden');
+  document.getElementById('skillListPanel').classList.add('hidden');
+  if (section === 'chat') {
+    // default
+  } else if (section === 'warroom') {
+    addAIMessage('作战室功能正在开发中...');
+  } else if (section === 'cluster') {
+    addAIMessage('Agent集群管理功能正在开发中...');
+  } else if (section === 'output') {
+    addAIMessage('输出中心功能正在开发中...');
+  } else if (section === 'forecast') {
+    openParamPanel(agents.find(a => a.id === 'A2'), 'agent');
+  }
+  if (isMobile) toggleSidebar();
+}
+
+function toggleAgentList() {
+  agentListExpanded = !agentListExpanded;
+  document.getElementById('navAgentExpand').classList.toggle('rotated', agentListExpanded);
+  document.getElementById('agentListPanel').classList.toggle('hidden', !agentListExpanded);
+  document.getElementById('skillListPanel').classList.add('hidden');
+  document.getElementById('navSkillExpand').classList.remove('rotated');
+  skillListExpanded = false;
+  if (agentListExpanded) renderAgentList();
+}
+
+function toggleSkillList() {
+  skillListExpanded = !skillListExpanded;
+  document.getElementById('navSkillExpand').classList.toggle('rotated', skillListExpanded);
+  document.getElementById('skillListPanel').classList.toggle('hidden', !skillListExpanded);
+  document.getElementById('agentListPanel').classList.add('hidden');
+  document.getElementById('navAgentExpand').classList.remove('rotated');
+  agentListExpanded = false;
+  if (skillListExpanded) renderSkillList();
+}
+
+// ==================== AGENT/SKILL LIST ====================
+function roleMatch(item) {
+  if (!currentRole) return true;
+  return item.roleTags.includes('all') || item.roleTags.includes(currentRole.tag);
+}
+
+function renderAgentList() {
+  const container = document.getElementById('agentListContent');
+  const search = (document.getElementById('agentSearchInput') && document.getElementById('agentSearchInput').value || '').toLowerCase();
+  if (!container) return;
+  const filter = currentFilter.agents;
+  let filtered = agents.filter(a => {
+    if (!roleMatch(a)) return false;
+    if (filter !== 'all' && a.status !== filter) return false;
+    if (search && !a.name.includes(search) && !a.id.toLowerCase().includes(search)) return false;
+    return true;
+  });
+  container.innerHTML = filtered.map(a => {
+    const statusClass = a.status === 'core' ? 'status-core' : a.status === 'new' ? 'status-new' : 'status-default';
+    return '<div class="item-card" data-open-agent="'+a.id+'">'+
+      '<div class="item-card-header"><span class="item-id">'+a.id+'</span><span class="item-name">'+a.name+'</span></div>'+
+      '<div class="item-desc">'+a.desc+'</div>'+
+      '<div class="item-meta"><span class="status-badge '+statusClass+'">'+(a.status==='core'?'核心':a.status==='new'?'新增':'常规')+'</span></div>'+
+    '</div>';
+  }).join('');
+  if (!filtered.length) container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">无匹配的Agent</div>';
+}
+
+function renderSkillList() {
+  const container = document.getElementById('skillListContent');
+  const search = (document.getElementById('skillSearchInput') && document.getElementById('skillSearchInput').value || '').toLowerCase();
+  if (!container) return;
+  const filter = currentFilter.skills;
+  let filtered = skills.filter(s => {
+    if (!roleMatch(s)) return false;
+    if (filter !== 'all' && s.status !== filter) return false;
+    if (search && !s.name.includes(search) && !s.id.toLowerCase().includes(search)) return false;
+    return true;
+  });
+  container.innerHTML = filtered.map(s => {
+    const statusClass = s.status === 'core' ? 'status-core' : s.status === 'new' ? 'status-new' : 'status-default';
+    return '<div class="item-card" data-open-skill="'+s.id+'">'+
+      '<div class="item-card-header"><span class="item-id">'+s.id+'</span><span class="item-name">'+s.name+'</span></div>'+
+      '<div class="item-desc">'+s.desc+'</div>'+
+      '<div class="item-meta"><span class="status-badge '+statusClass+'">'+(s.status==='core'?'核心':s.status==='new'?'新增':'常规')+'</span></div>'+
+    '</div>';
+  }).join('');
+  if (!filtered.length) container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">无匹配的Skill</div>';
+}
+
+function setAgentFilter(f, el) { currentFilter.agents = f; document.querySelectorAll('#agentListPanel .filter-tab').forEach(t=>t.classList.remove('active')); el.classList.add('active'); renderAgentList(); }
+function setSkillFilter(f, el) { currentFilter.skills = f; document.querySelectorAll('#skillListPanel .filter-tab').forEach(t=>t.classList.remove('active')); el.classList.add('active'); renderSkillList(); }
+function filterAgents() { renderAgentList(); }
+function filterSkills() { renderSkillList(); }
+
+// ==================== RIGHT PANEL ====================
+function renderRightPanel() {
+  const container = document.getElementById('rightPanelContent');
+  if (!currentRole) { container.innerHTML = ''; return; }
+  const roleAgents = agents.filter(a => roleMatch(a));
+  const roleSkills = skills.filter(s => roleMatch(s));
+  container.innerHTML =
+    '<div class="info-card">'+
+      '<div class="info-card-title">角色信息</div>'+
+      '<div class="stat-row"><span class="stat-label">角色</span><span class="stat-value">'+currentRole.name+'</span></div>'+
+      '<div class="stat-row"><span class="stat-label">层级</span><span class="stat-value">'+currentRole.level+'</span></div>'+
+      '<div class="stat-row"><span class="stat-label">可用Agent</span><span class="stat-value">'+roleAgents.length+'</span></div>'+
+      '<div class="stat-row"><span class="stat-label">可用Skill</span><span class="stat-value">'+roleSkills.length+'</span></div>'+
+    '</div>'+
+    '<div class="info-card">'+
+      '<div class="info-card-title">快捷Agent</div>'+
+      '<div class="chip-list">'+roleAgents.slice(0,5).map(function(a){return '<span class="chip" data-aid="'+a.id+'">'+a.id+' '+a.name+'</span>';}).join('')+'</div>'+
+    '</div>'+
+    '<div class="info-card">'+
+      '<div class="info-card-title">快捷Skill</div>'+
+      '<div class="chip-list">'+roleSkills.slice(0,5).map(function(s){return '<span class="chip" data-sid="'+s.id+'">'+s.id+' '+s.name+'</span>';}).join('')+'</div>'+
+    '</div>';
+}
+
+// ==================== PARAMETER PANEL ====================
+function openParamPanel(item, type) {
+  try {
+    console.log('openParamPanel called', item && item.id, type);
+    const _welc = document.getElementById('welcomeMsg'); if (_welc) _welc.style.display = 'none';
+    const _demo = document.getElementById('msg_demo'); if (_demo) _demo.remove();
+    selectedItemForParam = {item, type};
+    const msgId = 'msg_' + Date.now();
+    const label = type === 'agent' ? 'Agent' : 'Skill';
+    const chipHtml = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">'+
+      '<span style="background:#E8F1FA;color:#4A90D9;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:600;">'+label+'</span>'+
+      '<span style="font-size:14px;font-weight:600;">' + item.id + ' ' + item.name + '</span></div>';
+    const paramHtml = buildParamForm(item, msgId, type);
+    const fullHtml = chipHtml + paramHtml;
+    // Direct DOM insert for reliability
+    const container = document.getElementById('messagesContainer');
+    const div = document.createElement('div');
+    div.className = 'msg ai';
+    div.id = msgId;
+    const time = new Date().toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'});
+    div.innerHTML = '<div class="msg-avatar ai"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><div><div class="msg-bubble">' + fullHtml + '</div><div class="msg-time">' + time + '</div></div>';
+    container.appendChild(div);
+    document.getElementById('chatArea').scrollTop = document.getElementById('chatArea').scrollHeight;
+  } catch(e) {
+    console.error('openParamPanel ERROR:', e);
+    alert('Error: ' + e.message);
+  }
+}
+
+function buildParamForm(item, msgId, type) {
+  console.log('buildParamForm start', item.id, item.params && item.params.length);
+  let html = '<div class="param-card" id="paramCard_' + msgId + '">';
+  html += '<div class="param-card-header">';
+  html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="' + (item.status==='core'?'#1890FF':'#52C41A') + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>';
+  html += '<span class="param-card-title">' + item.id + ' ' + item.name + ' - 参数配置</span>';
+  html += '</div>';
+
+  if (!item.params || item.params.length === 0) {
+    html += '<div style="font-size:13px;color:var(--text-secondary);padding:12px 0;">此功能无需配置参数</div>';
+  } else {
+    item.params.forEach(p => {
+      const showIfAttr = p.showIf ? ' data-showif="' + p.showIf + '"' : '';
+      const showIfStyle = p.showIf ? ' style="display:none"' : '';
+      html += '<div class="param-field param-field-' + p.name + '"' + showIfAttr + showIfStyle + '>';
+      html += '<label class="param-label">' + p.label + (p.optional ? ' (可选)' : '') + '</label>';
+      if (p.hint) html += '<div class="param-hint">' + p.hint + '</div>';
+
+      if (p.type === 'select') {
+        html += '<select class="param-select param-input-' + p.name + '" data-param="' + p.name + '">';
+        p.options.forEach(opt => {
+          const sel = opt === p.default ? ' selected' : '';
+          html += '<option value="' + opt + '"' + sel + '>' + opt + '</option>';
+        });
+        html += '</select>';
+      } else if (p.type === 'multi-select') {
+        html += '<div class="param-checkbox-group">';
+        const defaults = p.default || [];
+        p.options.forEach(opt => {
+          const sel = defaults.includes(opt) ? ' selected' : '';
+          const checked = defaults.includes(opt) ? ' checked' : '';
+          html += '<label class="param-checkbox-item' + sel + '">';
+          html += '<input type="checkbox" data-param="' + p.name + '" value="' + opt + '"' + checked + '>' + opt + '</label>';
+        });
+        html += '</div>';
+      } else if (p.type === 'text') {
+        const ro = p.readonly ? ' readonly' : '';
+        const val = p.default || '';
+        html += '<input type="text" class="param-input param-input-' + p.name + '" data-param="' + p.name + '" placeholder="' + (p.placeholder || '') + '" value="' + val + '"' + ro + '>';
+      } else if (p.type === 'number') {
+        const val = p.default !== undefined ? p.default : '';
+        const step = p.step || 1;
+        const min = p.min !== undefined ? ' min="' + p.min + '"' : '';
+        const max = p.max !== undefined ? ' max="' + p.max + '"' : '';
+        html += '<input type="number" class="param-input param-input-' + p.name + '" data-param="' + p.name + '" placeholder="' + (p.placeholder || '') + '" value="' + val + '" step="' + step + '"' + min + max + '>';
+      } else if (p.type === 'date') {
+        html += '<input type="date" class="param-input param-input-' + p.name + '" data-param="' + p.name + '" value="' + (p.default || '') + '">';
+      } else if (p.type === 'daterange') {
+        html += '<div style="display:flex;gap:8px;align-items:center;">';
+        html += '<input type="date" class="param-input param-input-' + p.name + '-start" value="' + (p.start || '') + '" style="flex:1">';
+        html += '<span style="color:var(--text-muted);">至</span>';
+        html += '<input type="date" class="param-input param-input-' + p.name + '-end" value="' + (p.end || '') + '" style="flex:1">';
+        html += '</div>';
+      } else if (p.type === 'file') {
+        html += '<input type="file" class="param-input param-input-' + p.name + '" data-param="' + p.name + '" accept="' + (p.accept || '*') + '">';
+      }
+      html += '</div>';
+    });
+  }
+
+  html += '<div class="param-meta">';
+  html += '<div><strong>数据来源(内部):</strong> ' + (item.dataSources && item.dataSources.internal || '-') + '</div>';
+  if (item.dataSources && item.dataSources.external) html += '<div><strong>数据来源(外部):</strong> ' + item.dataSources.external + '</div>';
+  html += '<div><strong>预计耗时:</strong> 约 ' + (item.status === 'core' ? '3-5' : '2-4') + ' 秒</div>';
+  html += '</div>';
+
+  html += '<div class="param-actions">';
+  html += '<button class="btn btn-secondary param-cancel-btn" data-cancel-card="paramCard_' + msgId + '">取消</button>';
+  html += '<button class="btn btn-primary param-execute-btn" data-exec-id="' + item.id + '" data-exec-status="' + (item.status || '') + '" data-exec-msgid="' + msgId + '" data-exec-type="' + type + '">确认执行</button>';
+  html += '</div>';
+  html += '</div>';
+  console.log('buildParamForm done, html length', html.length);
+  return html;
+}
+
+function handleParamChange(el) {
+  const card = el.closest('.param-card');
+  if (!card) return;
+  const allFields = card.querySelectorAll('.param-field[data-showif]');
+  allFields.forEach(f => {
+    const showIf = f.dataset.showif;
+    if (!showIf) return;
+    const [paramName, expectedValue] = showIf.split('=');
+    const currentVal = (function(__e){return __e?__e.value:undefined;})(card.querySelector('.param-input-' + paramName));
+    f.style.display = (currentVal === expectedValue) ? '' : 'none';
+  });
+}
+
+function toggleMultiSelect(el) {
+  el.parentElement.classList.toggle('selected', el.checked);
+  var group = el.closest('.param-checkbox-group');
+  if (!group) return;
+  var ALL = ['全部','全部品类','全部门店','全部渠道','全部区域'];
+  var pname = el.getAttribute('data-param');
+  var boxes = group.querySelectorAll('input[type="checkbox"][data-param="' + pname + '"]');
+  var isAll = ALL.indexOf(el.value) >= 0;
+  if (el.checked && isAll) {
+    boxes.forEach(function(b){ if(b!==el){ b.checked=false; b.parentElement.classList.remove('selected'); } });
+  } else if (el.checked && !isAll) {
+    boxes.forEach(function(b){ if(ALL.indexOf(b.value)>=0){ b.checked=false; b.parentElement.classList.remove('selected'); } });
+  }
+}
+
+function cancelParam(cardId) {
+  const card = document.getElementById(cardId);
+  if (card) card.style.opacity = '0.5';
+}
+
+function getParamValues(item, msgId) {
+  const card = document.getElementById('paramCard_' + msgId);
+  if (!card) return {};
+  const values = {};
+  (item.params || []).forEach(p => {
+    if (p.type === 'multi-select') {
+      const checked = Array.from(card.querySelectorAll('input[data-param="' + p.name + '"]:checked')).map(cb => cb.value);
+      values[p.name] = checked;
+    } else if (p.type === 'daterange') {
+      values[p.name] = {
+        start: (function(__e){return __e?__e.value:'';})(card.querySelector('.param-input-' + p.name + '-start')) || '',
+        end: (function(__e){return __e?__e.value:'';})(card.querySelector('.param-input-' + p.name + '-end')) || ''
+      };
+    } else if (p.type === 'file') {
+      const fileInput = card.querySelector('.param-input-' + p.name);
+      values[p.name] = (fileInput&&fileInput.files&&fileInput.files[0]?fileInput.files[0].name:undefined) || '(未选择文件)';
+    } else {
+      values[p.name] = (function(__e){return __e?__e.value:'';})(card.querySelector('.param-input-' + p.name)) || '';
+    }
+  });
+  return values;
+}
+
+function formatParamValues(values) {
+  return Object.entries(values).map(([k, v]) => {
+    if (Array.isArray(v)) return k + ': ' + v.join(', ');
+    if (typeof v === 'object') return k + ': ' + (v.start && v.end ? v.start + ' 至 ' + v.end : JSON.stringify(v));
+    return k + ': ' + v;
+  }).join(' | ');
+}
+
+// ==================== EXECUTION ====================
+function executeItem(id, status, msgId, type) {
+  const arr = type === 'agent' ? agents : skills;
+  const item = arr.find(x => x.id === id);
+  if (!item) return;
+  const values = getParamValues(item, msgId);
+  const card = document.getElementById('paramCard_' + msgId);
+  if (card) card.style.display = 'none';
+
+  // Add loading message
+  const loadingId = 'loading_' + Date.now();
+  const userMsg = '执行 ' + item.id + ' ' + item.name + (Object.keys(values).length ? ' (' + formatParamValues(values) + ')' : '');
+  addUserMessage(userMsg);
+  addAIMessage('<div style="display:flex;align-items:center;gap:10px;padding:12px 0;"><span class="loading-spinner"></span><span>正在执行 ' + item.id + ' ' + item.name + '...</span></div>', loadingId);
+
+  // Simulate execution
+  setTimeout(() => {
+    const loadingEl = document.getElementById(loadingId);
+    if (loadingEl) loadingEl.remove();
+    showExecutionResult(item, values, type);
+  }, 2500 + Math.random() * 1500);
+}
+
+function showExecutionResult(item, values, type) {
+  const label = type === 'agent' ? 'Agent' : 'Skill';
+  const resultHtml = generateResultHtml(item, values, type);
+  addAIMessage(resultHtml);
+}
+
+// ==================== RESULT RENDERERS (task-specific, param-aware) ====================
+function rKPI(arr){
+  var h='<div style="display:flex;flex-wrap:wrap;gap:10px;margin:8px 0;">';
+  arr.forEach(function(k){
+    h+='<div style="flex:1;min-width:110px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;">'+
+       '<div style="font-size:12px;color:var(--text-muted);">'+k.label+'</div>'+
+       '<div style="font-size:20px;font-weight:700;color:'+(k.color||'var(--primary)')+';margin-top:2px;line-height:1.2;">'+k.value+'</div>'+
+       (k.sub?'<div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">'+k.sub+'</div>':'')+
+       '</div>';
+  });
+  return h+'</div>';
+}
+function rBars(arr){
+  var h='<div style="margin:8px 0;">';
+  arr.forEach(function(b){
+    h+='<div style="margin-bottom:10px;">'+
+       '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;gap:8px;"><span>'+b.label+'</span><span style="font-weight:600;white-space:nowrap;">'+b.value+'</span></div>'+
+       '<div style="background:#EEF2F7;border-radius:6px;height:10px;overflow:hidden;"><div style="width:'+b.pct+'%;height:100%;background:'+(b.color||'var(--primary)')+';border-radius:6px;"></div></div>'+
+       '</div>';
+  });
+  return h+'</div>';
+}
+function rTable(headers, rows){
+  var h='<div style="overflow-x:auto;margin:8px 0;"><table style="width:100%;border-collapse:collapse;font-size:13px;">';
+  h+='<thead><tr>';
+  headers.forEach(function(hd){ h+='<th style="text-align:left;padding:8px;border-bottom:2px solid var(--border);color:var(--text-secondary);font-weight:600;white-space:nowrap;">'+hd+'</th>'; });
+  h+='</tr></thead><tbody>';
+  rows.forEach(function(r){ h+='<tr>'; r.forEach(function(c){ h+='<td style="padding:8px;border-bottom:1px solid var(--border);">'+c+'</td>'; }); h+='</tr>'; });
+  return h+'</tbody></table></div>';
+}
+function rTimeline(arr){
+  var h='<div style="margin:8px 0;">';
+  arr.forEach(function(t,i){
+    h+='<div style="display:flex;gap:10px;padding-bottom:'+(i<arr.length-1?'14px':'0')+';">'+
+       '<div style="flex-shrink:0;width:50px;font-size:12px;font-weight:600;color:var(--primary);">'+t.time+'</div>'+
+       '<div style="flex-shrink:0;width:10px;height:10px;border-radius:50%;background:var(--primary);margin-top:3px;"></div>'+
+       '<div style="font-size:13px;"><div style="font-weight:600;">'+t.title+'</div>'+(t.sub?'<div style="color:var(--text-secondary);font-size:12px;">'+t.sub+'</div>':'')+'</div>'+
+       '</div>';
+  });
+  return h+'</div>';
+}
+function rCalendar(cells){
+  var h='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0;">';
+  cells.forEach(function(c){
+    h+='<div style="border:1px solid var(--border);border-radius:8px;padding:8px;min-height:64px;background:'+(c.dim?'#FAFAFA':'var(--bg)')+';">'+
+       '<div style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:4px;">'+c.label+'</div>';
+    (c.items||[]).forEach(function(it){ h+='<div style="font-size:11px;background:var(--primary-light);color:var(--primary);border-radius:4px;padding:2px 6px;margin-bottom:3px;line-height:1.3;">'+it+'</div>'; });
+    if(!c.items||!c.items.length) h+='<div style="font-size:11px;color:var(--text-muted);">—</div>';
+    h+='</div>';
+  });
+  return h+'</div>';
+}
+function rDoc(sections){
+  return sections.map(function(s){
+    return '<div style="margin:8px 0;"><div style="font-weight:600;font-size:13px;color:var(--text);margin-bottom:3px;">'+s.h+'</div>'+
+      '<div style="font-size:13px;color:var(--text-secondary);line-height:1.7;">'+s.body+'</div></div>';
+  }).join('');
+}
+function rTags(arr){
+  return '<div style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0;">'+arr.map(function(t){
+    return '<span style="font-size:12px;background:var(--primary-light);color:var(--primary);border-radius:14px;padding:3px 10px;">'+t+'</span>';
+  }).join('')+'</div>';
+}
+function rProgress(label,pct,color){
+  return '<div style="margin:6px 0;"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px;"><span>'+label+'</span><span style="font-weight:600;">'+pct+'%</span></div>'+
+    '<div style="background:#EEF2F7;border-radius:6px;height:8px;overflow:hidden;"><div style="width:'+pct+'%;height:100%;background:'+(color||'var(--primary)')+';"></div></div></div>';
+}
+
+function renderResultBody(item, values){
+  var v = values || {};
+  switch(item.id){
+    case 'A1': {
+      var region=v.range||'华东大区';
+      var topN=Math.min(parseInt(v.topN,10)||20, 20);
+      var chains=['全家','罗森','7-Eleven','喜士多','便利蜂'];
+      var dists=['南京西路','淮海中路','南京东路','西湖大道','陆家嘴','世纪大道','张江','人民广场','五角场','徐家汇','中山公园','静安寺'];
+      var reasons=['周边3km无竞品','写字楼密集','交通枢纽','客流量大','高端商圈','社区成熟','学区周边','地铁口直达','商业综合体','新建小区'];
+      var rows=[];
+      for(var i=0;i<topN;i++){ rows.push([String(i+1), chains[i%chains.length]+'-'+dists[i%dists.length]+'店', String(92-i*2), reasons[i%reasons.length]]); }
+      return '<div style="margin-bottom:6px;">已在 <b>'+region+'</b> 识别 Top '+topN+' 潜力门店：</div>'+
+        rTable(['排名','门店','潜力分','推荐理由'],rows);
+    }
+    case 'A2': {
+      var cat=v.skuCategory||'气泡茶', days=v.forecastDays||'7天';
+      var data=(cat==='全部'||cat==='全部品类')
+        ? [{label:'气泡茶330ml · 日均1,250箱',value:'补3,500箱',pct:70,color:'#00C39A'},{label:'矿泉水550ml · 日均2,100箱',value:'补5,800箱',pct:92},{label:'果汁250ml · 日均680箱',value:'补1,900箱',pct:45}]
+        : [{label:cat+' 主SKU · 日均1,250箱',value:'补3,500箱',pct:70,color:'#00C39A'},{label:cat+' 次SKU · 日均640箱',value:'补1,800箱',pct:42}];
+      return '<div style="margin-bottom:6px;">未来 '+days+' <b>'+cat+'</b> SKU 级销量预测与建议补货量：</div>'+rBars(data)+
+        '<div style="font-size:12px;color:var(--text-secondary);">库存风险：<span style="color:#52C41A;font-weight:600;">绿色（安全）</span></div>';
+    }
+    case 'A3': case 'S1': {
+      var stops=[
+        {time:'08:30',title:'全家-南京西路店',sub:'补货+新品（老板上午在店概率高）'},
+        {time:'09:45',title:'罗森-淮海中路店',sub:'陈列检查'},
+        {time:'11:00',title:'喜士多-南京东路店',sub:'客情维护'},
+        {time:'13:30',title:'7-Eleven-西湖大道店',sub:'库存预警处理'},
+        {time:'14:40',title:'全家-陆家嘴店',sub:'新品推广'},
+        {time:'15:50',title:'罗森-世纪大道店',sub:'补货'},
+        {time:'16:40',title:'喜士多-张江店',sub:'陈列整改'},
+        {time:'17:30',title:'7-Eleven-金桥店',sub:'客情维护'}];
+      return '<div style="margin-bottom:8px;">最优拜访路线已规划（<b>共 '+stops.length+' 家</b>，预计总耗时 6.5 小时，已避开早高峰）：</div>'+rTimeline(stops)+
+        '<div style="font-size:12px;color:var(--text-secondary);margin-top:6px;">全程预计节省 45 分钟行驶时间。</div>';
+    }
+    case 'A4': {
+      var ct=v.checkType||'两者都执行', h='';
+      if(ct==='照片合规审核'||ct==='两者都执行'){
+        h+='<div style="font-weight:600;margin:4px 0;">陈列合规审核</div>'+rKPI([{label:'通过',value:'85%',color:'#52C41A'},{label:'驳回',value:'10%',color:'#F5222D'},{label:'存疑',value:'5%',color:'#FAAD14'}]);
+      }
+      if(ct==='ROI费效计算'||ct==='两者都执行'){
+        h+='<div style="font-weight:600;margin:8px 0 4px;">ROI 费效计算</div>'+rKPI([{label:'ROI',value:'1.35',color:'#00C39A',sub:'投入产出良好'},{label:'增量销量',value:'+12.5%',sub:'vs 对照组'},{label:'核销金额',value:'¥48.6万'}]);
+      }
+      return '<div style="margin-bottom:4px;">审核类型：<b>'+ct+'</b></div>'+h;
+    }
+    case 'A5': {
+      var sc=v.scenario||'买二送一';
+      return '<div style="margin-bottom:6px;">蒙特卡洛模拟（'+(v.iterations||'5000次')+'）各方案达成概率，当前选择「<b>'+sc+'</b>」：</div>'+
+        rBars([
+          {label:'买二送一 → 提升20-25%',value:'78%',pct:78,color: sc==='买二送一'?'#00C39A':'#9DBFF0'},
+          {label:'降价10% → 提升15-20%',value:'65%',pct:65,color: sc==='降价10%'?'#00C39A':'#9DBFF0'},
+          {label:'满100减20 → 提升10-15%',value:'52%',pct:52,color: sc==='满100减20'?'#00C39A':'#9DBFF0'}])+
+        '<div style="font-size:12px;color:var(--text-secondary);">价格弹性系数 -1.8；推荐方案：买二送一</div>';
+    }
+    case 'A10': return rKPI([{label:'分销率',value:'68%',sub:'目标80% (-12%)',color:'#FAAD14'},{label:'首购率',value:'15%',sub:'高于历史均值',color:'#52C41A'},{label:'第14天日销',value:'1,200箱',sub:'稳步上升'}]);
+    case 'A14': {
+      var cat=v.category||'全部品类', year=v.year||'2026';
+      var planMap={'7月':['气泡茶'],'8月':['矿泉水'],'9月':['果汁'],'10月':['气泡茶'],'11月':['果汁'],'12月':['矿泉水']};
+      var act={'气泡茶':'气泡茶清凉一夏 ROI1.8','矿泉水':'矿泉水买二送一 ROI1.5','果汁':'果汁新品推广 ROI2.1'};
+      var cells=Object.keys(planMap).map(function(m){
+        var items=[]; planMap[m].forEach(function(c){ if(cat==='全部品类'||cat===c) items.push(act[c]); });
+        return {label:m, items:items, dim:items.length===0};
+      });
+      var note = cat==='全部品类' ? '已平衡各品类冲突' : '已按「'+cat+'」筛选，仅显示该品类活动';
+      return '<div style="margin-bottom:4px;">'+year+' 年下半年最优促销日历（'+note+'）：</div>'+rCalendar(cells);
+    }
+    case 'S5': {
+      var fmt=v.reportFormat||'标准版(3-5页)', region=v.region||'华东';
+      var h='<div style="margin-bottom:6px;">'+region+'区机会门店分析（<b>'+fmt+'</b>）：</div>';
+      h+=rKPI([{label:'机会门店',value:'45家'},{label:'高机会',value:'12家',color:'#52C41A',sub:'优先投入'},{label:'中机会',value:'20家',color:'#FAAD14'},{label:'低机会',value:'13家',color:'var(--text-muted)'}]);
+      if(fmt.indexOf('简洁')<0){
+        h+=rTable(['门店','机会分','主要机会点'],[['全家-南京西路店','92','品类渗透+陈列改善'],['罗森-淮海中路店','88','销量增长空间大'],['喜士多-南京东路店','85','竞品压力下仍增长']]);
+      }
+      if(fmt.indexOf('详细')>=0){
+        h+='<div style="margin-top:8px;line-height:1.7;"><b>问题根因：</b>竞品压力为最大挑战；3 家门店陈列排面不足。<br><b>差异化策略：</b>高机会门店增加陈列投入+新品首发；中机会门店促销响应测试。<br><b>预期收益：</b>高机会门店预计季度增量 +18%。</div>';
+      } else {
+        h+='<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">（简洁版仅含概览；选「详细版」可查看根因与策略建议）</div>';
+      }
+      h+='<div style="margin-top:10px;"><button class="btn btn-secondary" onclick="window.print()" style="font-size:13px;padding:6px 14px;">📄 导出 PDF 报告</button></div>';
+      return h;
+    }
+    case 'S32': {
+      return rKPI([{label:'营收',value:'¥580万'},{label:'毛利率',value:'18.2%',color:'#00C39A'},{label:'净利率',value:'6.5%'}])+
+        rBars([{label:'气泡茶 贡献毛利',value:'52%',pct:52,color:'#00C39A'},{label:'矿泉水 贡献毛利',value:'28%',pct:28},{label:'果汁 贡献毛利',value:'20%',pct:20}]);
+    }
+    case 'A7': return '<div>'+
+      '<div style="padding:6px 10px;background:#FFF1F0;border-left:3px solid #F5222D;border-radius:4px;margin-bottom:6px;">🔴 华东区气泡茶库存低于安全线 3 天</div>'+
+      '<div style="padding:6px 10px;background:#FFF1F0;border-left:3px solid #F5222D;border-radius:4px;margin-bottom:6px;">🔴 华南区竞品（元气森林）降价 15%</div>'+
+      '<div style="padding:6px 10px;background:#FFFBE6;border-left:3px solid #FAAD14;border-radius:4px;">🟡 华北区 3 家门店连续 7 天未拜访</div></div>';
+    case 'A22': return rKPI([{label:'今日销量',value:'128瓶',sub:'目标 150'},{label:'达成率',value:'85%',color:'#FAAD14'},{label:'提成预估',value:'+¥256'},{label:'排名',value:'第3名',sub:'共8人'}]);
+    case 'A23': {
+      var store=v.storeId||'全家-南京西路店', obj=v.objective||'平衡型', ws=v.weekStart||'2026-06-09';
+      var wd=['周一','周二','周三','周四','周五','周六','周日'];
+      var base=new Date(ws); if(isNaN(base.getTime())) base=new Date('2026-06-09');
+      var headers=['导购'].concat(wd.map(function(d,i){ var dt=new Date(base.getTime()+i*86400000); return d+'<br><span style="font-size:10px;color:var(--text-muted);font-weight:400;">'+(dt.getMonth()+1)+'/'+dt.getDate()+'</span>'; }));
+      function sb(code){ var m={'早':['#E6F4FF','#1890FF'],'晚':['#FFF4E6','#FA8C16'],'休':['#F0F0F0','#999999']}, c=m[code]||m['休']; return '<span style="display:inline-block;min-width:28px;text-align:center;background:'+c[0]+';color:'+c[1]+';border-radius:4px;padding:2px 5px;font-size:12px;">'+code+'</span>'; }
+      var roster=[['小美','早','早','休','晚','晚','早','早'],['小李','晚','晚','早','早','休','晚','晚'],['小王','休','早','晚','晚','早','早','休']];
+      var rows=roster.map(function(r){ return [r[0]].concat(r.slice(1).map(sb)); });
+      var sum={'高峰覆盖最大化':{cov:'96%',cost:'+5%'},'人力成本最低':{cov:'88%',cost:'-8%'},'平衡型':{cov:'92%',cost:'不变'}}[obj]||{cov:'92%',cost:'不变'};
+      return '<div style="margin-bottom:6px;"><b>'+store+'</b> 周排班表（'+ws+' 起 · 优化目标：'+obj+'）：</div>'+
+        rTable(headers,rows)+
+        '<div style="font-size:12px;color:var(--text-secondary);margin:6px 0;">班次：早 08–16 ｜ 晚 14–22 ｜ 休 休息　·　周末双岗保障高峰</div>'+
+        rKPI([{label:'高峰覆盖率',value:sum.cov,color:'#52C41A',sub:'优化前85%'},{label:'人力成本',value:sum.cost},{label:'工时公平性',value:'差异<10%',color:'#00C39A'}]);
+    }
+    case 'A6': return rKPI([{label:'组织效能',value:'78',sub:'满分100',color:'#52C41A'}])+
+      rBars([{label:'拜访效率',value:'85',pct:85,color:'#00C39A'},{label:'订单转化',value:'72',pct:72},{label:'目标达成',value:'80',pct:80},{label:'新品推广',value:'63',pct:63,color:'#FAAD14'}])+
+      '<div style="font-size:12px;color:var(--text-secondary);">低效单元：华东C区（建议重点辅导）</div>';
+    case 'A8': return rKPI([{label:'综合绩效',value:'76',sub:'Top30%'},{label:'拜访效率',value:'85',color:'#52C41A'},{label:'订单转化',value:'68',color:'#FAAD14',sub:'需提升'}])+
+      rDoc([{h:'能力短板',body:'新品推荐成功率仅 12%，低于团队均值 25%。'},{h:'辅导话术（AI 生成）',body:'"王老板，这款新品在隔壁罗森两周动销 120 箱——进 10 箱、压金小、约 5 天回本，先上一组试试？"'},{h:'改进行动',body:'本周加练新品话术 2 次；主管跟访 1 次并点评。'}]);
+    case 'A9': return '<div style="margin-bottom:6px;">临期/滞销清单（60 天内）：</div>'+
+      rTable(['SKU','库存','到期','处理方案','预计减损'],[['气泡茶330ml','800箱','45天','内部调拨华南','¥2.1万'],['果汁250ml','350箱','30天','捆绑促销 8 折','¥1.3万'],['矿泉水550ml','120箱','58天','买赠搭售','¥0.8万']])+
+      rKPI([{label:'合计可减损',value:'¥4.2万',color:'#52C41A'}]);
+    case 'A11': { var c11=v.category||v.skuCategory||'气泡茶';
+      return '<div style="margin-bottom:6px;"><b>'+c11+'</b> 品类趋势（近 6 个月）：</div>'+
+      rBars([{label:'白桃味',value:'+35%',pct:90,color:'#00C39A'},{label:'无糖系列',value:'+28%',pct:75},{label:'大包装',value:'+12%',pct:40},{label:'经典原味',value:'-6%',pct:18,color:'#FAAD14'}])+
+      rDoc([{h:'消费者需求变化',body:'"零糖"提及率 +42%；运动场景占比升至 28%。'},{h:'新品方向建议',body:'布局白桃味无糖大包装，卡位增速最快象限。'}]); }
+    case 'A12': return '<div style="margin-bottom:6px;">渠道客户分层画像：</div>'+
+      rKPI([{label:'A级',value:'12家',color:'#52C41A',sub:'月销50万+'},{label:'B级',value:'28家',sub:'增长潜力'},{label:'C级',value:'15家',color:'#FAAD14'},{label:'D级',value:'5家',color:'#F5222D',sub:'流失风险'}])+
+      rTable(['客户','分层','月均销售','流失风险'],[['全家华东','A','58万','低'],['罗森华东','A','52万','低'],['某连锁B','B','22万','中'],['某夫妻店','D','3万','高']]);
+    case 'A13': return rKPI([{label:'价格合规率',value:'97.5%',color:'#52C41A'},{label:'乱价门店',value:'15家',color:'#FAAD14'},{label:'窜货嫌疑',value:'3家',color:'#F5222D'}])+
+      rTable(['门店','SKU','标准价','实际价','偏离'],[['某超市A','气泡茶330ml','5.0','5.9','+18%'],['某店B','矿泉水550ml','2.0','1.6','-20%'],['某店C','果汁250ml','6.0','7.0','+17%']]);
+    case 'A15': return rKPI([{label:'审计单据',value:'1,240笔'},{label:'异常',value:'37笔',color:'#FAAD14'},{label:'预计节约',value:'¥12.6万',color:'#52C41A'}])+
+      '<div style="margin:6px 0;">异常清单（节选）：</div>'+
+      rTable(['活动','异常类型','证据','建议'],[['气泡茶清凉一夏','陈列照片重复','3店雷同','驳回核销'],['矿泉水买赠','超预算15%','TPM比对','约谈整改'],['果汁推广','虚报门店数','POS无销量','扣减费用']]);
+    case 'A16': return rKPI([{label:'数据质量分',value:'86',sub:'满分100',color:'#52C41A'},{label:'问题字段',value:'24个',color:'#FAAD14'},{label:'高危',value:'3个',color:'#F5222D'}])+
+      rTable(['数据表','问题','占比','修复建议'],[['门店主数据','经纬度缺失','8%','补采集'],['拜访记录','打卡异常','5%','规则校验'],['订单','SKU编码不一致','3%','映射清洗']]);
+    case 'A17': return '<div style="margin-bottom:6px;">AutoML 调参 · 模型对比：</div>'+
+      rTable(['模型','AUC','提升','状态'],[['LightGBM(调参后)','0.91','+6.2%','✅ 推荐部署'],['XGBoost','0.88','基线','—'],['RandomForest','0.83','-5%','—']])+
+      rKPI([{label:'最优模型',value:'LightGBM',color:'#52C41A'},{label:'性能提升',value:'+6.2%'},{label:'建议',value:'一键部署'}]);
+    case 'A18': return '<div style="margin-bottom:6px;">智能补货推荐单：</div>'+
+      rTable(['SKU','建议量','预期毛利','理由'],[['气泡茶330ml','30箱','¥420','动销快+周末'],['矿泉水550ml','50箱','¥350','低于安全线'],['果汁250ml(新)','10箱','¥180','试销/高毛利']])+
+      rKPI([{label:'推荐成功率',value:'78%',sub:'历史同类',color:'#52C41A'},{label:'预期总毛利',value:'¥950'}]);
+    case 'A19': return rDoc([{h:'客户：全家-南京西路店（王老板）',body:'合作 3 年；偏好节前压货；上次承诺补气泡茶陈列位。'},{h:'关键客情',body:'女儿高考（6 月）；爱聊本地球队；忌迟到。'},{h:'下次拜访提醒',body:'6/12 前回访，兑现陈列位承诺 + 带新品试饮。'},{h:'个性化开场白（AI）',body:'"王哥，高考结束了吧，辛苦一阵！上次说的端架我给您协调好了……"'}]);
+    case 'A20': return rKPI([{label:'执行质量分',value:'82',sub:'满分100',color:'#52C41A'},{label:'门店排名',value:'第6/45'},{label:'待整改',value:'3项',color:'#FAAD14'}])+
+      rBars([{label:'陈列规范',value:'90',pct:90,color:'#00C39A'},{label:'价格标签',value:'85',pct:85},{label:'库存健康',value:'78',pct:78},{label:'促销执行',value:'70',pct:70,color:'#FAAD14'}])+
+      '<div style="font-size:12px;color:var(--text-secondary);">问题：端架缺货、2 处价签错误。</div>';
+    case 'A21': return rKPI([{label:'整改项',value:'28'},{label:'已闭环',value:'21',color:'#52C41A'},{label:'进行中',value:'5',color:'#FAAD14'},{label:'超期',value:'2',color:'#F5222D'}])+
+      rProgress('整改闭环率',75,'#52C41A')+
+      rTable(['门店','问题','负责人','状态'],[['全家-南京西路','端架缺货','小美','✅ 已闭环'],['罗森-淮海中路','价签错误','小李','🟡 进行中'],['7-11-西湖','陈列不达标','小王','🔴 超期2天']]);
+    case 'A24': return rKPI([{label:'建议订货',value:'¥86万'},{label:'周转天数',value:'18天',sub:'优化前25',color:'#52C41A'},{label:'预期利润',value:'+¥4.8万',color:'#00C39A'}])+
+      '<div style="margin:6px 0;">订货建议（Top SKU）：</div>'+
+      rTable(['SKU','建议订货','时机','供应商'],[['气泡茶330ml','500箱','本周','一级经销'],['矿泉水550ml','800箱','下周','厂直'],['果汁250ml','200箱','本周','一级经销']]);
+    case 'A25': return rKPI([{label:'信用评分',value:'82',sub:'满分100',color:'#52C41A'},{label:'信用等级',value:'A级'},{label:'建议额度',value:'¥50万'},{label:'坏账风险',value:'低',color:'#52C41A'}])+
+      rDoc([{h:'评估依据',body:'近 12 月回款准时率 96%；负债率 38%；合作 3 年无逾期。'},{h:'风险提示',body:'旺季备货资金占用偏高，建议额度分两期释放。'}]);
+    case 'A26': return rKPI([{label:'车辆利用率',value:'94%',color:'#52C41A',sub:'优化前78%'},{label:'配送门店',value:'12家'},{label:'预计完成',value:'15:30'}])+
+      '<div style="margin:6px 0;">最优配送路线：</div>'+
+      rTimeline([{time:'08:00',title:'装车出发（载重 94%）'},{time:'08:40',title:'全家-南京西路店',sub:'卸 30 箱'},{time:'09:30',title:'罗森-淮海中路店',sub:'卸 50 箱'},{time:'10:40',title:'7-Eleven-西湖大道店',sub:'卸 20 箱'},{time:'15:30',title:'返仓'}]);
+    case 'A27': return rKPI([{label:'应收合计',value:'¥128万'},{label:'即将到期',value:'¥32万',color:'#FAAD14'},{label:'已逾期',value:'¥8万',color:'#F5222D'}])+
+      rTable(['客户','金额','到期','状态'],[['某连锁A','¥18万','3天后','🟡 即将到期'],['某店B','¥5万','逾期7天','🔴 逾期'],['某店C','¥3万','逾期15天','🔴 逾期']])+
+      rDoc([{h:'催款话术（AI）',body:'"张总，本月对账 5 万这两天方便安排下不？月底厂里核数，先走掉省得影响您额度～"'}]);
+    case 'A28': return '<div style="margin-bottom:6px;">推荐 SKU 组合：</div>'+
+      rTable(['SKU','建议进货','周转天数','预期毛利'],[['气泡茶白桃330ml','40箱','9天','22%'],['矿泉水550ml','60箱','7天','15%'],['功能饮料250ml','20箱','12天','28%']])+
+      rDoc([{h:'选品理由（AI）',body:'白桃味处品类增速 Top；功能饮料补高毛利；矿泉水保流量。'}]);
+    case 'A29': { var sku29=v.sku||v.skuCategory||'气泡茶330ml';
+      return rKPI([{label:'建议零售价',value:'¥5.5',color:'#52C41A',sub:'现¥5.0'},{label:'价格弹性',value:'-1.8'},{label:'预期销量',value:'-6%'},{label:'预期利润',value:'+9%',color:'#00C39A'}])+
+      rDoc([{h:'测算（'+sku29+'）',body:'提价 10% → 销量降约 6%（弹性 -1.8），毛利净增约 9%。'},{h:'风险提示',body:'竞品(元气森林)同档 ¥5.8，提价空间安全；建议先 A 级店试点。'}]); }
+    case 'S2': { var act2=v.activityId||'气泡茶清凉一夏';
+      return '<div style="margin-bottom:6px;"><b>'+act2+'</b> 促销 Brief：</div>'+rDoc([
+      {h:'活动目标',body:'夏季旺季拉动气泡茶动销，目标增量 +20%，新客占比 30%。'},
+      {h:'机制',body:'买二送一（限 330ml）；端架 + 冰柜陈列。'},
+      {h:'物料清单',body:'爆炸贴×2、冰柜贴×1、堆头围膜×1、试饮装 50。'},
+      {h:'门店执行标准',body:'端架≥2 排面；试饮高峰时段 12-14 / 18-20。'},
+      {h:'KPI / 预算',body:'ROI 目标 ≥1.5；预算 ¥500/店；周报回收效果。'}]); }
+    case 'S3': return rDoc([
+      {h:'标题',body:'【厂家直补】气泡茶买二送一，进货就送冰柜贴！'},
+      {h:'正文',body:'王老板，夏天气泡茶动销翻倍，这次厂家直补买二送一，您进 10 箱多送 5 箱，端架我帮您布好，卖不动算我的～'},
+      {h:'行动号召',body:'回复"要"，今天下单明天到货。'},
+      {h:'适用渠道 / 版本',body:'微信、电话；另附 A/B 版（A 强调利润、B 强调动销）。'}]);
+    case 'S4': return '<div style="margin-bottom:6px;">多平台营销内容包：</div>'+rDoc([
+      {h:'小红书笔记',body:'"打工人续命水！0 糖气泡茶白桃味绝了🍑"——9 图种草正文已生成。'},
+      {h:'抖音脚本(15s)',body:'开盖特写 → 畅饮 → "夏天就要这口气泡感" → 购买引导。'},
+      {h:'朋友圈文案',body:'"这个夏天的快乐，3 块 5 就能买到 🫧"'},
+      {h:'发布时间建议',body:'小红书 周四 20:00；抖音 周五 12:00。'}])+rTags(['#0糖气泡茶','#夏日续命水','#白桃气泡']);
+    case 'S6': return '<div style="margin-bottom:6px;">经营周报（华东区 · 第23周）：</div>'+
+      rKPI([{label:'周销售',value:'¥860万',sub:'环比+6%',color:'#52C41A'},{label:'目标达成',value:'92%',color:'#FAAD14'},{label:'动销率',value:'88%'},{label:'新客',value:'+42家'}])+
+      rDoc([{h:'异常说明',body:'华东C区达成仅 78%，受竞品降价影响。'},{h:'下周计划',body:'C区启动买赠反击；推进气泡茶端架陈列。'}]);
+    case 'S7': { var comp7=v.competitor||'元气森林';
+      return '<div style="margin-bottom:6px;">竞品应对（'+comp7+'）：</div>'+rDoc([
+      {h:'竞品动作',body:comp7+' 气泡水降价 15%，主推买赠。'},
+      {h:'本品优势对比',body:'0 糖配方 + 本地化口味（白桃）+ 更高陈列费支持。'},
+      {h:'分层话术',body:'高管版：算总账保毛利；经理版：争端架；一线版："新口味 + 买赠不输价格"。'},
+      {h:'反击方案',body:'A 级店同步买赠 7 天 + 试饮，避免直接降价伤毛利。'}]); }
+    case 'S8': return rKPI([{label:'拜访',value:'8家',sub:'计划8'},{label:'订单',value:'6单',color:'#52C41A'},{label:'金额',value:'¥1.2万'},{label:'问题',value:'2项',color:'#FAAD14'}])+
+      rDoc([{h:'拜访汇总',body:'8 家全访，6 家下单；2 家缺货已补。'},{h:'问题反馈',body:'全家-南京西路端架被竞品占；罗森价签错误。'},{h:'明日计划',body:'回访 2 家未下单门店 + 新店开发 1 家。'}]);
+    case 'S9': { var q9=v.question||v.query||'华东区为何未达标';
+      return rDoc([{h:'问题',body:q9},{h:'数据事实',body:'华东达成 92%，其中 C 区仅 78% 拖累整体。'},{h:'趋势分析',body:'C 区连续 3 周下滑，与竞品 5 月降价时点吻合。'},{h:'根因推断',body:'竞品降价 + C 区 3 家门店陈列丢失。'},{h:'关联 Agent',body:'建议联动 A5 沙盘推演测算反击、A7 持续预警。'}]); }
+    case 'S10': return '<div style="margin-bottom:6px;">订单趋势（近 8 周）：</div>'+
+      rBars([{label:'第20周',value:'¥620万',pct:62},{label:'第21周',value:'¥680万',pct:68},{label:'第22周',value:'¥810万',pct:81,color:'#00C39A'},{label:'第23周',value:'¥860万',pct:86,color:'#00C39A'}])+
+      rDoc([{h:'异常检测 / 根因',body:'第22周跳增源于气泡茶促销；同比 +14%、环比 +6%。'}]);
+    case 'S11': return '<div style="margin-bottom:6px;">竞品动态周报：</div>'+
+      rTable(['竞品','动作','幅度','威胁'],[['元气森林','气泡水降价','-15%','🔴 高'],['农夫山泉','新品上市','茶π新味','🟡 中'],['可口可乐','陈列扩张','+端架','🟡 中']])+
+      rDoc([{h:'应对建议',body:'优先应对元气森林降价（见 S7 话术）；监控农夫新品动销。'}]);
+    case 'S12': return rKPI([{label:'合规率',value:'94%',color:'#52C41A'},{label:'巡检门店',value:'45家'},{label:'异常',value:'6家',color:'#FAAD14'}])+
+      rTable(['门店','问题','等级','整改'],[['某店A','陈列不达标','中','3日内'],['某店B','价签缺失','低','当日'],['某店C','过期物料','高','立即']]);
+    case 'S13': return '<div style="margin-bottom:6px;">Q3 费用预算编制：</div>'+
+      rBars([{label:'促销费',value:'¥260万',pct:52,color:'#00C39A'},{label:'陈列费',value:'¥120万',pct:24},{label:'人员激励',value:'¥80万',pct:16},{label:'物料',value:'¥40万',pct:8}])+
+      rKPI([{label:'总预算',value:'¥500万'},{label:'预期ROI',value:'1.6',color:'#52C41A'}]);
+    case 'S14': return rDoc([
+      {h:'陈列标准',body:'气泡茶端架 ≥2 排面，与竞品错位；冰柜黄金视线 1.2-1.6m。'},
+      {h:'检查表',body:'①端架到位 ②价签正确 ③冰柜温度 ④爆炸贴张贴 ⑤无临期混陈。'},
+      {h:'评分标准',body:'5 项各 20 分，≥80 合格，<60 限期整改。'}]);
+    case 'S15': return rDoc([
+      {h:'培训材料包',body:'《新品白桃气泡茶》导购速成。'},
+      {h:'PPT 大纲',body:'卖点 3 句话 → 价格体系 → 异议应对 → 实操演练。'},
+      {h:'话术',body:'"0 糖 0 卡白桃味，夏天爆款，先尝一口？"'},
+      {h:'测试题 / 计划',body:'10 题理论 + 1 次现场演练；本周五考核。'}]);
+    case 'S16': return rDoc([
+      {h:'门店信息',body:'全家-南京西路（王老板）：A 级、偏好节前压货。'},
+      {h:'推荐话术',body:'"王哥，气泡茶端架我布好了，再上一组白桃新味试试？"'},
+      {h:'订单建议',body:'气泡茶 30 箱、矿泉水 50 箱、新品 10 箱。'},
+      {h:'注意事项',body:'勿迟到；兑现上次陈列承诺。'}]);
+    case 'S17': return '<div style="margin-bottom:6px;">督导周计划：</div>'+
+      rTimeline([{time:'周一',title:'华东A线 3 店',sub:'重点查陈列'},{time:'周二',title:'华东B线 3 店',sub:'价签+库存'},{time:'周三',title:'整改复查',sub:'上周超期 2 店'},{time:'周四',title:'华东C线 3 店',sub:'竞品监控'},{time:'周五',title:'周会 + 报表'}])+
+      rKPI([{label:'计划门店',value:'12家'},{label:'预计耗时',value:'4.5天'}]);
+    case 'S18': return rDoc([
+      {h:'开场白',body:'"夏天来瓶冰的气泡茶吗？刚上的白桃味，0 糖～"'},
+      {h:'产品介绍',body:'"0 糖 0 卡，白桃香气，3 块 5 一瓶，买二送一更划算。"'},
+      {h:'促单话术',body:'"今天买二送一，等于 2 块 3 一瓶，囤一周刚好。"'},
+      {h:'异议处理',body:'嫌贵 → 算单瓶价；怕甜 → 强调 0 糖。'},
+      {h:'成交感谢',body:'"谢谢老板！喝着好下次还来～"'}]);
+    case 'S19': return '<div style="margin-bottom:6px;">对账单（华东总经销 · 5月）：</div>'+
+      rTable(['项目','系统','经销商','差异'],[['进货额','¥320万','¥320万','0'],['返利','¥18万','¥16万','¥2万'],['退货','¥5万','¥6万','¥1万']])+
+      rKPI([{label:'未清差异',value:'¥3万',color:'#FAAD14'},{label:'建议',value:'核返利凭证'}]);
+    case 'S20': return rKPI([{label:'动销率',value:'88%',color:'#52C41A'},{label:'周转天数',value:'9天'},{label:'滞销SKU',value:'4个',color:'#FAAD14'}])+
+      rTable(['SKU','动销','排行'],[['气泡茶330ml','快','🔥 畅销Top1'],['矿泉水550ml','正常','—'],['果汁250ml','慢','⚠️ 滞销']])+
+      rDoc([{h:'补货建议',body:'气泡茶加订 30 箱；果汁转促销清库。'}]);
+    case 'S21': return rKPI([{label:'当前周转',value:'25天'},{label:'目标',value:'18天',color:'#52C41A'},{label:'差距',value:'-7天',color:'#FAAD14'}])+
+      rBars([{label:'气泡茶',value:'12天',pct:32,color:'#00C39A'},{label:'矿泉水',value:'20天',pct:53},{label:'果汁',value:'38天',pct:100,color:'#FAAD14'}])+
+      rDoc([{h:'优化建议',body:'果汁降订货 30% + 捆绑促销；气泡茶维持高频小批。'}]);
+    case 'S22': { var obj22=v.objection||'价格太高';
+      return rDoc([{h:'客户异议',body:'"'+obj22+'"'},{h:'即时回应',body:'"王哥，单瓶算下来才贵几毛，但毛利高 8%、动销快，算总账更赚。"'},{h:'证据材料',body:'隔壁罗森两周动销 120 箱截图 + 毛利对比表。'},{h:'替代方案',body:'先进半量试销；达标再追单。'},{h:'升级路径',body:'仍犹豫 → 主管申请首单陈列费支持。'}]); }
+    case 'S23': return '<div style="margin-bottom:6px;">人员效能报表（华东A组）：</div>'+
+      rTable(['姓名','人均产出','拜访效率','转化率','排名'],[['张三','¥4.2万','85%','68%','1'],['李四','¥3.6万','80%','60%','2'],['王五','¥2.8万','72%','52%','3']])+
+      rDoc([{h:'改进建议',body:'王五转化率偏低，安排新品话术辅导（见 A8）。'}]);
+    case 'S24': return rKPI([{label:'KA客户',value:'8家'},{label:'季度交易',value:'¥420万',color:'#52C41A'},{label:'合同到期',value:'2家',color:'#FAAD14'}])+
+      rTable(['KA客户','季度交易','合同','行动'],[['全家华东','¥180万','9月到期','启动续约'],['罗森华东','¥150万','正常','扩品类'],['7-11华东','¥90万','3月到期','已续约']]);
+    case 'S25': return '<div style="margin-bottom:6px;">促销物料管理：</div>'+
+      rTable(['物料','库存','已分配','状态'],[['爆炸贴','2,000','1,500','正常'],['冰柜贴','800','750','🟡 偏低'],['试饮杯','5,000','3,200','正常']])+
+      rKPI([{label:'核销率',value:'82%',color:'#52C41A'},{label:'预警',value:'冰柜贴需补'}]);
+    case 'S26': return rDoc([
+      {h:'退货申请',body:'全家-南京西路：气泡茶临期 20 箱，原因临近保质期。'},
+      {h:'审核建议',body:'✅ 同意（符合临期政策）；建议改内部调拨减损。'},
+      {h:'处理流程',body:'申请 → 主管审核 → 仓库收货 → 财务冲红。'},
+      {h:'预计金额',body:'退货金额 ¥1,200，减损方案后实退 ¥400。'}]);
+    case 'S27': return '<div style="margin-bottom:6px;">新客开发计划（华东A线）：</div>'+
+      rTable(['目标客户','类型','潜力','策略'],[['新开便利店X','CVS','高','首单免陈列费'],['社区超市Y','GT','中','试销装'],['餐饮店Z','餐饮','中','现调气泡饮']])+
+      rTimeline([{time:'第1周',title:'扫街建档 + 首拜 5 家'},{time:'第2周',title:'试销铺货 3 家'},{time:'第3周',title:'回访转化'}]);
+    case 'S28': return rKPI([{label:'相关系数',value:'0.78',color:'#52C41A',sub:'高温↔气泡茶'},{label:'影响量化',value:'+1℃→+3%'},{label:'未来7天',value:'晴热',color:'#FAAD14'}])+
+      rDoc([{h:'促销时机建议',body:'本周日起连续高温（35℃+），气泡茶/矿泉水提前备货 +20%、周五启动促销。'}]);
+    case 'S29': return rKPI([{label:'今日销量',value:'128瓶',sub:'目标150'},{label:'达成率',value:'85%',color:'#FAAD14'},{label:'提成预估',value:'+¥256'},{label:'排名',value:'第3/8'}])+
+      '<div style="font-size:13px;padding:8px 10px;background:var(--primary-light);color:var(--primary);border-radius:6px;margin-top:6px;">🎉 再卖 22 瓶达标，冲第 2 名只差 9 瓶！</div>';
+    case 'S30': return rKPI([{label:'应得返利',value:'¥16.8万',color:'#52C41A'},{label:'达成率',value:'112%',sub:'超额',color:'#00C39A'},{label:'环比',value:'+¥2.1万'}])+
+      rTable(['档位','条件','达成','返利'],[['基础','进货100万','✅','¥10万'],['增量','增长10%','✅ 12%','¥4.8万'],['专项','新品占比','✅','¥2万']]);
+    case 'S31': { var c31=v.category||'气泡茶';
+      return rKPI([{label:c31+' 铺货率',value:'72%',color:'#FAAD14',sub:'目标85%'},{label:'缺口门店',value:'126家'},{label:'环比',value:'+5%',color:'#52C41A'}])+
+      rBars([{label:'CVS便利',value:'88%',pct:88,color:'#00C39A'},{label:'GT传统',value:'65%',pct:65,color:'#FAAD14'},{label:'餐饮',value:'48%',pct:48,color:'#FAAD14'}])+
+      rDoc([{h:'提升计划',body:'GT/餐饮为缺口主力，配首单免陈列费 + 试销装攻坚。'}]); }
+    case 'S33': return rKPI([{label:'执行进度',value:'68%',color:'#FAAD14'},{label:'销量响应',value:'+18%',color:'#52C41A'},{label:'费用消耗',value:'72%'}])+
+      rProgress('门店执行覆盖',68,'#FAAD14')+rProgress('费用消耗',72,'#1890FF')+
+      rDoc([{h:'预警 / 调整',body:'费用消耗快于进度，C 区 5 店未执行，建议催办或回收预算。'}]);
+    case 'S34': return rKPI([{label:'效率提升',value:'+22%',color:'#52C41A'},{label:'工作量均衡',value:'差异<8%',color:'#00C39A'},{label:'覆盖门店',value:'45家'}])+
+      rTable(['业务员','负责片区','门店数','日均拜访'],[['张三','华东A线','15','8'],['李四','华东B线','16','8'],['王五','华东C线','14','7']])+
+      rDoc([{h:'优化说明',body:'按地理聚类 + 能力匹配重分片区，减少跨区行驶，人均多访 1 店/日。'}]);
+    case 'S35': return rKPI([{label:'有效合同',value:'42份'},{label:'90天内到期',value:'6份',color:'#FAAD14'},{label:'已逾期',value:'1份',color:'#F5222D'}])+
+      rTable(['客户','类型','到期','建议'],[['全家华东','年框','9/30','启动续约'],['某连锁','陈列协议','7/15','续签+提价'],['某店','赊销协议','已逾期','暂停供货']]);
+    case 'S36': return '<div style="margin-bottom:6px;">2026 H2 目标分解：</div>'+
+      rTable(['层级','目标','分解逻辑','可行性'],[['华东大区','¥1.2亿','基线+15%','中'],['上海城市','¥4,800万','占比40%','高'],['华东A组','¥1,500万','人均×效率','中']])+
+      rDoc([{h:'调整建议',body:'C 区目标偏高（受竞品影响），建议下调 5% 并配促销资源。'}]);
+    case 'S37': return rKPI([{label:'我的积分',value:'2,480'},{label:'本月获取',value:'+360',color:'#52C41A'},{label:'排行',value:'第5/120'}])+
+      rTable(['可兑商品','所需积分','库存'],[['品牌冰柜贴','500','充足'],['加油卡¥100','2,000','少量'],['新品试用装','300','充足']]);
+    case 'S38': return '<div style="font-size:13px;padding:10px;background:#F6FFED;border-left:3px solid #52C41A;border-radius:6px;margin-bottom:8px;">✅ 核销成功：气泡茶买二送一 × 1</div>'+
+      rKPI([{label:'本次核销',value:'1笔'},{label:'累计核销',value:'238笔',color:'#52C41A'},{label:'剩余配额',value:'762'}]);
+    case 'S39': return '<div style="margin-bottom:6px;">下游需求协同预测：</div>'+
+      rBars([{label:'经销商上报',value:'8,200箱',pct:82},{label:'模型预测',value:'9,000箱',pct:90,color:'#00C39A'},{label:'上期实际',value:'8,600箱',pct:86}])+
+      rDoc([{h:'差异分析 / 订货',body:'下游低报约 9%（旺季保守），建议按模型 9,000 箱备货并留 5% 安全库存。'}]);
+    case 'S40': return rDoc([
+      {h:'工单号',body:'#WX20260609-017'},
+      {h:'处理状态',body:'🟡 已派单（维修商：XX 制冷）'},
+      {h:'预计处理时间',body:'24 小时内上门，48 小时内修复。'},
+      {h:'处理记录',body:'09:10 报修（冰柜不制冷）→ 09:25 派单 → 待上门。'}]);
+    default: {
+      var note = Object.keys(v).length ? '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">已按所选参数执行：'+formatParamValues(v)+'</div>' : '';
+      return note + (generateMockOutput(item) || '执行完成。');
+    }
+  }
+}
+
+function generateResultHtml(item, values, type) {
+  let html = '<div class="result-card">';
+  html += '<div class="result-header">';
+  html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#52C41A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+  html += '<span class="result-title">' + item.id + ' ' + item.name + ' - 执行完成</span>';
+  html += '<span class="result-status status-success">成功</span>';
+  html += '</div>';
+  html += '<div class="result-body">';
+  html += '<div class="result-section">';
+  html += '<div class="result-section-title">执行参数</div>';
+  html += '<div style="font-size:13px;color:var(--text-secondary);background:var(--bg);padding:10px;border-radius:6px;">' + formatParamValues(values) + '</div>';
+  html += '</div>';
+  html += '<div class="result-section">';
+  html += '<div class="result-section-title">执行结果</div>';
+  html += '<div style="font-size:14px;line-height:1.8;">' + renderResultBody(item, values) + '</div>';
+  html += '</div>';
+  html += '<div class="result-section">';
+  html += '<div class="result-section-title">AI 解读</div>';
+  html += '<div style="font-size:13px;color:var(--text-secondary);padding:10px;background:var(--primary-light);border-radius:6px;border-left:3px solid var(--primary);">' + generateMockLLM(item, values) + '</div>';
+  html += '</div>';
+  html += '</div>';
+  html += '<div class="result-data-source">';
+  html += '<strong>数据来源(内部):</strong> ' + (item.dataSources && item.dataSources.internal || '-') + '<br>';
+  if (item.dataSources && item.dataSources.external) html += '<strong>数据来源(外部):</strong> ' + item.dataSources.external;
+  html += '</div>';
+  html += '</div>';
+  return html;
+}
+
+function generateMockOutput(item) {
+  const outputs = {
+    'A1': 'Top 20潜力门店已生成。<br>1. 全家-南京西路店(潜力分92) - 周边3公里无竞品<br>2. 罗森-淮海中路店(潜力分88) - 写字楼密集区<br>3. 7-Eleven-西湖大道店(潜力分85) - 交通枢纽流量大',
+    'A2': '未来7天SKU级销量预测已生成。<br>气泡茶330ml: 日均预测1,250箱,建议补货3,500箱<br>库存风险: 绿色(安全)<br>矿泉水550ml: 日均预测2,100箱,建议补货5,800箱',
+    'A3': '最优拜访路线已规划(8家门店,预计总耗时6.5小时):<br>08:30 全家-南京西路店 -> 09:45 罗森-淮海中路店 -> 11:00 喜士多-南京东路店 -> 13:30 7-Eleven-西湖大道店',
+    'A4': '陈列审核: 通过85%,驳回10%,存疑5%<br>ROI: 1.35(投入产出比良好)<br>增量销量: +12.5%(vs对照组)<br>主要问题: 3家门店排面不足',
+    'A5': '蒙特卡洛模拟结果(5000次迭代):<br>降价10%方案: 65%概率提升销量15-20%<br>买二送一方案: 78%概率提升销量20-25%(推荐)<br>敏感性: 价格弹性系数-1.8',
+    'A6': '组织效能评分: 78/100<br>拜访效率: 85分 | 订单转化: 72分 | 目标达成: 80分<br>低效单元: 华东C区(建议关注)',
+    'A7': '当前预警: 红色2条,黄色5条,蓝色8条<br>[红] 华东区气泡茶库存低于安全线3天<br>[红] 华南区竞品降价15%<br>[黄] 华北区3家门店连续7天未拜访',
+    'A8': '张三绩效分析: 拜访效率85分(Top20%),订单转化68分(需提升)<br>短板: 新品推荐成功率仅12%<br>辅导建议: 加强新品话术培训',
+    'A9': '临期预警(60天内): 共发现临期SKU 15个<br>气泡茶330ml: 800箱(建议内部调拨)<br>果汁250ml: 350箱(建议打折促销)<br>预计可减少损耗: 4.2万元',
+    'A10': '气泡茶零糖版上市追踪:<br>分销率: 68%(目标80%,差距-12%)<br>首购率: 15%(高于历史平均12%)<br>日销量: 稳步上升,第14天达1,200箱',
+    'A11': '气泡茶品类趋势(近6个月):<br>口味趋势: 白桃味增长+35%,成为Top2<br>场景变化: 运动场景占比上升至28%<br>健康诉求: "零糖"提及率+42%',
+    'A12': 'CVS便利连锁客户画像:<br>A级客户(12家): 月均销售50万+,流失风险低<br>B级客户(28家): 增长潜力大<br>预警: 2家C级客户流失风险高',
+    'A13': '华东区价格监测:<br>乱价门店: 15家(合规率97.5%)<br>气泡茶330ml偏离度: 最大+18%<br>窜货嫌疑: 3家门店需关注',
+    'A14': '2026年Q3最优促销日历:<br>7月: 气泡茶清凉一夏(预估ROI 1.8)<br>8月: 矿泉水买二送一(预估ROI 1.5)<br>9月: 果汁新品推广(预估ROI 2.1)',
+    'A15': '费用审计完成:<br>合规率: 92%<br>异常: 8笔(金额合计3.5万元)<br>重复申报: 2笔(已标记)<br>预估节约: 12万元/年',
+    'A16': '数据质量评分: 87/100<br>DMS: 完整性98%,异常值3个<br>SFA: 完整性95%,延迟上传5条<br>问题总数: 18个(低于阈值)',
+    'A17': 'A2补货预测模型调参完成:<br>最优MAPE: 8.2%(原9.5%,提升13.7%)<br>最优配置: learning_rate=0.05, epochs=200<br>推理速度: 120ms/次',
+    'A18': '全家-南京西路店订单推荐:<br>1. 气泡茶330ml x50箱(预期毛利+8%)<br>2. 矿泉水550ml x80箱(周转快)<br>3. 气泡茶零糖版 x20箱(新品推广)',
+    'A19': '全家-南京西路店客情:<br>店长: 王姐,偏好上午拜访<br>上次承诺: 6月增加气泡茶陈列位<br>家庭情况: 有一子上初中<br>建议开场: "王姐,上次说的陈列位考虑得怎么样?"',
+    'A20': '巡店质量评分: 82/100<br>陈列: 90分 | 物料: 75分 | 卫生: 80分 | 人员: 85分<br>问题: 堆头物料破损需更换',
+    'A21': '整改问题看板:<br>待整改: 8条 | 进行中: 5条 | 已验收: 12条 | 超期: 2条<br>超期预警: 罗森-淮海中路店陈列整改已超期3天',
+    'A22': '小美今日销量追踪:<br>实际销量: 128瓶 | 日目标: 150瓶 | 达成率: 85%<br>提成预估: +256元<br>同事排名: 第3名(共8人)',
+    'A23': '全家-南京西路店下周排班:<br>高峰覆盖率: 92%(优化前85%)<br>人力成本: 不变<br>公平性: 各导购工时差异<10%',
+    'A24': '华东总经销进销存优化:<br>建议订货: 气泡茶3,500箱(6月15日到货)<br>安全库存: 从500调整为350箱<br>预期利润提升: +8.5%/月',
+    'A25': '下游客户信用评估:<br>A级(15家): 信用额度50万<br>B级(32家): 信用额度20万<br>预警: 1家C级客户逾期15天',
+    'A26': '沪A12345配送配载方案:<br>车辆利用率: 92%(装载2.76吨/3吨)<br>配送路线: 6家门店,预计4.5小时<br>装车顺序: 后卸先装已优化',
+    'A27': '账款追踪:<br>7天内到期: 8笔(合计45万元)<br>已逾期: 3笔(合计12万元)<br>高危(30天+): 1笔(3万元,建议升级催收)',
+    'A28': '全家-南京西路店智能选品:<br>推荐15个SKU,预期周转18天<br>新增建议: 小包装果汁(周边学校多)<br>减少建议: 大瓶装气泡茶(销量下滑)',
+    'A29': '气泡茶330ml定价建议:<br>建议零售价: 4.5元<br>价格弹性: -1.2(中度敏感)<br>预期销量: +5%<br>预期利润: +12%<br>风险提示: 高于竞品8%,在可接受范围',
+    'S1': '拜访任务包已生成(15家门店):<br>08:30 全家-南京西路(补货+新品) -> 09:45 罗森-淮海中路(陈列检查) -> ...<br>预计成交: 3,500箱,预计订单额: 12.5万元',
+    'S2': 'TPM促销Brief已生成:<br>活动: 气泡茶清凉一夏<br>机制: 买二送一<br>预估ROI: 1.8 | 覆盖门店: 500家<br>预算分配: 物料40万/人员10万',
+    'S3': 'B2B店主文案已生成:<br>[亲切随和风格-微信]<br>"王姐,气泡茶库存只剩3天了,这次有买赠活动,要不要来一单?回复1我帮您预留~"',
+    'S4': 'C端营销内容包已生成:<br>小红书笔记1篇(夏日清凉场景)<br>抖音脚本1个(15秒)<br>朋友圈文案2条<br>话题标签: #夏日清凉 #气泡茶',
+    'S5': '机会门店分析报告(标准版)已生成:<br>华东区共识别机会门店45家<br>高机会: 12家(建议优先投入)<br>中机会: 20家 | 低机会: 13家',
+    'S6': '经营周报已生成(2026年第23周):<br>本周销量: 1,250万(目标达成98%)<br>费用率: 12.5%(预算内)<br>异常: 华东区气泡茶销量下滑5%',
+    'S7': '【竞品应对话术包 · 元气森林降价】<br>━━━━━━━━━<br><strong>竞品动作:</strong> 元气森林气泡水降价至4元(-10%),华东CVS加大铺货<br><strong>本品优势:</strong> 0糖0脂同级,单箱毛利高2.3元;买二送一期内单瓶折后更低<br><br><strong>分层话术:</strong><br>· <strong>一线版(对店主):</strong> "王姐,他家降价是清库存,咱这款利润反而更高,买二送一这周走量,我帮您先上两件试试?"<br>· <strong>经理版(对KA):</strong> "短期价格战不可持续,我们用陈列+赠品锁客流,保您单店毛利不降反升"<br>· <strong>高管版(对内):</strong> "不跟价,以促销节奏+陈列份额应对,守住价盘"<br><br><strong>反击方案:</strong> 黄金位陈列 + 限时买赠 + 试饮转化,预计抵消竞品降价影响约70%',
+    'S8': '一线日报汇总(2026-06-09):<br>拜访总计: 128家 | 订单: 86笔<br>问题反馈: 5条(3条陈列问题/2条价格问题)',
+    'S9': '【高管问答 · 华东区 · 上月】<br>━━━━━━━━━<br><strong>你问:</strong> 华东区上月哪个品类下滑最厉害,为什么?<br><br><strong>事实:</strong> 果汁品类环比 -12.3%(华东),下滑最大;气泡茶 +6%,矿泉水持平<br><strong>趋势:</strong> 果汁连续2个月下滑,主要集中在GT传统渠道(-18%),CVS基本持平<br><strong>根因推断(置信度):</strong><br>· 竞品果汁5月密集促销,价格带下探　(高)<br>· 我方GT铺货率从72%降至64%,断货门店增多　(高)<br>· 天气偏凉,果汁季节性需求未起　(中)<br><br><strong>建议:</strong> 优先补GT断货门店 + 跟进果汁促销;可一键调用 @A1 潜力门店、@S5 机会门店分析 深入',
+    'S10': '全家-南京西路店订单趋势(最近90天):<br>周均订单: 12.5万(环比+5%)<br>异常点: 5月1日销量突增(假期因素)<br>预测: 下周订单13万',
+    'S11': '竞品动态追踪(元气森林-华东):<br>价格变动: 气泡茶降价至4元(-10%)<br>促销: 7月有大型活动计划<br>新品: 柠檬味气泡茶即将上市<br>威胁评级: 高',
+    'S12': '合规巡检报告(本月):<br>总体合规率: 94%<br>费用合规: 96% | 照片合规: 92%<br>异常: 8笔,已下发整改通知',
+    'S13': '2027年费用预算初稿:<br>总预算: 2,800万<br>促销费用: 1,400万(50%)<br>陈列费用: 560万(20%)<br>ROI预估: 1.65',
+    'S14': '气泡茶330ml-CVS陈列标准已生成:<br>货架: 黄金层位3个排面<br>堆头: 入口处1个(不少于10箱)<br>检查表: 10项标准',
+    'S15': '新品知识培训材料已生成:<br>话术脚本(3页) + 测试题(10道)<br>培训时长: 30分钟<br>重点: 零糖卖点/口感描述/竞品对比',
+    'S16': '全家-南京西路店拜访准备:<br>当前库存: 气泡茶120箱(可售3天)<br>上次订单: 6月5日,300箱<br>推荐话术: 强调零糖新品利润空间',
+    'S17': '华东A区督导周计划(6.9-6.13):<br>巡店: 20家 | 重点: 陈列+促销执行<br>周一: 全家5家 | 周二: 罗森5家...',
+    'S18': '气泡茶日常推荐话术:<br>"您好!我们这款气泡茶零糖零脂,夏天喝特别清爽,现在第二件半价,要不要试试?"',
+    'S19': '华东总经销6月对账:<br>出货: 580万 | 回款: 560万<br>差异: 20万(费用抵扣)<br>未清项: 3笔(合计45万,均在账期内)',
+    'S20': '全家-南京西路店动销分析(30天):<br>动销率: 78% | 周转天数: 15天<br>Top3畅销: 气泡茶/矿泉水/果汁<br>滞销: 功能性饮料(建议减少进货)',
+    'S21': '全仓库存周转优化:<br>当前周转: 22天 | 目标: 15天<br>建议: 减少气泡茶安全库存至280箱<br>预期节约资金: 85万元',
+    'S22': '【现场异议处理 · 实时】<br>━━━━━━━━━<br><strong>店主异议:</strong> "你们气泡水比元气森林贵,卖不动"<br><br><strong>即时回应(亲切版):</strong> "您说的是单价,但咱这款利润空间大2块多,而且这周买二送一,折下来比他家还划算,我给您算笔账——"<br><strong>证据材料:</strong> 同商圈3家店上月该款动销 +22%;单箱毛利对比(本品55元 vs 竞品42元)<br><strong>替代方案:</strong> 先上1组试卖2周,不动销我帮您调换;或换小规格降客单门槛<br><strong>升级路径:</strong> 若坚持,申请首单赠品政策(经理审批)',
+    'S23': '人员效能报表(本月):<br>人均产出: 52万/月<br>Top performer: 张三(78万)<br>拜访转化率: 68%(目标70%)',
+    'S24': '全家KA客户管理:<br>年销售额: 2,800万 | 合同状态: 正常<br>下月重点: 中秋促销谈判<br>问题: Q2陈列费结算延迟',
+    'S25': '气泡茶清凉一夏物料管理:<br>库存: 海报500张/堆头架20个<br>已分配: 300张/15个<br>核销: 180张/10个',
+    'S26': '退货处理(全家-南京西路-临期):<br>申请: 气泡茶20箱<br>审核: 通过(临期47天)<br>处理方式: 内部调拨至促销仓',
+    'S27': '华东A区新客开发计划:<br>目标客户: 10家GT传统渠道<br>策略: 气泡茶高利润切入<br>预期月增销售: +15万',
+    'S28': '气泡茶-华东天气关联分析:<br>高温(30C+)日销量+35%<br>降雨日销量-15%<br>建议: 高温前2天加大备货',
+    'S29': '【小美 · 今日实时看板】<br>━━━━━━━━━<br><strong>今日销量:</strong> 128瓶　<strong>日目标:</strong> 150瓶　<strong>达成率:</strong> 85%　▮▮▮▮▮▮▮▮▯▯<br><strong>提成预估:</strong> +256元(再卖22瓶解锁下一档 +80元)<br><strong>团队排名:</strong> 第3名 / 共8人(距第2名仅差9瓶)<br><strong>里程碑:</strong> 距"月销3000瓶"还差240瓶,达成奖励京东卡200元<br><br>🔥 加油!午高峰前再推一组试饮,冲进前二很有戏!',
+    'S30': '华东总经销Q2返利计算:<br>应得返利: 28.5万<br>达成率: 105%(超额完成)<br>同比: +12%',
+    'S31': '气泡茶330ml华东铺货率:<br>当前: 72% | 目标: 85%<br>缺口门店: 156家<br>Top缺口渠道: GT传统(68家)',
+    'S32': '【经营利润分析 · 华东总经销 · 本月 · 分品类】<br>━━━━━━━━━<br><strong>整体:</strong> 营收580万　毛利率18.2%　净利率6.5%<br><strong>品类利润贡献:</strong><br>· 气泡茶: 贡献毛利52%(毛利率21%,主力)<br>· 矿泉水: 贡献毛利28%(毛利率12%,走量)<br>· 果汁: 贡献毛利20%(毛利率16%,但环比下滑)<br><strong>费用结构:</strong> 物流6.1% / 人工3.4% / 促销2.9%(促销费率偏高)<br><strong>改进建议:</strong> 矿泉水毛利偏低,建议优化进货价或调价盘;促销费率压缩1个点,约增净利5.8万/月',
+    'S33': '气泡茶清凉一夏执行监控:<br>进度: 85%(目标90%)<br>销量响应: +25%(超预期)<br>费用消耗: 78%(正常)',
+    'S34': '华东A组下周排班优化:<br>拜访覆盖: 128家 -> 135家<br>人均拜访: 16家/天<br>路程优化: 节省1.2小时/人/天',
+    'S35': '合同到期预警:<br>30天内到期: 5份<br>已过期: 1份(罗森-补充协议)<br>建议: 优先续签全家年度合同',
+    'S36': '2026年销售目标分解:<br>总目标: 10,000万<br>华东: 3,500万 | 华南: 2,800万 | 华北: 2,200万 | 华西: 1,500万',
+    'S37': '小美积分商城:<br>当前积分: 2,580分<br>本月新增: +320分<br>可兑换: 京东卡100元(2000分)/电影票(800分)',
+    'S38': '扫码核销(气泡茶清凉一夏):<br>本次核销: 成功<br>累计核销: 158笔/配额200笔<br>剩余: 42笔',
+    'S39': '下游需求预测协同(下月):<br>预测总需求: 3,500箱<br>你的预测: 3,200箱<br>差异: -300箱(建议上调)',
+    'S40': '门店报修工单已提交:<br>工单号: WX20240609001<br>类型: 冰柜故障<br>预计处理: 24小时内<br>状态: 已派单'
+  };
+  return outputs[item.id] || (item.output ? item.output.substring(0, 200) + '...' : '执行完成,详细结果请查看输出中心。');
+}
+
+function generateMockLLM(item, values) {
+  var v = values || {};
+  // 参数感知解读：仅覆盖会被参数筛选/改变、否则会与结果矛盾的场景
+  switch(item.id){
+    case 'A1': { var r1=v.range||'华东大区', t1=v.topN||20; return '已在'+r1+'按所选维度排序输出 Top '+t1+'。建议优先攻坚榜单前列的 CVS 便利连锁，转化潜力更高；可衔接 A3 路径规划串点拜访。'; }
+    case 'A2': { var c2=v.skuCategory||'气泡茶', d2=v.forecastDays||'7天'; return '未来'+d2+'，'+c2+'受高温推动需求上行，建议提前增加安全库存；其余品类按常规补货，避免资金占用。'; }
+    case 'A4': { var ct=v.checkType||'两者都执行'; if(ct==='ROI费效计算') return 'ROI 1.35 表现良好，增量销量 +12.5%（vs 对照组）。建议把预算向高 ROI 活动集中，低效活动及时止损。'; if(ct==='照片合规审核') return '陈列合规通过率 85%，10% 驳回多因排面不足。建议对驳回门店限期整改并复查照片真实性。'; return '费效与合规一并核验：ROI 1.35 良好，仍有 10% 陈列驳回需跟进，建议对存疑门店复查。'; }
+    case 'A5': { var sc=v.scenario||'买二送一'; return '在所选「'+sc+'」等方案中，买二送一达成概率最高(78%)、性价比最优，建议采用；注意备货以防旺季缺货。'; }
+    case 'A14': { var c14=v.category||'全部品类'; if(c14==='全部品类') return '促销日历已平衡各品类冲突；果汁新品推广 ROI 最高(2.1)，建议配合中秋节点加大投入。'; return '已按「'+c14+'」筛选排期，该品类活动 ROI 稳健；建议聚焦其旺季节点，避免与竞品同期撞档。'; }
+    case 'A11': { var c11b=v.category||v.skuCategory||'气泡茶'; return c11b+' 品类中白桃味与零糖是明显增长极，建议加大研发与铺货；运动场景上升，可试运动联名款。'; }
+    case 'A23': { var ob=v.objective||'平衡型', m23={'高峰覆盖最大化':'优先保障高峰覆盖(96%)，人力成本略增 5%，适合大促周','人力成本最低':'以成本最优为先(覆盖88%)，适合淡季','平衡型':'兼顾覆盖(92%)与成本(不变)，并保持工时公平'}; return '排班按「'+ob+'」目标优化：'+(m23[ob]||m23['平衡型'])+'。建议每周按实际销售微调。'; }
+    case 'A29': { var s29=v.sku||v.skuCategory||'该 SKU'; return s29+' 提价 10% 后毛利净增约 9%（弹性 -1.8）；竞品同档价更高，提价空间安全，建议先 A 级店试点 2 周。'; }
+    case 'S5': { var fmt=v.reportFormat||'标准版(3-5页)', rg=v.region||'华东', base='已在'+rg+'区识别 12 家高机会门店，建议优先投入；竞品压力为最大风险。'; if(fmt.indexOf('简洁')>=0) return base+'（当前为简洁版，如需根因与策略建议可切换详细版。）'; if(fmt.indexOf('详细')>=0) return base+'详细版已附问题根因与差异化策略，可据此制定门店级行动计划。'; return base; }
+    case 'S7': { var cp=v.competitor||'元气森林'; return '不跟价是对的——价格战拼现金流我们不占优。针对'+cp+'，建议把"高毛利+买赠"打包给一线，重点守住黄金陈列位，7 天后复盘动销再决定是否加码。'; }
+    case 'S31': { var c31b=v.category||'气泡茶'; return c31b+' 铺货率 72% 距目标尚有缺口，GT/餐饮为主要缺口渠道，建议以首单免陈列费 + 试销装攻坚。'; }
+  }
+  const insights = {
+    'A1': '基于分析,建议优先关注Top10中的CVS便利连锁门店,这些门店通常具有更高的转化潜力和更稳定的客流。同时,建议结合A3路径规划进行高效拜访。',
+    'A2': '预测显示下周高温天气将推动气泡茶需求上升30%,建议提前增加安全库存。同时矿泉水需求稳定,可按常规补货。',
+    'A3': '路线已优化避开早高峰时段,建议第一站全家-南京西路店(老板上午在店概率高)。全程预计节省45分钟行驶时间。',
+    'A4': '整体费效表现良好(ROI 1.35),但3家门店陈列未达标需跟进。建议对存疑门店安排复查,确保数据准确性。',
+    'A5': '买二送一方案表现最优,建议采用。但需注意库存准备,预计销量增长20%可能导致部分区域缺货。',
+    'A6': '华东区整体效能良好,但C区订单转化率偏低(68分),建议安排专项辅导。A区表现最佳,可提炼最佳实践推广。',
+    'A7': '当前2条红色预警需立即处理,特别是华东区库存预警可能影响3天后供货。建议启动紧急补货流程。',
+    'A8': '张三整体表现良好,拜访效率突出,但新品转化是明显短板。建议安排跟访Top performer学习新品推荐技巧。',
+    'A9': '临期品处理方案可在7天内完成,预计减少损耗4.2万元。建议优先内部调拨至促销活跃门店。',
+    'A10': '气泡茶零糖版整体表现良好,首购率超预期,但分销率低于目标12个百分点。建议加快CVS便利连锁的铺货进度。',
+    'A11': '白桃味和零糖是明显增长趋势,建议加大这两个方向的研发投入。运动场景占比上升,可考虑运动联名款。',
+    'A12': 'A级客户贡献了65%的销售额,建议集中资源维护。2家高流失风险客户需立即安排拜访挽回。',
+    'A13': '华东区价格合规率97.5%整体良好,但3家窜货嫌疑门店需重点调查。建议加强边界区域巡查。',
+    'A14': 'Q3促销日历已平衡各品类冲突,9月果汁新品推广ROI最高(2.1),建议配合中秋节点加大投入。',
+    'A15': '审计发现的问题主要集中在照片真实性方面,建议升级SFA拍照功能,增加GPS水印和时间戳验证。',
+    'A16': '数据质量总体良好(87分),DMS表现最佳。SFA的延迟上传问题需关注,建议优化移动端网络体验。',
+    'A17': '模型性能提升13.7%,效果良好。建议将新配置部署至生产环境,并设置持续监控。',
+    'A18': '推荐订单考虑了库存水平和季节性需求,预期毛利提升8%。建议优先推荐气泡茶零糖版(新品推广期利润更高)。',
+    'A19': '店长王姐客情良好,上次承诺的陈列位是重要跟进点。建议上午10点左右拜访,带点小礼物增进关系。',
+    'A20': '整体评分82分良好,物料是主要扣分项。建议更换破损堆头物料后重新评分可达到90分以上。',
+    'A21': '超期问题需重点关注,罗森-淮海中路店已超期3天。建议下发催促通知,必要时升级至区域经理介入。',
+    'A22': '今日达成率85%还有提升空间,离目标差22瓶。建议下午高峰时段加大推荐力度,把握下班客流。',
+    'A23': '排班方案高峰覆盖率达92%,同时保持了公平性。建议根据实际销售数据每周微调排班。',
+    'A24': '优化方案可在不增加缺货风险的前提下减少库存持有成本,预期月利润提升8.5%。建议逐步实施,观察效果。',
+    'A25': '大部分客户信用良好,1家C级客户逾期需关注。建议对B级客户中的高潜力客户适度提高信用额度。',
+    'A26': '车辆利用率92%已达较高水平,配送路线已优化。建议考虑下午时段配送以避开早高峰,进一步缩短时间。',
+    'A27': '账款回收整体良好,高危账款1笔建议采取法律手段。建议对即将到期客户提前3天发送提醒。',
+    'A28': '选品建议基于周边学校多的人群特征,小包装果汁需求高。建议试销2周后根据实际销量调整。',
+    'A29': '定价4.5元处于合理区间,虽然略高于竞品但品质和品牌支撑溢价。建议观察2周销量变化再调整。',
+    'S1': '任务包已根据门店优先级和地理位置优化排序,建议按顺序执行以提高效率。新品推广话术已针对各门店特点个性化。',
+    'S2': '促销Brief完整,ROI预估1.8基于历史同类活动数据。建议重点关注物料到位率,确保执行效果。',
+    'S3': '文案风格亲切随和,适合微信推送。建议在下午3-4点发送,此时店主查看消息概率最高。',
+    'S4': '内容包已针对各平台特点优化,小红书侧重生活方式,抖音侧重短平快。建议A/B测试后选择效果最好的版本。',
+    'S5': '报告识别出的12家高机会门店建议优先投入资源。风险点分析显示竞品压力是最大挑战。',
+    'S6': '周报显示整体经营平稳,华东区气泡茶下滑需关注。建议结合A11品类趋势分析下滑原因。',
+    'S7': '不跟价是对的——价格战拼现金流我们不占优。建议把"高毛利+买赠"打包给一线,重点守住黄金陈列位,7天后复盘动销再决定是否加码。',
+    'S8': '日报汇总显示一线工作效率良好,5条问题反馈需及时跟进。建议每日下班前处理问题反馈。',
+    'S9': '果汁下滑主因更可能是渠道断货而非需求,GT铺货率掉了8个点最值得先查。建议本周先解决断货,再看促销是否要跟。',
+    'S10': '订单趋势整体向好,5月1日异常峰值已标注。预测下周订单13万建议提前备货。',
+    'S11': '元气森林降价和新品上市是重大威胁,建议加快我方新品推出节奏并考虑针对性促销。',
+    'S12': '合规率94%整体良好,照片合规是主要问题。建议加强一线人员培训,提高拍照规范意识。',
+    'S13': '预算初稿基于历史数据,ROI预估1.65。建议预留10%应急预算以应对竞品反击。',
+    'S14': '陈列标准已参考行业最佳实践,检查表便于督导使用。建议每季度更新标准以适应市场变化。',
+    'S15': '培训材料针对性强,30分钟时长适合班前培训。建议培训后进行测试,确保知识掌握。',
+    'S16': '拜访准备充分,库存紧张是切入机会。强调零糖新品利润空间有助于提升店主兴趣。',
+    'S17': '周计划覆盖20家门店,重点明确。建议预留弹性时间应对突发问题。',
+    'S18': '话术热情自然,第二件半价是有效促单点。建议根据顾客反应灵活调整推荐策略。',
+    'S19': '对账差异已解释清楚,未清项均在账期内整体良好。建议加强月末对账及时性。',
+    'S20': '动销分析显示功能性饮料滞销,建议调整SKU结构。15天周转效率良好。',
+    'S21': '周转优化方案可行,减少安全库存至280箱不影响服务水平。预期释放85万流动资金。',
+    'S22': '这类异议核心是"利润焦虑"而非价格本身,先用毛利账打动店主、再用试卖降低风险,转化率通常比硬碰价格高。',
+    'S23': '人员效能整体良好,张三表现突出可树立为标杆。拜访转化率接近目标,稍加努力即可达标。',
+    'S24': '全家是我们的核心KA客户,中秋促销谈判是下月重点。陈列费结算延迟需尽快解决。',
+    'S25': '物料管理正常,核销进度良好。建议关注剩余配额使用,避免浪费。',
+    'S26': '退货处理流程合规高效,内部调拨至促销仓是最佳处理方式。预计可减少损失3,000元。',
+    'S27': '新客开发计划目标明确,气泡茶高利润切入策略合理。预期月增15万销售,建议优先执行。',
+    'S28': '天气关联分析显示高温对销量影响显著,建议在天气预报30C+时提前2天增加30%备货。',
+    'S29': '小美距第二名只差9瓶,临门一脚的激励最有效。把"还差X瓶解锁奖励"做成实时弹窗,对一线冲刺最管用。',
+    'S30': 'Q2返利计算已完成,超额完成目标表现优异。返利到账后可作为经销商激励的宣传案例。',
+    'S31': '铺货率72%距离目标85%还有差距,建议重点攻克GT传统渠道68家缺口门店。',
+    'S32': '利润主要被矿泉水低毛利和偏高的促销费率拖累。建议优先优化矿泉水价盘,促销费率约有1个点压缩空间,合计每月可增净利近6万。',
+    'S33': '促销执行整体良好,销量响应超预期。进度略滞后建议加快物料下发速度。',
+    'S34': '排班优化后拜访覆盖增加7家,效率提升明显。建议持续收集数据优化算法。',
+    'S35': '合同管理需加强,5份即将到期合同建议提前启动续签谈判,避免服务中断。',
+    'S36': '目标分解基于历史占比,各区目标合理可行。建议各区根据本地市场情况微调。',
+    'S37': '积分商城激励效果良好,小美可兑换京东卡。建议设置更高目标争取更多积分。',
+    'S38': '核销成功,累计158笔进度正常。剩余42笔配额建议月底前用完避免浪费。',
+    'S39': '下游需求协同显示你的预测偏保守,建议上调至3,500箱以避免缺货。',
+    'S40': '报修工单已提交,预计24小时内处理。建议保留备用冰柜存放转移商品。'
+  };
+  return insights[item.id] || '分析完成,建议结合实际业务情况灵活调整策略。如有疑问可继续深入探讨。';
+}
+
+// ==================== CHAT MESSAGES ====================
+function hideWelcome() {
+  console.log('hideWelcome called');
+  const w = document.getElementById('welcomeMsg');
+  console.log('welcomeMsg found', !!w);
+  if (w) w.style.display = 'none';
+}
+
+function addUserMessage(text) {
+  hideWelcome();
+  const container = document.getElementById('messagesContainer');
+  const div = document.createElement('div');
+  div.className = 'msg user';
+  const time = new Date().toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'});
+  div.innerHTML = '<div class="msg-avatar user">' + (currentRole ? currentRole.abbr : '我') + '</div><div><div class="msg-bubble">' + escapeHtml(text) + '</div><div class="msg-time">' + time + '</div></div>';
+  container.appendChild(div);
+  scrollToBottom();
+}
+
+function addAIMessage(html, msgId) {
+  console.log('addAIMessage called, msgId', msgId, 'html length', html.length);
+  const container = document.getElementById('messagesContainer');
+  console.log('container found', !!container);
+  const div = document.createElement('div');
+  div.className = 'msg ai';
+  if (msgId) div.id = msgId;
+  const time = new Date().toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'});
+  div.innerHTML = '<div class="msg-avatar ai"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><div><div class="msg-bubble">' + html + '</div><div class="msg-time">' + time + '</div></div>';
+  container.appendChild(div);
+  console.log('div appended to container');
+  scrollToBottom();
+}
+
+function scrollToBottom() {
+  const area = document.getElementById('chatArea');
+  area.scrollTop = area.scrollHeight;
+}
+
+function escapeHtml(text) {
+  const d = document.createElement('div');
+  d.textContent = text;
+  return d.innerHTML;
+}
+
+// ==================== INPUT & MENTION ====================
+function handleKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+// ===== 真大模型接入（可选）=====
+// 部署好 Cloudflare Worker 后，把 Worker 网址粘到下面引号里（留空 = 演示模式，不调用大模型）
+const LLM_ENDPOINT = 'https://agent.linda605523.workers.dev';
+async function callLLM(userText) {
+  var roleName = (currentRole && currentRole.name) ? currentRole.name : '快消销售';
+  var sys = '你是 eBest 快消行业 AI 工作台助手，服务品牌商/经销商/一线销售。当前使用者角色：' + roleName + '。请用中文回答，专业、简洁、给出可执行建议；涉及具体数据时说明这是示例数据。';
+  var resp = await fetch(LLM_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ system: sys, messages: [{ role: 'user', content: userText }] })
+  });
+  if (!resp.ok) throw new Error('HTTP ' + resp.status);
+  var data = await resp.json();
+  return data.text || '（大模型无返回）';
+}
+
+function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+  addUserMessage(text);
+  input.value = '';
+  input.style.height = 'auto';
+  document.getElementById('sendBtn').disabled = true;
+
+  // Check if message contains @ mention
+  const mentionMatch = text.match(/@(\w+)/);
+  if (mentionMatch) {
+    const id = mentionMatch[1].toUpperCase();
+    const agent = agents.find(a => a.id === id);
+    const skill = skills.find(s => s.id === id);
+    if (agent) {
+      setTimeout(() => openParamPanel(agent, 'agent'), 500);
+      return;
+    } else if (skill) {
+      setTimeout(() => openParamPanel(skill, 'skill'), 500);
+      return;
+    }
+  }
+
+  // Free-text chat
+  if (LLM_ENDPOINT) {
+    var mid = 'llm_' + Date.now();
+    addAIMessage('<div style="font-size:14px;color:var(--text-muted);">🤔 思考中…</div>', mid);
+    callLLM(text).then(function(ans){
+      var el = document.getElementById(mid);
+      if (el) el.querySelector('.msg-bubble').innerHTML = '<div style="font-size:14px;line-height:1.7;white-space:pre-wrap;">' + escapeHtml(ans) + '</div>';
+      scrollToBottom();
+    }).catch(function(e){
+      var el = document.getElementById(mid);
+      if (el) el.querySelector('.msg-bubble').innerHTML = '<div style="font-size:14px;color:#C00;">连接大模型失败：' + escapeHtml(e.message) + '<br>请检查 Worker 网址是否填对、是否已部署成功。</div>';
+    });
+    return;
+  }
+  setTimeout(() => {
+    addAIMessage('<div style="font-size:14px;">收到您的消息。可使用 <strong>@AgentID</strong> 或 <strong>@SkillID</strong> 调用具体功能（如 <strong>@A1</strong> 潜力门店、<strong>@S1</strong> 拜访任务包）；接入大模型后也可直接用中文提问。</div>');
+  }, 600);
+}
+
+function toggleMention() {
+  const popup = document.getElementById('mentionPopup');
+  popup.classList.toggle('show');
+  if (popup.classList.contains('show')) {
+    renderMentionList();
+    setTimeout(() => { var el = document.getElementById('mentionSearch'); el && el.focus(); }, 100);
+  }
+}
+
+function setMentionTab(tab, el) {
+  mentionTab = tab;
+  document.querySelectorAll('.mention-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderMentionList();
+}
+
+function renderMentionList() {
+  const container = document.getElementById('mentionList');
+  const search = ((document.getElementById('mentionSearch')&&document.getElementById('mentionSearch').value) || '').toLowerCase();
+  const arr = mentionTab === 'agents' ? agents : skills;
+  let filtered = arr.filter(item => {
+    if (!roleMatch(item)) return false;
+    if (search && !item.name.includes(search) && !item.id.toLowerCase().includes(search)) return false;
+    return true;
+  });
+  container.innerHTML = filtered.map(item => {
+    return '<div class="mention-item" data-mention-id="' + item.id + '" data-mention-type="' + (mentionTab === 'agents' ? 'agent' : 'skill') + '">'+
+      '<span class="mention-item-id">' + item.id + '</span>'+
+      '<div class="mention-item-info"><div class="mention-item-name">' + item.name + '</div><div class="mention-item-desc">' + item.desc + '</div></div>'+
+    '</div>';
+  }).join('');
+  if (!filtered.length) container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">无匹配结果</div>';
+}
+
+function filterMention() { renderMentionList(); }
+
+function selectMention(id, type) {
+  const arr = type === 'agent' ? agents : skills;
+  const item = arr.find(x => x.id === id);
+  if (item) {
+    document.getElementById('mentionPopup').classList.remove('show');
+    openParamPanel(item, type);
+  }
+}
+
+// ==================== REMAINING FUNCTIONS ====================
+
+function newChat() {
+  document.getElementById('messagesContainer').innerHTML = '';
+  document.getElementById('welcomeMsg').style.display = 'block';
+  updateWelcome();
+  closeSidebar();
+}
+
+
+function showMentionPopup() {
+  var popup = document.getElementById('mentionPopup');
+  var input = document.getElementById('chatInput');
+  var rect = input.getBoundingClientRect();
+  popup.style.bottom = (window.innerHeight - rect.top + 10) + 'px';
+  popup.style.left = rect.left + 'px';
+  renderMentionList();
+  popup.classList.add('show');
+}
+
+
+function simulateExecution(id, name, type) {
+  var card = document.getElementById('paramCard_demo');
+  if (card) card.style.display = 'none';
+  addAIMessage('<div style="display:flex;align-items:center;gap:12px;padding:12px;"><div class="spinner"></div><span style="color:var(--text-secondary);font-size:14px;">正在执行 <strong>A5 沙盘推演</strong>，请稍候...</span></div>');
+  setTimeout(function() {
+    var resultHtml = '<div style="border-left:3px solid var(--primary);padding-left:12px;">'+
+      '<div style="font-weight:600;margin-bottom:8px;">A5 沙盘推演 - 执行结果</div>'+
+      '<div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">'+
+      '<strong>策略:</strong> 促销策略 - 买二送一<br>'+
+      '<strong>市场:</strong> 华东区<br>'+
+      '<strong>模拟周期:</strong> 3个月<br>'+
+      '<strong>迭代次数:</strong> 5000次<br><br>'+
+      '<strong>概率化预测:</strong><br>'+
+      '方案"买二送一"在华东区执行3个月：<br>'+
+      '· 有65%概率提升销量15-20%<br>'+
+      '· 有25%概率提升销量8-14%<br>'+
+      '· 有10%概率销量变化不超过5%<br><br>'+
+      '<strong>敏感性分析:</strong><br>'+
+      '· 促销力度增加10% → 销量提升边际递减<br>'+
+      '· 配合陈列改善 → 效果提升约30%<br>'+
+      '· 竞品同期反击 → 效果降低约20%<br><br>'+
+      '<strong>建议:</strong> 推荐执行，建议配合陈列优化以最大化效果'+
+      '</div></div>';
+    addAIMessage(resultHtml);
+  }, 2000);
+}
+
+</script>
+</body>
+</html>
