@@ -368,6 +368,7 @@
       <div class="input-wrapper" id="inputWrapper">
         <textarea class="input-textarea" id="chatInput" placeholder="输入消息，使用 @ 调用Agent或Skill..." rows="1"></textarea>
         <button class="at-btn" onclick="document.getElementById('fileInput').click()" title="上传数据(CSV/TXT)">📎</button>
+        <button class="at-btn" onclick="downloadTemplate()" title="下载数据模板">📄</button>
         <input type="file" id="fileInput" accept=".csv,.txt,.tsv" style="display:none" onchange="handleFileUpload(this)">
         <button class="at-btn" onclick="toggleMention()">@</button>
         <div class="mention-popup" id="mentionPopup">
@@ -2331,33 +2332,59 @@ async function chatWithRouting(userText) {
   var raw = data.text || '';
   var ids = [];
   var clean = raw;
-  var m = raw.match(/【推荐工具】\s*([^\n]*)/);
-  if (m) {
-    clean = raw.replace(m[0], '').trim();
-    ids = m[1].split(/[,，、\s]+/).map(function(s){ return s.trim().toUpperCase(); }).filter(function(s){ return /^[AS]\d+$/.test(s); });
+  var line = raw.match(/^.*推荐工具.*$/m);
+  if (line) {
+    ids = (line[0].match(/[ASas]\d+/g) || []).map(function(s){ return s.toUpperCase(); });
+    clean = raw.replace(line[0], '').replace(/\n{3,}/g, '\n\n').trim();
   }
   return { text: clean, ids: ids };
 }
 
-// 渲染回答 + 可点击的推荐工具按钮
+// 轻量 Markdown 渲染(去掉满屏星号)
+function mdLite(s) {
+  var h = escapeHtml(s || '');
+  h = h.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+  h = h.replace(/^\s*#{1,6}\s*(.+)$/gm, '<strong>$1</strong>');
+  return h;
+}
+
+// 渲染回答 + 可点击的推荐工具卡片
 function renderAnswerWithChips(text, ids) {
-  var html = '<div style="font-size:14px;line-height:1.7;white-space:pre-wrap;">' + escapeHtml(text) + '</div>';
+  var html = '<div style="font-size:14px;line-height:1.75;white-space:pre-wrap;">' + mdLite(text) + '</div>';
   var valid = (ids || []).map(function(id){
     var a = agents.find(function(x){ return x.id === id; });
-    if (a) return { id: id, name: a.name };
+    if (a) return { id: id, name: a.name, desc: a.desc || '' };
     var s = skills.find(function(x){ return x.id === id; });
-    if (s) return { id: id, name: s.name };
+    if (s) return { id: id, name: s.name, desc: s.desc || '' };
     return null;
   }).filter(Boolean);
   if (valid.length) {
-    html += '<div style="margin-top:12px;font-size:12px;color:var(--text-muted);">💡 推荐工具（点击直接使用）</div>' +
-      '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;">';
+    html += '<div style="margin-top:12px;font-size:12px;color:var(--text-muted);">💡 推荐工具（点击直接使用）</div>';
     valid.forEach(function(t){
-      html += '<button onclick="openToolById(\'' + t.id + '\')" style="border:1px solid var(--primary);color:var(--primary);background:var(--primary-light);border-radius:16px;padding:6px 14px;font-size:13px;cursor:pointer;font-weight:600;">' + t.id + ' ' + t.name + ' →</button>';
+      html += '<button onclick="openToolById(\'' + t.id + '\')" style="display:block;width:100%;text-align:left;border:1px solid var(--border);background:#fff;border-radius:10px;padding:10px 12px;margin-top:8px;cursor:pointer;">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;">' +
+        '<div><span style="display:inline-block;background:var(--primary-light);color:var(--primary);border-radius:6px;padding:2px 8px;font-size:12px;font-weight:700;margin-right:8px;">' + t.id + '</span>' +
+        '<span style="font-weight:600;font-size:14px;color:var(--text);">' + escapeHtml(t.name) + '</span></div>' +
+        '<span style="color:var(--primary);font-weight:700;">→</span></div>' +
+        (t.desc ? '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">' + escapeHtml(t.desc) + '</div>' : '') +
+        '</button>';
     });
-    html += '</div>';
   }
   return html;
+}
+
+// 下载数据分析模板(供用户填好后上传)
+function downloadTemplate() {
+  var csv = '门店名称,渠道类型,品类,本周销量(箱),期末库存(箱),陈列是否达标\n' +
+    '全家-南京西路店,CVS便利,气泡茶,120,30,是\n' +
+    '罗森-淮海中路店,CVS便利,气泡茶,95,20,是\n' +
+    '7-Eleven-西湖店,CVS便利,矿泉水,80,18,是\n' +
+    '夫妻店A,GT传统,果汁,40,15,否\n';
+  var blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'eBest数据模板.csv';
+  a.click();
 }
 
 function openToolById(id) {
@@ -2384,7 +2411,7 @@ function handleFileUpload(inp) {
     addAIMessage('<div style="font-size:14px;color:var(--text-muted);">🤔 正在分析你上传的数据…</div>', mid);
     analyzeData(file.name, sample).then(function(ans){
       var el = document.getElementById(mid);
-      if (el) el.querySelector('.msg-bubble').innerHTML = '<div style="font-size:14px;line-height:1.7;white-space:pre-wrap;">' + escapeHtml(ans) + '</div>';
+      if (el) el.querySelector('.msg-bubble').innerHTML = '<div style="font-size:14px;line-height:1.75;white-space:pre-wrap;">' + mdLite(ans) + '</div>';
       scrollToBottom();
     }).catch(function(err){
       var el = document.getElementById(mid);
