@@ -2419,9 +2419,12 @@ function getParamValues(item, msgId) {
       const fileInput = card.querySelector('.param-input-' + p.name);
       values[p.name] = (fileInput&&fileInput.files&&fileInput.files[0]?fileInput.files[0].name:undefined) || '(未选择文件)';
       try {
-        var _imgs = Array.prototype.slice.call((fileInput&&fileInput.files)||[]).filter(function(f){return /image\//.test(f.type);});
-        window._a30Photos = [];
-        _imgs.slice(0,8).forEach(function(f){ var _r=new FileReader(); _r.onload=function(){ window._a30Photos.push(_r.result); }; _r.readAsDataURL(f); });
+        var _files = Array.prototype.slice.call((fileInput&&fileInput.files)||[]);
+        window._a30Media = [];
+        _files.slice(0,12).forEach(function(f){
+          if(/image\//.test(f.type)) window._a30Media.push({type:'image', url:URL.createObjectURL(f)});
+          else if(/video\//.test(f.type)) window._a30Media.push({type:'video', url:URL.createObjectURL(f)});
+        });
       } catch(e){}
     } else {
       values[p.name] = (function(__e){return __e?__e.value:'';})(card.querySelector('.param-input-' + p.name)) || '';
@@ -2465,12 +2468,12 @@ function executeItem(id, status, msgId, type) {
 // ==================== A30 在线拍照 -> 3D 门店漫游 (纯前端/离线) ====================
 function _s3dT(zh,en){return (typeof currentLang!=='undefined'&&currentLang==='en')?en:zh;}
 function enterStore3D(){
-  if(window._a30Photos && window._a30Photos.length){ build3DRoom(window._a30Photos.slice()); }
+  if(window._a30Media && window._a30Media.length){ prepareMediaThenBuild(window._a30Media.slice()); }
   else { openStore3D(); }
 }
 function openStore3D(){
   var inp=document.createElement('input');
-  inp.type='file'; inp.accept='image/*'; inp.multiple=true;
+  inp.type='file'; inp.accept='image/*,video/*'; inp.multiple=true;
   try{inp.setAttribute('capture','environment');}catch(e){}
   inp.style.position='fixed'; inp.style.left='-9999px'; inp.style.top='0';
   document.body.appendChild(inp);
@@ -2478,13 +2481,61 @@ function openStore3D(){
   function cleanup(){ if(!cleaned && inp.parentNode){ cleaned=true; inp.parentNode.removeChild(inp);} }
   inp.addEventListener('change',function(){
     var files=Array.prototype.slice.call(inp.files||[]);
-    if(!files.length){ cleanup(); return; }
-    var slice=files.slice(0,8);
-    Promise.all(slice.map(function(f){return new Promise(function(res){var r=new FileReader();r.onload=function(){res(r.result);};r.onerror=function(){res(null);};r.readAsDataURL(f);});}))
-      .then(function(imgs){ imgs=imgs.filter(Boolean); cleanup(); if(imgs.length) build3DRoom(imgs); });
+    cleanup();
+    if(!files.length){ return; }
+    var media=[];
+    files.slice(0,12).forEach(function(f){
+      if(/image\//.test(f.type)) media.push({type:'image', url:URL.createObjectURL(f)});
+      else if(/video\//.test(f.type)) media.push({type:'video', url:URL.createObjectURL(f)});
+    });
+    if(media.length) prepareMediaThenBuild(media);
   });
   inp.click();
 }
+function _s3dToast(msg){
+  if(!document.getElementById('s3dSpinKf')){ var k=document.createElement('style'); k.id='s3dSpinKf'; k.textContent='@keyframes s3dspin{to{transform:rotate(360deg)}}'; document.head.appendChild(k); }
+  var t=document.createElement('div'); t.id='s3dToast';
+  t.style.cssText='position:fixed;inset:0;z-index:99998;background:rgba(7,11,22,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-size:14px;gap:14px;';
+  t.innerHTML='<div style="width:38px;height:38px;border:3px solid rgba(255,255,255,.25);border-top-color:#00C39A;border-radius:50%;animation:s3dspin 1s linear infinite;"></div><div>'+msg+'</div>';
+  document.body.appendChild(t); return t;
+}
+function extractVideoFrames(url, count){
+  return new Promise(function(resolve){
+    var v=document.createElement('video');
+    v.muted=true; v.playsInline=true; v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline',''); v.preload='auto'; v.src=url;
+    var frames=[], cnv=document.createElement('canvas'), idx=0, times=[], done=false;
+    function finish(){ if(done)return; done=true; resolve(frames); }
+    function grab(){
+      try{ cnv.width=v.videoWidth||640; cnv.height=v.videoHeight||480; cnv.getContext('2d').drawImage(v,0,0,cnv.width,cnv.height); var d=cnv.toDataURL('image/jpeg',0.85); if(d&&d.length>2000) frames.push(d); }catch(e){}
+      idx++; seekNext();
+    }
+    function seekNext(){ if(idx>=times.length){ finish(); return; } try{ v.currentTime=times[idx]; }catch(e){ finish(); } }
+    v.addEventListener('loadedmetadata', function(){
+      var dur=v.duration;
+      if(isFinite(dur)&&dur>0){ for(var i=0;i<count;i++) times.push(dur*(i+0.5)/count); }
+      else { times=[0.1]; }
+      seekNext();
+    });
+    v.addEventListener('seeked', grab);
+    v.addEventListener('error', finish);
+    setTimeout(finish, 9000);
+    try{ v.load(); }catch(e){ finish(); }
+  });
+}
+function prepareMediaThenBuild(media){
+  var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
+  var imgs=[], vids=[];
+  (media||[]).forEach(function(m){ if(m.type==='image') imgs.push(m.url); else if(m.type==='video') vids.push(m.url); });
+  if(!vids.length){ if(imgs.length) build3DRoom(imgs); return; }
+  var toast=_s3dToast(EN?'Processing video…':'正在处理视频，抽帧生成全景…');
+  Promise.all(vids.map(function(u){ return extractVideoFrames(u,12); })).then(function(res){
+    res.forEach(function(fr){ imgs=imgs.concat(fr); });
+    if(toast.parentNode) toast.parentNode.removeChild(toast);
+    if(imgs.length) build3DRoom(imgs);
+    else alert(EN?'Could not read frames from this video. Please try photos from your library.':'无法从该视频抽帧，请改用相册里的照片（可多选）。');
+  }).catch(function(){ if(toast&&toast.parentNode) toast.parentNode.removeChild(toast); if(imgs.length) build3DRoom(imgs); });
+}
+
 function build3DRoom(imgs){
   try { if(typeof THREE!=='undefined'){ build3DRoomSphere(imgs); return; } } catch(e){ console.warn('sphere failed, fallback CSS', e); }
   build3DRoomCSS(imgs);
