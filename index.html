@@ -443,8 +443,35 @@ function llmLangClause(){return currentLang==='zh'?'':('\n\n重要：请全程�
 function renderLangMenu(){var m=document.getElementById('langMenu');if(!m)return;m.innerHTML=LANGS.map(function(l){return '<div onclick="applyLanguage(\''+l.code+'\')" style="padding:10px 14px;cursor:pointer;font-size:14px;white-space:nowrap;'+(l.code===currentLang?'background:#E6F0FF;color:#1E2761;font-weight:600;':'')+'">'+l.label+'</div>';}).join('');}
 function toggleLangMenu(){var m=document.getElementById('langMenu');if(!m)return;renderLangMenu();m.style.display=(m.style.display==='block')?'none':'block';}
 function closeLangMenu(){var m=document.getElementById('langMenu');if(m)m.style.display='none';}
-function applyLanguage(lang){currentLang=lang;try{document.documentElement.lang=lang;document.documentElement.dir=(lang==='ar')?'rtl':'ltr';}catch(e){}document.querySelectorAll('[data-i18n]').forEach(function(el){el.textContent=t(el.getAttribute('data-i18n'));});document.querySelectorAll('[data-i18n-title]').forEach(function(el){el.title=t(el.getAttribute('data-i18n-title'));});var ci=document.getElementById('chatInput');if(ci)ci.placeholder=t('inputPlaceholder');var lb=document.getElementById('langBtnLabel');if(lb){var f=LANGS.filter(function(x){return x.code===lang;})[0];lb.textContent=f?f.label:'中文';}if(typeof renderRoleDropdown==='function')renderRoleDropdown();if(currentRole){var cl=document.getElementById('currentRoleLabel');if(cl)cl.textContent=(currentRole.abbr?currentRole.abbr+' - ':'')+tRole(currentRole);var un=document.getElementById('userName');if(un)un.textContent=tRole(currentRole);}if(typeof updateWelcome==='function')updateWelcome();if(typeof renderRightPanel==='function')renderRightPanel();closeLangMenu();}
+function applyLanguage(lang){currentLang=lang;try{document.documentElement.lang=lang;document.documentElement.dir=(lang==='ar')?'rtl':'ltr';}catch(e){}document.querySelectorAll('[data-i18n]').forEach(function(el){el.textContent=t(el.getAttribute('data-i18n'));});document.querySelectorAll('[data-i18n-title]').forEach(function(el){el.title=t(el.getAttribute('data-i18n-title'));});var ci=document.getElementById('chatInput');if(ci)ci.placeholder=t('inputPlaceholder');var lb=document.getElementById('langBtnLabel');if(lb){var f=LANGS.filter(function(x){return x.code===lang;})[0];lb.textContent=f?f.label:'中文';}if(typeof renderRoleDropdown==='function')renderRoleDropdown();if(currentRole){var cl=document.getElementById('currentRoleLabel');if(cl)cl.textContent=(currentRole.abbr?currentRole.abbr+' - ':'')+tRole(currentRole);var un=document.getElementById('userName');if(un)un.textContent=tRole(currentRole);}if(typeof updateWelcome==='function')updateWelcome();if(typeof renderRightPanel==='function')renderRightPanel();if(typeof renderAgentList==='function')renderAgentList();if(typeof renderSkillList==='function')renderSkillList();try{translateCatalog(lang);}catch(e){}closeLangMenu();}
 document.addEventListener('click',function(e){var d=document.getElementById('langDropdown');if(d&&!d.contains(e.target))closeLangMenu();});
+
+/* ===== AI 内容翻译(名称/描述, 缓存) ===== */
+var TRANS_CACHE={}; var transActive=0;
+function aName(item){if(!item)return '';if(currentLang==='zh')return item.name;var c=TRANS_CACHE[currentLang];return (c&&c[item.id]&&c[item.id].name)?c[item.id].name:item.name;}
+function aDesc(item){if(!item)return '';if(currentLang==='zh')return item.desc||'';var c=TRANS_CACHE[currentLang];return (c&&c[item.id]&&c[item.id].desc)?c[item.id].desc:(item.desc||'');}
+function rerenderForLang(){try{if(typeof renderAgentList==='function')renderAgentList();if(typeof renderSkillList==='function')renderSkillList();if(typeof renderRightPanel==='function')renderRightPanel();if(typeof renderMentionList==='function'){var mp=document.getElementById('mentionPopup');if(mp&&mp.classList.contains('show'))renderMentionList();}}catch(e){}}
+function showTransToast(on){var el=document.getElementById('transToast');if(on){if(!el){el=document.createElement('div');el.id='transToast';el.style.cssText='position:fixed;top:64px;left:50%;transform:translateX(-50%);background:#1E2761;color:#fff;padding:8px 16px;border-radius:20px;font-size:13px;z-index:3000;box-shadow:0 4px 16px rgba(0,0,0,.2);';document.body.appendChild(el);}var f=LANGS.filter(function(x){return x.code===currentLang;})[0];el.textContent='🌐 '+(f?f.label:'')+' 翻译中…';}else if(el&&el.parentNode){el.parentNode.removeChild(el);}}
+async function translateCatalog(lang){
+  if(lang==='zh'||TRANS_CACHE[lang]||!LLM_ENDPOINT)return;
+  TRANS_CACHE[lang]={}; transActive++; showTransToast(true);
+  var all=agents.concat(skills); var langName=LLM_LANG[lang]||'English'; var size=10;
+  try{
+    for(var i=0;i<all.length;i+=size){
+      var chunk=all.slice(i,i+size);
+      var payload=chunk.map(function(x){return {i:x.id,n:x.name,d:x.desc||''};});
+      var sys='你是翻译引擎。把下面快消(FMCG)行业工具的名称(n)和描述(d)翻译成'+langName+'，专业、简洁、贴合行业术语。只返回一个JSON数组，每项为{"i":原ID保持不变,"n":翻译后的名称,"d":翻译后的描述}，不要输出任何额外文字或markdown代码块。';
+      var resp=await fetch(LLM_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:sys,messages:[{role:'user',content:JSON.stringify(payload)}]})});
+      if(!resp.ok)throw new Error('HTTP '+resp.status);
+      var data=await resp.json(); var raw=(data.text||'').replace(/```json/g,'').replace(/```/g,'').trim();
+      var arr=null; try{arr=JSON.parse(raw);}catch(e){var m=raw.match(/\[[\s\S]*\]/);if(m){try{arr=JSON.parse(m[0]);}catch(e2){}}}
+      if(arr&&arr.forEach){arr.forEach(function(o){if(o&&o.i){TRANS_CACHE[lang][o.i]={name:o.n||'',desc:o.d||''};}});}
+      if(currentLang===lang)rerenderForLang();
+    }
+  }catch(e){console.log('translateCatalog error',e);}
+  transActive--; if(transActive<=0)showTransToast(false);
+  if(currentLang===lang)rerenderForLang();
+}
 
 const agents = [
   {id:'A1', name:'潜力门店挖掘', desc:'XGBoost/LightGBM排序,输出Top潜力门店及推荐理由', status:'core', roleTags:['executive','regional','brand','channel','tpm','analyst','distributor','subdistributor'],
@@ -1453,8 +1480,8 @@ function renderAgentList() {
   container.innerHTML = filtered.map(a => {
     const statusClass = a.status === 'core' ? 'status-core' : a.status === 'new' ? 'status-new' : 'status-default';
     return '<div class="item-card" data-open-agent="'+a.id+'">'+
-      '<div class="item-card-header"><span class="item-id">'+a.id+'</span><span class="item-name">'+a.name+'</span></div>'+
-      '<div class="item-desc">'+a.desc+'</div>'+
+      '<div class="item-card-header"><span class="item-id">'+a.id+'</span><span class="item-name">'+aName(a)+'</span></div>'+
+      '<div class="item-desc">'+aDesc(a)+'</div>'+
       '<div class="item-meta"><span class="status-badge '+statusClass+'">'+(a.status==='core'?'核心':a.status==='new'?'新增':'常规')+'</span></div>'+
     '</div>';
   }).join('');
@@ -1475,8 +1502,8 @@ function renderSkillList() {
   container.innerHTML = filtered.map(s => {
     const statusClass = s.status === 'core' ? 'status-core' : s.status === 'new' ? 'status-new' : 'status-default';
     return '<div class="item-card" data-open-skill="'+s.id+'">'+
-      '<div class="item-card-header"><span class="item-id">'+s.id+'</span><span class="item-name">'+s.name+'</span></div>'+
-      '<div class="item-desc">'+s.desc+'</div>'+
+      '<div class="item-card-header"><span class="item-id">'+s.id+'</span><span class="item-name">'+aName(s)+'</span></div>'+
+      '<div class="item-desc">'+aDesc(s)+'</div>'+
       '<div class="item-meta"><span class="status-badge '+statusClass+'">'+(s.status==='core'?'核心':s.status==='new'?'新增':'常规')+'</span></div>'+
     '</div>';
   }).join('');
@@ -1504,11 +1531,11 @@ function renderRightPanel() {
     '</div>'+
     '<div class="info-card">'+
       '<div class="info-card-title">'+t('quickAgents')+'</div>'+
-      '<div class="chip-list">'+roleAgents.slice(0,5).map(function(a){return '<span class="chip" data-aid="'+a.id+'">'+a.id+' '+a.name+'</span>';}).join('')+'</div>'+
+      '<div class="chip-list">'+roleAgents.slice(0,5).map(function(a){return '<span class="chip" data-aid="'+a.id+'">'+a.id+' '+aName(a)+'</span>';}).join('')+'</div>'+
     '</div>'+
     '<div class="info-card">'+
       '<div class="info-card-title">'+t('quickSkills')+'</div>'+
-      '<div class="chip-list">'+roleSkills.slice(0,5).map(function(s){return '<span class="chip" data-sid="'+s.id+'">'+s.id+' '+s.name+'</span>';}).join('')+'</div>'+
+      '<div class="chip-list">'+roleSkills.slice(0,5).map(function(s){return '<span class="chip" data-sid="'+s.id+'">'+s.id+' '+aName(s)+'</span>';}).join('')+'</div>'+
     '</div>';
 }
 
@@ -1523,7 +1550,7 @@ function openParamPanel(item, type) {
     const label = type === 'agent' ? 'Agent' : 'Skill';
     const chipHtml = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">'+
       '<span style="background:#E8F1FA;color:#4A90D9;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:600;">'+label+'</span>'+
-      '<span style="font-size:14px;font-weight:600;">' + item.id + ' ' + item.name + '</span></div>';
+      '<span style="font-size:14px;font-weight:600;">' + item.id + ' ' + aName(item) + '</span></div>';
     const paramHtml = buildParamForm(item, msgId, type);
     const fullHtml = chipHtml + paramHtml;
     // Direct DOM insert for reliability
@@ -1546,7 +1573,7 @@ function buildParamForm(item, msgId, type) {
   let html = '<div class="param-card" id="paramCard_' + msgId + '">';
   html += '<div class="param-card-header">';
   html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="' + (item.status==='core'?'#1890FF':'#52C41A') + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>';
-  html += '<span class="param-card-title">' + item.id + ' ' + item.name + ' - '+t('paramConfig')+'</span>';
+  html += '<span class="param-card-title">' + item.id + ' ' + aName(item) + ' - '+t('paramConfig')+'</span>';
   html += '</div>';
 
   if (!item.params || item.params.length === 0) {
@@ -2068,7 +2095,7 @@ function generateResultHtml(item, values, type) {
   let html = '<div class="result-card">';
   html += '<div class="result-header">';
   html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#52C41A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
-  html += '<span class="result-title">' + item.id + ' ' + item.name + ' - 执行完成</span>';
+  html += '<span class="result-title">' + item.id + ' ' + aName(item) + ' - 执行完成</span>';
   html += '<span class="result-status status-success">成功</span>';
   html += '</div>';
   html += '<div class="result-body">';
@@ -2376,9 +2403,9 @@ function renderAnswerWithChips(text, ids) {
   var html = '<div style="font-size:14px;line-height:1.75;white-space:pre-wrap;">' + mdLite(text) + '</div>';
   var valid = (ids || []).map(function(id){
     var a = agents.find(function(x){ return x.id === id; });
-    if (a) return { id: id, name: a.name, desc: a.desc || '' };
+    if (a) return { id: id, name: aName(a), desc: aDesc(a) };
     var s = skills.find(function(x){ return x.id === id; });
-    if (s) return { id: id, name: s.name, desc: s.desc || '' };
+    if (s) return { id: id, name: aName(s), desc: aDesc(s) };
     return null;
   }).filter(Boolean);
   if (valid.length) {
@@ -2530,7 +2557,7 @@ function renderMentionList() {
   container.innerHTML = filtered.map(item => {
     return '<div class="mention-item" data-mention-id="' + item.id + '" data-mention-type="' + (mentionTab === 'agents' ? 'agent' : 'skill') + '">'+
       '<span class="mention-item-id">' + item.id + '</span>'+
-      '<div class="mention-item-info"><div class="mention-item-name">' + item.name + '</div><div class="mention-item-desc">' + item.desc + '</div></div>'+
+      '<div class="mention-item-info"><div class="mention-item-name">' + aName(item) + '</div><div class="mention-item-desc">' + aDesc(item) + '</div></div>'+
     '</div>';
   }).join('');
   if (!filtered.length) container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">无匹配结果</div>';
