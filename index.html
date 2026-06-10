@@ -3399,6 +3399,7 @@ function mdLite(s) {
   var h = escapeHtml(s || '');
   h = h.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
   h = h.replace(/^\s*#{1,6}\s*(.+)$/gm, '<strong>$1</strong>');
+  h = h.replace(/^\s*[-*]\s+/gm, '\u2022 ');
   return h;
 }
 
@@ -3433,8 +3434,9 @@ async function chatWithOrchestration(userText){
   var sys='你是 eBest 快消行业 AI 工作台的智能编排引擎。当前使用者角色：'+roleName+'。'+
     '判断用户问题是否需要「多Agent协同分析」（需要拆成多个子任务、分别用不同工具完成后再汇总归因）。'+
     '严格只返回一个 JSON 对象，不要任何解释、不要 markdown 代码块。字段：'+
-    '{"orchestrate":布尔值,"intent":"一句话意图","agents":[{"id":"工具ID","task":"该工具负责的子任务(简短)","finding":"该工具得出的关键发现(可用示例数据，简短)"}],"synthesis":"综合归因结论与可执行建议(分点、简洁，示例数据请注明)","answer":"若不需要编排则在此直接回答","tools":["相关工具ID"]}。'+
+    '{"orchestrate":布尔值,"intent":"一句话意图","agents":[{"id":"工具ID","task":"该工具负责的子任务(一句话)","output":"该工具的完整产出物本身，要紧扣用户请求的具体范围(时间/区域/品类等)，给出有结构、有具体数字的可交付结果；可用 markdown(加粗、短横线列表、分行)；可用示例数据但需标注‘示例’；不要只写一句话结论"}],"synthesis":"综合所有产出的归因结论与可执行建议(分点)","answer":"若不需要编排则在此直接回答","tools":["相关工具ID"]}。'+
     'orchestrate=true 时填 agents(2-5个) 与 synthesis；false 时填 answer 与 tools(0-3个)。'+
+    '关键要求：每个 agent 的 output 必须与用户问题的范围严格一致——例如用户说“七月份/一个月”，就要给整月的计划(如按周拆解、月度汇总数字)，绝不能只给单独一天；用户指定了区域/品类，也要体现在产出里。'+
     '所有 id 只能来自下面"工具清单"中出现过的 ID。\n\n工具清单:\n'+buildToolCatalog()+llmLangClause();
   var resp=await fetch(LLM_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:sys,messages:[{role:'user',content:userText}]})});
   if(!resp.ok) throw new Error('HTTP '+resp.status);
@@ -3464,17 +3466,17 @@ function renderOrchestration(res){
        '<span style="flex-shrink:0;color:#52C41A;font-size:13px;">✓</span></div>';
   });
   h+='</div>';
-  // 每个 Agent 的真实产出物
+  // 每个 Agent 的真实产出物（由 DeepSeek 按用户请求实时生成）
   h+='<div class="result-section"><div class="result-section-title">'+L('各 Agent 产出','Agent deliverables')+'</div>';
   list.forEach(function(a){ var id=String(a.id).toUpperCase(); var it=getItemById(id); if(!it)return; var nm=aName(it);
-    var body='';
-    try{ body=renderResultBody(it, {}); }catch(e){ body = a.finding ? '<div style="color:var(--text-secondary);">'+escapeHtml(a.finding)+'</div>' : ''; }
-    h+='<div style="margin:10px 0 4px;padding:10px;border:1px solid var(--border);border-radius:10px;background:#fff;">'+
+    var outRaw=a.output||a.finding||'';
+    h+='<div style="margin:10px 0 4px;padding:12px;border:1px solid var(--border);border-radius:10px;background:#fff;">'+
        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'+
          '<span style="font-size:11px;font-weight:700;color:#fff;background:var(--primary);border-radius:6px;padding:2px 8px;">'+id+'</span>'+
          '<span style="font-weight:700;font-size:14px;color:var(--text);">'+escapeHtml(nm)+'</span>'+
        '</div>'+
-       '<div style="font-size:14px;">'+body+'</div>'+
+       (a.task?'<div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">'+escapeHtml(a.task)+'</div>':'')+
+       '<div style="font-size:13px;line-height:1.75;color:var(--text);white-space:pre-line;">'+mdLite(outRaw)+'</div>'+
        '</div>';
   });
   h+='</div>';
@@ -3645,7 +3647,6 @@ function sendMessage() {
       var bub = el.querySelector('.msg-bubble');
       if (res && res.orchestrate && res.agents && res.agents.length) {
         bub.innerHTML = renderOrchestration(res);
-        if (currentLang==='en') { try{ localizeEl(bub); }catch(_e){} }
       } else {
         bub.innerHTML = renderAnswerWithChips((res && res.answer) || '', (res && res.tools) || []);
       }
