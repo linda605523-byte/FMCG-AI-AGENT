@@ -456,7 +456,7 @@ async function translateElement(el,lang){
   if(lang==='zh'||!el||!LLM_ENDPOINT)return;
   var walker=document.createTreeWalker(el,NodeFilter.SHOW_TEXT,null);
   var nodes=[],n;
-  while(n=walker.nextNode()){var v=n.nodeValue;if(v&&v.trim()&&/[\u4e00-\u9fff]/.test(v)&&!_inSelect(n)){n._src=v;nodes.push(n);}}
+  while(n=walker.nextNode()){var v=n.nodeValue;if(v&&v.trim()&&/[\u4e00-\u9fff]/.test(v)){n._src=v;nodes.push(n);}}
   if(!nodes.length)return;
   var ck=lang+'\u0001';
   var uniq=[],seen={};
@@ -1752,7 +1752,8 @@ function executeItem(id, status, msgId, type) {
   // Add loading message
   const loadingId = 'loading_' + Date.now();
   const userMsg = '执行 ' + item.id + ' ' + item.name + (Object.keys(values).length ? ' (' + formatParamValues(values) + ')' : '');
-  addUserMessage(userMsg);
+  var _echo = addUserMessage(userMsg);
+  if (currentLang !== 'zh' && _echo) { try { translateElement(_echo, currentLang); } catch(e){} }
   addAIMessage('<div style="display:flex;align-items:center;gap:10px;padding:12px 0;"><span class="loading-spinner"></span><span>正在执行 ' + item.id + ' ' + item.name + '...</span></div>', loadingId);
 
   // Simulate execution
@@ -2337,6 +2338,7 @@ function addUserMessage(text) {
   div.innerHTML = '<div class="msg-avatar user">' + (currentRole ? currentRole.abbr : '我') + '</div><div><div class="msg-bubble">' + escapeHtml(text) + '</div><div class="msg-time">' + time + '</div></div>';
   container.appendChild(div);
   scrollToBottom();
+  return div;
 }
 
 function addAIMessage(html, msgId) {
