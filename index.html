@@ -3455,6 +3455,7 @@ function renderOrchestration(res){
   h+='<div class="result-header"><span style="font-size:18px;">🧩</span><span class="result-title">'+L('多Agent智能编排','Multi-Agent Orchestration')+'</span><span class="result-status status-success">DeepSeek</span></div>';
   h+='<div class="result-body">';
   if(res.intent){ h+='<div class="result-section"><div class="result-section-title">'+L('意图识别','Intent')+'</div><div style="font-size:13px;color:var(--text-secondary);background:var(--bg);padding:10px;border-radius:6px;">'+escapeHtml(res.intent)+'</div></div>'; }
+  // 编排方案概览
   h+='<div class="result-section"><div class="result-section-title">'+L('编排方案','Plan')+' · '+list.length+' '+L('个 Agent','agents')+'</div>';
   list.forEach(function(a){ var id=String(a.id).toUpperCase(); var it=getItemById(id); var nm=it?aName(it):id;
     h+='<div style="display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--border);">'+
@@ -3463,16 +3464,21 @@ function renderOrchestration(res){
        '<span style="flex-shrink:0;color:#52C41A;font-size:13px;">✓</span></div>';
   });
   h+='</div>';
-  var wf=list.filter(function(a){return a.finding;});
-  if(wf.length){ h+='<div class="result-section"><div class="result-section-title">'+L('各 Agent 关键发现','Key findings per agent')+'</div>';
-    wf.forEach(function(a){ var id=String(a.id).toUpperCase(); var it=getItemById(id); var nm=it?aName(it):id;
-      h+='<div style="margin:6px 0;font-size:13px;"><span style="font-weight:600;color:var(--primary);">'+escapeHtml(nm)+': </span><span style="color:var(--text-secondary);">'+escapeHtml(a.finding)+'</span></div>'; });
-    h+='</div>'; }
+  // 每个 Agent 的真实产出物
+  h+='<div class="result-section"><div class="result-section-title">'+L('各 Agent 产出','Agent deliverables')+'</div>';
+  list.forEach(function(a){ var id=String(a.id).toUpperCase(); var it=getItemById(id); if(!it)return; var nm=aName(it);
+    var body='';
+    try{ body=renderResultBody(it, {}); }catch(e){ body = a.finding ? '<div style="color:var(--text-secondary);">'+escapeHtml(a.finding)+'</div>' : ''; }
+    h+='<div style="margin:10px 0 4px;padding:10px;border:1px solid var(--border);border-radius:10px;background:#fff;">'+
+       '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'+
+         '<span style="font-size:11px;font-weight:700;color:#fff;background:var(--primary);border-radius:6px;padding:2px 8px;">'+id+'</span>'+
+         '<span style="font-weight:700;font-size:14px;color:var(--text);">'+escapeHtml(nm)+'</span>'+
+       '</div>'+
+       '<div style="font-size:14px;">'+body+'</div>'+
+       '</div>';
+  });
+  h+='</div>';
   if(res.synthesis){ h+='<div class="result-section"><div class="result-section-title">'+L('🎯 AI 综合归因结论','🎯 AI root-cause synthesis')+'</div><div style="font-size:13px;line-height:1.85;color:var(--text);padding:12px;background:var(--primary-light);border-radius:8px;border-left:3px solid var(--primary);white-space:pre-line;">'+mdLite(res.synthesis)+'</div></div>'; }
-  if(list.length){ h+='<div class="result-section"><div class="result-section-title">'+L('一键执行','Run agents')+'</div><div style="display:flex;flex-wrap:wrap;gap:6px;">';
-    list.forEach(function(a){ var id=String(a.id).toUpperCase(); var it=getItemById(id); if(!it)return; var nm=aName(it); var tp=agents.find(function(x){return x.id===id;})?'agent':'skill';
-      h+='<button class="quick-btn" onclick="quickInvoke(\''+id+'\',\''+tp+'\')">'+id+' '+escapeHtml(nm)+'</button>'; });
-    h+='</div></div>'; }
   h+='</div>';
   h+='</div>';
   return h;
@@ -3579,16 +3585,15 @@ function clusterCardHtml(cl, region){
        '<span style="flex-shrink:0;color:#52C41A;font-size:13px;">✓</span></div>';
   });
   h+='</div>';
-  h+='<div class="result-section"><div class="result-section-title">各 Agent 关键发现</div>';
-  cl.steps.forEach(function(s){ var it=getItemById(s.id); var nm=it?it.name:s.id;
-    h+='<div style="margin:6px 0;font-size:13px;"><span style="font-weight:600;color:var(--primary);">'+nm+': </span><span style="color:var(--text-secondary);">'+s.find+'</span></div>';
+  h+='<div class="result-section"><div class="result-section-title">各 Agent 产出</div>';
+  cl.steps.forEach(function(s){ var it=getItemById(s.id); if(!it)return; var nm=it.name; var body='';
+    try{ body=renderResultBody(it, {}); }catch(e){ body='<div style="color:var(--text-secondary);">'+s.find+'</div>'; }
+    h+='<div style="margin:10px 0 4px;padding:10px;border:1px solid var(--border);border-radius:10px;background:#fff;">'+
+       '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:11px;font-weight:700;color:#fff;background:var(--primary);border-radius:6px;padding:2px 8px;">'+s.id+'</span><span style="font-weight:700;font-size:14px;">'+nm+'</span></div>'+
+       '<div style="font-size:14px;">'+body+'</div></div>';
   });
   h+='</div>';
   h+='<div class="result-section"><div class="result-section-title">🎯 AI 综合归因结论</div><div style="font-size:13px;line-height:1.85;color:var(--text);padding:12px;background:var(--primary-light);border-radius:8px;border-left:3px solid var(--primary);white-space:pre-line;"><b>'+region+'</b> '+cl.synth+'</div></div>';
-  h+='<div class="result-section"><div class="result-section-title">下钻建议</div><div style="display:flex;flex-wrap:wrap;gap:6px;">';
-  cl.drill.forEach(function(id){ var it=getItemById(id); var nm=it?it.name:id; var tp=agents.find(function(a){return a.id===id;})?'agent':'skill';
-    h+='<button class="quick-btn" onclick="quickInvoke(\''+id+'\',\''+tp+'\')">'+id+' '+nm+'</button>'; });
-  h+='</div></div>';
   h+='</div>';
   h+='</div>';
   return h;
@@ -3640,6 +3645,7 @@ function sendMessage() {
       var bub = el.querySelector('.msg-bubble');
       if (res && res.orchestrate && res.agents && res.agents.length) {
         bub.innerHTML = renderOrchestration(res);
+        if (currentLang==='en') { try{ localizeEl(bub); }catch(_e){} }
       } else {
         bub.innerHTML = renderAnswerWithChips((res && res.answer) || '', (res && res.tools) || []);
       }
