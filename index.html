@@ -450,6 +450,38 @@ document.addEventListener('click',function(e){var d=document.getElementById('lan
 var TRANS_CACHE={}; var transActive=0;
 function aName(item){if(!item)return '';if(currentLang==='zh')return item.name;var c=TRANS_CACHE[currentLang];return (c&&c[item.id]&&c[item.id].name)?c[item.id].name:item.name;}
 function aDesc(item){if(!item)return '';if(currentLang==='zh')return item.desc||'';var c=TRANS_CACHE[currentLang];return (c&&c[item.id]&&c[item.id].desc)?c[item.id].desc:(item.desc||'');}
+var TEXT_CACHE={};
+function _inSelect(node){var pp=node.parentNode;while(pp&&pp.nodeType===1){var nn=pp.nodeName;if(nn==='OPTION'||nn==='SELECT')return true;pp=pp.parentNode;}return false;}
+async function translateElement(el,lang){
+  if(lang==='zh'||!el||!LLM_ENDPOINT)return;
+  var walker=document.createTreeWalker(el,NodeFilter.SHOW_TEXT,null);
+  var nodes=[],n;
+  while(n=walker.nextNode()){var v=n.nodeValue;if(v&&v.trim()&&/[\u4e00-\u9fff]/.test(v)&&!_inSelect(n)){n._src=v;nodes.push(n);}}
+  if(!nodes.length)return;
+  var ck=lang+'\u0001';
+  var uniq=[],seen={};
+  nodes.forEach(function(nd){if(!seen[nd._src]){seen[nd._src]=1;uniq.push(nd._src);}});
+  function paint(){nodes.forEach(function(nd){var tt=TEXT_CACHE[ck+nd._src];if(tt)nd.nodeValue=tt;});}
+  paint();
+  var need=uniq.filter(function(x){return !TEXT_CACHE[ck+x];});
+  if(!need.length)return;
+  var langName=LLM_LANG[lang]||'English';
+  transActive++;showTransToast(true);
+  try{
+    var size=20;
+    for(var i=0;i<need.length;i+=size){
+      var chunk=need.slice(i,i+size);
+      var sys='你是翻译引擎。把下面JSON数组中的每个中文字符串翻译成'+langName+'，保持其中的数字、百分比、符号、英文与ID不变，语气专业简洁。只返回一个等长的JSON字符串数组，顺序与输入一一对应，不要输出任何额外文字或markdown。';
+      var resp=await fetch(LLM_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:sys,messages:[{role:'user',content:JSON.stringify(chunk)}]})});
+      if(!resp.ok)throw new Error('HTTP '+resp.status);
+      var data=await resp.json();var raw=(data.text||'').replace(/```json/g,'').replace(/```/g,'').trim();
+      var arr=null;try{arr=JSON.parse(raw);}catch(e){var m=raw.match(/\[[\s\S]*\]/);if(m){try{arr=JSON.parse(m[0]);}catch(e2){}}}
+      if(arr&&arr.length){chunk.forEach(function(src,idx){if(arr[idx]!=null)TEXT_CACHE[ck+src]=String(arr[idx]);});}
+      paint();
+    }
+  }catch(e){console.log('translateElement err',e);}
+  transActive--;if(transActive<=0)showTransToast(false);
+}
 function rerenderForLang(){try{if(typeof renderAgentList==='function')renderAgentList();if(typeof renderSkillList==='function')renderSkillList();if(typeof renderRightPanel==='function')renderRightPanel();if(typeof renderMentionList==='function'){var mp=document.getElementById('mentionPopup');if(mp&&mp.classList.contains('show'))renderMentionList();}}catch(e){}}
 function showTransToast(on){var el=document.getElementById('transToast');if(on){if(!el){el=document.createElement('div');el.id='transToast';el.style.cssText='position:fixed;top:64px;left:50%;transform:translateX(-50%);background:#1E2761;color:#fff;padding:8px 16px;border-radius:20px;font-size:13px;z-index:3000;box-shadow:0 4px 16px rgba(0,0,0,.2);';document.body.appendChild(el);}var f=LANGS.filter(function(x){return x.code===currentLang;})[0];el.textContent='🌐 '+(f?f.label:'')+' 翻译中…';}else if(el&&el.parentNode){el.parentNode.removeChild(el);}}
 async function translateCatalog(lang){
@@ -1561,6 +1593,7 @@ function openParamPanel(item, type) {
     const time = new Date().toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'});
     div.innerHTML = '<div class="msg-avatar ai"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><div><div class="msg-bubble">' + fullHtml + '</div><div class="msg-time">' + time + '</div></div>';
     container.appendChild(div);
+    if (currentLang !== 'zh') { try { translateElement(div, currentLang); } catch(e){} }
     document.getElementById('chatArea').scrollTop = document.getElementById('chatArea').scrollHeight;
   } catch(e) {
     console.error('openParamPanel ERROR:', e);
@@ -1733,7 +1766,9 @@ function executeItem(id, status, msgId, type) {
 function showExecutionResult(item, values, type) {
   const label = type === 'agent' ? 'Agent' : 'Skill';
   const resultHtml = generateResultHtml(item, values, type);
-  addAIMessage(resultHtml);
+  var rid = 'res_' + Date.now() + '_' + Math.floor(Math.random()*1000);
+  addAIMessage(resultHtml, rid);
+  if (currentLang !== 'zh') { var _el = document.getElementById(rid); if (_el) translateElement(_el, currentLang); }
 }
 
 // ==================== RESULT RENDERERS (task-specific, param-aware) ====================
