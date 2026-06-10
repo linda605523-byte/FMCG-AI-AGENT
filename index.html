@@ -3428,6 +3428,73 @@ function renderAnswerWithChips(text, ids) {
   return html;
 }
 
+// ==================== 促销海报生成（前端 canvas，离线可用） ====================
+function _posterFallback(text){
+  var t=text||'';
+  var lines=t.split('\n').map(function(s){return s.replace(/[*#>\-]/g,'').trim();}).filter(Boolean);
+  var title=(lines[0]||'促销活动').slice(0,12);
+  var mech=(t.match(/买[一二三四1-4]送[一二三四1-4]|第二件半价|降价\s?\d+%|满\s?\d+\s?减\s?\d+|买赠|加价购/)||[''])[0];
+  var price=(t.match(/¥\s?\d+(\.\d+)?(\/[^\s，。,；;]+)?/)||[''])[0];
+  var period=(t.match(/\d{4}-\d{2}-\d{2}\s*[~至到\-]+\s*\d{4}-\d{2}-\d{2}|\d{1,2}\s?月(份)?/)||[''])[0];
+  var slogan=(lines.find(function(l){return l.length>=4&&l.length<=16&&l!==title;})||'');
+  return {title:title,slogan:slogan,mechanic:mech,price:price,period:period,theme:'mint'};
+}
+async function genPromoPoster(idx){
+  var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
+  var text=(window._promoBriefs&&window._promoBriefs[idx])||'';
+  var toast=_s3dToast(EN?'Generating poster…':'正在生成海报…');
+  var fields=null;
+  try{
+    if(typeof LLM_ENDPOINT!=='undefined' && LLM_ENDPOINT){
+      var sys='你是促销海报文案助手。从用户给的促销brief中提取海报字段，严格只返回一个JSON对象、不要解释、不要markdown代码块：{"title":"主标题(产品或活动名,≤12字)","slogan":"一句卖点(≤16字)","mechanic":"促销机制(如 买二送一,≤8字)","price":"价格(如 ¥3.5/瓶，没有就留空)","period":"活动时间(没有就留空)","theme":"从 mint/navy/orange/red 中选最贴合的一个"}。'+(EN?'字段值用英文。':'');
+      var resp=await fetch(LLM_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:sys,messages:[{role:'user',content:text}]})});
+      if(resp.ok){ var d=await resp.json(); var raw=(d.text||'').replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'').trim(); var m=raw.match(/\{[\s\S]*\}/); if(m){ try{ fields=JSON.parse(m[0]); }catch(e){} } }
+    }
+  }catch(e){ fields=null; }
+  if(!fields||!fields.title) fields=_posterFallback(text);
+  if(toast&&toast.parentNode) toast.parentNode.removeChild(toast);
+  showPosterModal(fields);
+}
+function _roundRect(x,rx,ry,rw,rh,r){ x.beginPath(); x.moveTo(rx+r,ry); x.arcTo(rx+rw,ry,rx+rw,ry+rh,r); x.arcTo(rx+rw,ry+rh,rx,ry+rh,r); x.arcTo(rx,ry+rh,rx,ry,r); x.arcTo(rx,ry,rx+rw,ry,r); x.closePath(); }
+function _wrapText(x, text, px, py, maxW, lh, font){ x.font=font; var chars=String(text).split(''); var line=''; var yy=py;
+  for(var i=0;i<chars.length;i++){ var test=line+chars[i]; if(x.measureText(test).width>maxW && line){ x.fillText(line,px,yy); line=chars[i]; yy+=lh; } else line=test; }
+  if(line){ x.fillText(line,px,yy); yy+=lh; } return yy; }
+function _drawPromoPoster(fields){
+  var W=1080,H=1440, cv=document.createElement('canvas'); cv.width=W; cv.height=H; var x=cv.getContext('2d');
+  var themes={mint:['#00C39A','#0c7a63','#062b24'],navy:['#3a4aa0','#1E2761','#0a1130'],orange:['#FF9A4D','#E5631E','#5e2600'],red:['#FF5A60','#C62A30','#5e0f12']};
+  var th=themes[(fields.theme||'mint')]||themes.mint;
+  var g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,th[0]); g.addColorStop(0.55,th[1]); g.addColorStop(1,th[2]); x.fillStyle=g; x.fillRect(0,0,W,H);
+  x.globalAlpha=0.12; x.fillStyle='#fff';
+  x.beginPath(); x.arc(W*0.85,H*0.13,190,0,7); x.fill();
+  x.beginPath(); x.arc(W*0.12,H*0.92,240,0,7); x.fill(); x.globalAlpha=1;
+  x.textAlign='left';
+  x.fillStyle='rgba(255,255,255,.85)'; x.font='600 30px sans-serif'; x.fillText('eBest · 门店促销', 80, 120);
+  x.fillStyle='#fff'; var ty=_wrapText(x, fields.title||'促销活动', 80, 290, W-160, 100, 'bold 94px sans-serif');
+  if(fields.slogan){ x.fillStyle='rgba(255,255,255,.92)'; ty=_wrapText(x, fields.slogan, 80, ty+34, W-160, 56, '500 46px sans-serif'); }
+  if(fields.mechanic){ var by=Math.max(ty+60, 740); x.font='bold 72px sans-serif'; var mw=x.measureText(fields.mechanic).width; var bw=Math.min(mw+100,W-160), bh=132;
+    x.fillStyle='#fff'; _roundRect(x,80,by,bw,bh,30); x.fill(); x.fillStyle=th[1]; x.fillText(fields.mechanic, 130, by+bh/2+26); ty=by+bh; }
+  var iy=Math.max(ty+90, 1080);
+  if(fields.price){ x.fillStyle='#FFE7A3'; x.font='bold 66px sans-serif'; x.fillText(fields.price, 80, iy); iy+=92; }
+  if(fields.period){ x.fillStyle='rgba(255,255,255,.92)'; x.font='500 40px sans-serif'; x.fillText((currentLang==='en'?'Period · ':'活动时间 · ')+fields.period, 80, iy); iy+=70; }
+  x.strokeStyle='rgba(255,255,255,.3)'; x.lineWidth=2; x.beginPath(); x.moveTo(80,H-150); x.lineTo(W-80,H-150); x.stroke();
+  x.fillStyle='rgba(255,255,255,.8)'; x.font='400 30px sans-serif'; x.fillText(currentLang==='en'?'AI-generated sample · demo only':'AI 生成示例 · 仅供演示', 80, H-90);
+  return cv;
+}
+function showPosterModal(fields){
+  var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
+  var url; try{ url=_drawPromoPoster(fields).toDataURL('image/png'); }catch(e){ alert(EN?'Poster generation failed.':'海报生成失败。'); return; }
+  var wrap=document.createElement('div'); wrap.id='posterModal';
+  wrap.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;';
+  var img=document.createElement('img'); img.src=url; img.style.cssText='max-width:90%;max-height:72vh;border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,.5);';
+  var hint=document.createElement('div'); hint.style.cssText='color:#fff;font-size:13px;margin-top:12px;'; hint.textContent=EN?'Long-press the image to save':'长按图片即可保存到相册';
+  var row=document.createElement('div'); row.style.cssText='display:flex;gap:12px;margin-top:14px;';
+  var dl=document.createElement('a'); dl.href=url; dl.download='promo_poster.png'; dl.textContent=EN?'Download':'下载海报'; dl.style.cssText='background:#00C39A;color:#fff;padding:10px 22px;border-radius:20px;font-size:14px;text-decoration:none;font-weight:600;';
+  var cl=document.createElement('button'); cl.textContent=EN?'Close':'关闭'; cl.style.cssText='background:rgba(255,255,255,.2);color:#fff;border:none;padding:10px 22px;border-radius:20px;font-size:14px;cursor:pointer;';
+  cl.onclick=function(){ if(wrap.parentNode)wrap.parentNode.removeChild(wrap); };
+  row.appendChild(dl); row.appendChild(cl); wrap.appendChild(img); wrap.appendChild(hint); wrap.appendChild(row);
+  document.body.appendChild(wrap);
+}
+
 // ==================== DeepSeek 驱动的多Agent智能编排 ====================
 async function chatWithOrchestration(userText){
   var roleName=(currentRole&&currentRole.name)?currentRole.name:'快消销售';
@@ -3437,6 +3504,7 @@ async function chatWithOrchestration(userText){
     '{"orchestrate":布尔值,"intent":"一句话意图","agents":[{"id":"工具ID","task":"该工具负责的子任务(一句话)","output":"该工具的完整产出物本身，要紧扣用户请求的具体范围(时间/区域/品类等)，给出有结构、有具体数字的可交付结果；可用 markdown(加粗、短横线列表、分行)；可用示例数据但需标注‘示例’；不要只写一句话结论"}],"synthesis":"综合所有产出的归因结论与可执行建议(分点)","answer":"若不需要编排则在此直接回答","tools":["相关工具ID"]}。'+
     'orchestrate=true 时填 agents(2-5个) 与 synthesis；false 时填 answer 与 tools(0-3个)。'+
     '关键要求：每个 agent 的 output 必须与用户问题的范围严格一致——例如用户说“七月份/一个月”，就要给整月的计划(如按周拆解、月度汇总数字)，绝不能只给单独一天；用户指定了区域/品类，也要体现在产出里。'+
+    '若问题涉及促销/活动：所有 agent 的产出要围绕同一个具体活动(同一目标月份/主题/机制)展开并保持一致；当沙盘推演推荐了某机制(如买二送一)，必须说明它对应促销日历中的哪个月/哪个活动，synthesis 也要点明该机制落地到哪个月，不要出现“只推荐机制却不说放哪个月”的脱节。'+
     '所有 id 只能来自下面"工具清单"中出现过的 ID。\n\n工具清单:\n'+buildToolCatalog()+llmLangClause();
   var resp=await fetch(LLM_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:sys,messages:[{role:'user',content:userText}]})});
   if(!resp.ok) throw new Error('HTTP '+resp.status);
@@ -3449,6 +3517,7 @@ async function chatWithOrchestration(userText){
   if(!obj){ return {orchestrate:false, answer:raw, tools:[]}; }
   return obj;
 }
+
 function renderOrchestration(res){
   var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
   var L=function(zh,en){return EN?en:zh;};
@@ -3470,14 +3539,17 @@ function renderOrchestration(res){
   h+='<div class="result-section"><div class="result-section-title">'+L('各 Agent 产出','Agent deliverables')+'</div>';
   list.forEach(function(a){ var id=String(a.id).toUpperCase(); var it=getItemById(id); if(!it)return; var nm=aName(it);
     var outRaw=a.output||a.finding||'';
-    h+='<div style="margin:10px 0 4px;padding:12px;border:1px solid var(--border);border-radius:10px;background:#fff;">'+
-       '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'+
+    var inner='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'+
          '<span style="font-size:11px;font-weight:700;color:#fff;background:var(--primary);border-radius:6px;padding:2px 8px;">'+id+'</span>'+
          '<span style="font-weight:700;font-size:14px;color:var(--text);">'+escapeHtml(nm)+'</span>'+
        '</div>'+
        (a.task?'<div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">'+escapeHtml(a.task)+'</div>':'')+
-       '<div style="font-size:13px;line-height:1.75;color:var(--text);white-space:pre-line;">'+mdLite(outRaw)+'</div>'+
-       '</div>';
+       '<div style="font-size:13px;line-height:1.75;color:var(--text);white-space:pre-line;">'+mdLite(outRaw)+'</div>';
+    if(/促销|Brief|海报|活动|TPM/i.test((it.name||'')+' '+(it.desc||'')+' '+id) && outRaw){
+      window._promoBriefs=window._promoBriefs||[]; var pIdx=window._promoBriefs.push(outRaw)-1;
+      inner+='<button onclick="genPromoPoster('+pIdx+')" style="margin-top:10px;border:none;background:linear-gradient(135deg,#00C39A,#1E2761);color:#fff;border-radius:18px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">🎨 '+L('生成促销海报','Generate promo poster')+'</button>';
+    }
+    h+='<div style="margin:10px 0 4px;padding:12px;border:1px solid var(--border);border-radius:10px;background:#fff;">'+inner+'</div>';
   });
   h+='</div>';
   if(res.synthesis){ h+='<div class="result-section"><div class="result-section-title">'+L('🎯 AI 综合归因结论','🎯 AI root-cause synthesis')+'</div><div style="font-size:13px;line-height:1.85;color:var(--text);padding:12px;background:var(--primary-light);border-radius:8px;border-left:3px solid var(--primary);white-space:pre-line;">'+mdLite(res.synthesis)+'</div></div>'; }
