@@ -147,7 +147,7 @@
   /* Input Bar */
   .input-bar { padding: 12px 20px; background: var(--bg-card); border-top: 1px solid var(--border); display: flex; gap: 8px; align-items: flex-end; max-width: 800px; margin: 0 auto; width: 100%; }
   .input-wrapper { flex: 1; position: relative; }
-  .input-textarea { width: 100%; padding: 12px 44px 12px 16px; border: 1px solid var(--border); border-radius: 12px; font-size: 14px; outline: none; resize: none; max-height: 120px; min-height: 48px; font-family: inherit; line-height: 1.5; }
+  .input-textarea { width: 100%; padding: 12px 124px 12px 16px; border: 1px solid var(--border); border-radius: 12px; font-size: 14px; outline: none; resize: none; max-height: 120px; min-height: 48px; font-family: inherit; line-height: 1.5; }
   .input-textarea:focus { border-color: var(--primary); }
   .at-btn { position: absolute; right: 10px; bottom: 10px; width: 32px; height: 32px; border: none; background: var(--bg-hover); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-secondary); font-size: 16px; font-weight: 700; }
   .at-btn:hover { background: var(--primary-light); color: var(--primary); }
@@ -367,10 +367,10 @@
     <div class="input-bar">
       <div class="input-wrapper" id="inputWrapper">
         <textarea class="input-textarea" id="chatInput" placeholder="输入消息，使用 @ 调用Agent或Skill..." rows="1"></textarea>
-        <button class="at-btn" onclick="document.getElementById('fileInput').click()" title="上传数据(CSV/TXT)">📎</button>
-        <button class="at-btn" onclick="downloadTemplate()" title="下载数据模板">📄</button>
+        <button class="at-btn" onclick="document.getElementById('fileInput').click()" title="上传数据(CSV/TXT)" style="right:48px;">📎</button>
+        <button class="at-btn" onclick="downloadTemplate()" title="下载数据模板" style="right:86px;">📄</button>
         <input type="file" id="fileInput" accept=".csv,.txt,.tsv" style="display:none" onchange="handleFileUpload(this)">
-        <button class="at-btn" onclick="toggleMention()">@</button>
+        <button class="at-btn" id="atBtnMain" onclick="toggleMention()">@</button>
         <div class="mention-popup" id="mentionPopup">
           <div class="mention-search"><input type="text" placeholder="搜索Agent或Skill..." id="mentionSearch"></div>
           <div class="mention-tabs">
@@ -1099,7 +1099,7 @@ document.addEventListener('DOMContentLoaded', () => {
       dropdown.classList.remove('show');
     }
     const mentionPopup = document.getElementById('mentionPopup');
-    const atBtn = document.querySelector('.at-btn');
+    const atBtn = document.getElementById('atBtnMain');
     const inputWrapper = document.getElementById('inputWrapper');
     if (mentionPopup && !mentionPopup.contains(e.target) && e.target !== atBtn && (!inputWrapper || !inputWrapper.contains(e.target))) {
       mentionPopup.classList.remove('show');
