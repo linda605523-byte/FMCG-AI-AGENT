@@ -2009,7 +2009,10 @@ function bindQuickActions() {
     const type = btn.dataset.type;
     if (type === 'cluster') {
       var _c = CLUSTERS.find(function(c){ return c.key === id; });
-      if (_c) runAgentCluster(_c.sampleZh || '', _c);
+      var q = (_c && _c.sampleZh) || '分析上月业绩下滑的原因';
+      var inp = document.getElementById('chatInput');
+      if (inp) inp.value = q;
+      sendMessage();
       return;
     }
     if (id && type) {
@@ -3255,6 +3258,58 @@ function renderAnswerWithChips(text, ids) {
   return html;
 }
 
+// ==================== DeepSeek 驱动的多Agent智能编排 ====================
+async function chatWithOrchestration(userText){
+  var roleName=(currentRole&&currentRole.name)?currentRole.name:'快消销售';
+  var sys='你是 eBest 快消行业 AI 工作台的智能编排引擎。当前使用者角色：'+roleName+'。'+
+    '判断用户问题是否需要「多Agent协同分析」（需要拆成多个子任务、分别用不同工具完成后再汇总归因）。'+
+    '严格只返回一个 JSON 对象，不要任何解释、不要 markdown 代码块。字段：'+
+    '{"orchestrate":布尔值,"intent":"一句话意图","agents":[{"id":"工具ID","task":"该工具负责的子任务(简短)","finding":"该工具得出的关键发现(可用示例数据，简短)"}],"synthesis":"综合归因结论与可执行建议(分点、简洁，示例数据请注明)","answer":"若不需要编排则在此直接回答","tools":["相关工具ID"]}。'+
+    'orchestrate=true 时填 agents(2-5个) 与 synthesis；false 时填 answer 与 tools(0-3个)。'+
+    '所有 id 只能来自下面"工具清单"中出现过的 ID。\n\n工具清单:\n'+buildToolCatalog()+llmLangClause();
+  var resp=await fetch(LLM_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:sys,messages:[{role:'user',content:userText}]})});
+  if(!resp.ok) throw new Error('HTTP '+resp.status);
+  var data=await resp.json();
+  var raw=(data.text||'').trim();
+  raw=raw.replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'').trim();
+  var m=raw.match(/\{[\s\S]*\}/);
+  var obj=null;
+  if(m){ try{ obj=JSON.parse(m[0]); }catch(e){ obj=null; } }
+  if(!obj){ return {orchestrate:false, answer:raw, tools:[]}; }
+  return obj;
+}
+function renderOrchestration(res){
+  var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
+  var L=function(zh,en){return EN?en:zh;};
+  var list=(res.agents||[]).filter(function(a){return a&&a.id&&getItemById(String(a.id).toUpperCase());});
+  var h='<div class="result-card">';
+  h+='<div class="result-header"><span style="font-size:18px;">🧩</span><span class="result-title">'+L('多Agent智能编排','Multi-Agent Orchestration')+'</span><span class="result-status status-success">DeepSeek</span></div>';
+  h+='<div class="result-body">';
+  if(res.intent){ h+='<div class="result-section"><div class="result-section-title">'+L('意图识别','Intent')+'</div><div style="font-size:13px;color:var(--text-secondary);background:var(--bg);padding:10px;border-radius:6px;">'+escapeHtml(res.intent)+'</div></div>'; }
+  h+='<div class="result-section"><div class="result-section-title">'+L('编排方案','Plan')+' · '+list.length+' '+L('个 Agent','agents')+'</div>';
+  list.forEach(function(a){ var id=String(a.id).toUpperCase(); var it=getItemById(id); var nm=it?aName(it):id;
+    h+='<div style="display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--border);">'+
+       '<span style="flex-shrink:0;font-size:11px;font-weight:700;color:var(--primary);background:var(--primary-light);border-radius:6px;padding:2px 7px;min-width:34px;text-align:center;">'+id+'</span>'+
+       '<div style="flex:1;font-size:13px;"><div style="font-weight:600;">'+escapeHtml(nm)+'</div>'+(a.task?'<div style="color:var(--text-secondary);font-size:12px;">'+escapeHtml(a.task)+'</div>':'')+'</div>'+
+       '<span style="flex-shrink:0;color:#52C41A;font-size:13px;">✓</span></div>';
+  });
+  h+='</div>';
+  var wf=list.filter(function(a){return a.finding;});
+  if(wf.length){ h+='<div class="result-section"><div class="result-section-title">'+L('各 Agent 关键发现','Key findings per agent')+'</div>';
+    wf.forEach(function(a){ var id=String(a.id).toUpperCase(); var it=getItemById(id); var nm=it?aName(it):id;
+      h+='<div style="margin:6px 0;font-size:13px;"><span style="font-weight:600;color:var(--primary);">'+escapeHtml(nm)+': </span><span style="color:var(--text-secondary);">'+escapeHtml(a.finding)+'</span></div>'; });
+    h+='</div>'; }
+  if(res.synthesis){ h+='<div class="result-section"><div class="result-section-title">'+L('🎯 AI 综合归因结论','🎯 AI root-cause synthesis')+'</div><div style="font-size:13px;line-height:1.85;color:var(--text);padding:12px;background:var(--primary-light);border-radius:8px;border-left:3px solid var(--primary);white-space:pre-line;">'+mdLite(res.synthesis)+'</div></div>'; }
+  if(list.length){ h+='<div class="result-section"><div class="result-section-title">'+L('一键执行','Run agents')+'</div><div style="display:flex;flex-wrap:wrap;gap:6px;">';
+    list.forEach(function(a){ var id=String(a.id).toUpperCase(); var it=getItemById(id); if(!it)return; var nm=aName(it); var tp=agents.find(function(x){return x.id===id;})?'agent':'skill';
+      h+='<button class="quick-btn" onclick="quickInvoke(\''+id+'\',\''+tp+'\')">'+id+' '+escapeHtml(nm)+'</button>'; });
+    h+='</div></div>'; }
+  h+='</div>';
+  h+='<div class="result-data-source"><strong>'+L('编排说明','Orchestration')+':</strong> '+L('由 DeepSeek 根据意图自动选择并编排上述 Agent，结论为模型实时生成（示例数据）。','Agents auto-selected and orchestrated by DeepSeek; synthesis is generated live by the model (demo data).')+'</div>';
+  h+='</div>';
+  return h;
+}
+
 // 下载数据分析模板(供用户填好后上传)
 function downloadTemplate() {
   var csv = '门店名称,渠道类型,品类,本周销量(箱),期末库存(箱),陈列是否达标\n' +
@@ -3409,26 +3464,38 @@ function sendMessage() {
     }
   }
 
-  // Multi-agent cluster orchestration (free-text intent)
-  var _cl = detectCluster(text);
-  if (_cl) { runAgentCluster(text, _cl); document.getElementById('sendBtn').disabled = false; return; }
-
-  // Free-text chat
+  // Free-text -> DeepSeek (smart: orchestrate multiple agents, or answer directly)
   if (LLM_ENDPOINT) {
     var mid = 'llm_' + Date.now();
     addAIMessage('<div style="font-size:14px;color:var(--text-muted);">'+t('thinking')+'</div>', mid);
-    chatWithRouting(text).then(function(res){
-      var el = document.getElementById(mid);
-      if (el) el.querySelector('.msg-bubble').innerHTML = renderAnswerWithChips(res.text, res.ids);
+    chatWithOrchestration(text).then(function(res){
+      var el = document.getElementById(mid); if(!el) return;
+      var bub = el.querySelector('.msg-bubble');
+      if (res && res.orchestrate && res.agents && res.agents.length) {
+        bub.innerHTML = renderOrchestration(res);
+      } else {
+        bub.innerHTML = renderAnswerWithChips((res && res.answer) || '', (res && res.tools) || []);
+      }
       scrollToBottom();
     }).catch(function(e){
-      var el = document.getElementById(mid);
-      if (el) el.querySelector('.msg-bubble').innerHTML = '<div style="font-size:14px;color:#C00;">连接大模型失败：' + escapeHtml(e.message) + '<br>请检查 Worker 网址是否填对、是否已部署成功。</div>';
+      var el = document.getElementById(mid); if(!el) return;
+      var _cl = detectCluster(text);
+      if (_cl) {
+        el.querySelector('.msg-bubble').innerHTML = clusterCardHtml(_cl, (text.match(/华东|华北|华南|华中|西南|西北|东北/)||['华东'])[0]);
+        if (currentLang==='en') { try{ localizeEl(el.querySelector('.msg-bubble')); }catch(_e){} }
+      } else {
+        el.querySelector('.msg-bubble').innerHTML = '<div style="font-size:14px;color:#C00;">' + (currentLang==='en'?'LLM connection failed: ':'连接大模型失败：') + escapeHtml(e.message) + '</div>';
+      }
+      scrollToBottom();
     });
     return;
   }
+
+  // Offline demo mode: rule-based cluster, else generic hint
+  var _cl = detectCluster(text);
+  if (_cl) { runAgentCluster(text, _cl); return; }
   setTimeout(() => {
-    addAIMessage('<div style="font-size:14px;">收到您的消息。可使用 <strong>@AgentID</strong> 或 <strong>@SkillID</strong> 调用具体功能（如 <strong>@A1</strong> 潜力门店、<strong>@S1</strong> 拜访任务包）；接入大模型后也可直接用中文提问。</div>');
+    addAIMessage('<div style="font-size:14px;">收到您的消息。可使用 <strong>@AgentID</strong> 或 <strong>@SkillID</strong> 调用具体功能（如 <strong>@A1</strong>、<strong>@S1</strong>）；也可直接用自然语言提问，我会智能编排相关 Agent。</div>');
   }, 600);
 }
 
