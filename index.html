@@ -3305,7 +3305,6 @@ function renderOrchestration(res){
       h+='<button class="quick-btn" onclick="quickInvoke(\''+id+'\',\''+tp+'\')">'+id+' '+escapeHtml(nm)+'</button>'; });
     h+='</div></div>'; }
   h+='</div>';
-  h+='<div class="result-data-source"><strong>'+L('编排说明','Orchestration')+':</strong> '+L('由 DeepSeek 根据意图自动选择并编排上述 Agent，结论为模型实时生成（示例数据）。','Agents auto-selected and orchestrated by DeepSeek; synthesis is generated live by the model (demo data).')+'</div>';
   h+='</div>';
   return h;
 }
@@ -3422,7 +3421,6 @@ function clusterCardHtml(cl, region){
     h+='<button class="quick-btn" onclick="quickInvoke(\''+id+'\',\''+tp+'\')">'+id+' '+nm+'</button>'; });
   h+='</div></div>';
   h+='</div>';
-  h+='<div class="result-data-source"><strong>编排说明:</strong> 路由器依据意图自动选择 '+cl.steps.length+' 个 Agent 并行执行，并对结果进行归因汇总。</div>';
   h+='</div>';
   return h;
 }
