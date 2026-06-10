@@ -253,6 +253,12 @@
     </div>
   </div>
   <div class="topbar-right">
+    <div class="lang-dropdown" id="langDropdown" style="position:relative;">
+      <button class="topbar-btn" id="langBtn" onclick="toggleLangMenu()" style="width:auto;padding:0 10px;display:flex;align-items:center;gap:5px;font-size:14px;">
+        <span style="font-size:16px;">🌐</span><span id="langBtnLabel">中文</span>
+      </button>
+      <div id="langMenu" style="display:none;position:absolute;top:115%;right:0;background:#fff;border:1px solid #E5E7EB;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.12);z-index:2000;min-width:150px;overflow:hidden;"></div>
+    </div>
     <button class="topbar-btn">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       <span class="badge">3</span>
@@ -274,35 +280,35 @@
     <div class="sidebar-header">
       <button class="new-chat-btn" onclick="newChat()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        新建会话
+        <span data-i18n="newChat">新建会话</span>
       </button>
     </div>
     <nav class="sidebar-nav" id="sidebarNav">
       <div class="nav-item active" onclick="showSection('chat', this)">
         <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        会话中心
+        <span data-i18n="chatCenter">会话中心</span>
       </div>
       <div class="nav-item" id="navAgents" onclick="toggleAgentList()">
         <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        全部Agent
+        <span data-i18n="allAgents">全部Agent</span>
         <span class="nav-expand" id="navAgentExpand">&#9654;</span>
       </div>
       <div class="nav-item" id="navSkills" onclick="toggleSkillList()">
         <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        全部Skill
+        <span data-i18n="allSkills">全部Skill</span>
         <span class="nav-expand" id="navSkillExpand">&#9654;</span>
       </div>
       <div class="nav-item" onclick="showSection('warroom', this)">
         <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-        作战室
+        <span data-i18n="warRoom">作战室</span>
       </div>
       <div class="nav-item" onclick="showSection('cluster', this)">
         <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        Agent集群
+        <span data-i18n="agentCluster">Agent集群</span>
       </div>
       <div class="nav-item" onclick="showSection('output', this)">
         <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        输出中心
+        <span data-i18n="outputCenter">输出中心</span>
       </div>
     </nav>
     <!-- Agent List Panel -->
@@ -349,14 +355,14 @@
             <div class="msg-bubble">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="background:#E8F1FA;color:#4A90D9;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:600;">Agent</span><span style="font-size:14px;font-weight:600;">A5 沙盘推演</span></div>
               <div class="param-card" id="paramCard_demo">
-                <div class="param-card-header"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1890FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><span class="param-card-title">A5 沙盘推演 - 参数配置</span><span class="param-card-subtitle" style="background:#C6EFCE;color:#52C41A;">核心Agent</span></div>
+                <div class="param-card-header"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1890FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><span class="param-card-title">A5 沙盘推演 - <span data-i18n="paramConfig">参数配置</span></span><span class="param-card-subtitle" style="background:#C6EFCE;color:#52C41A;">核心Agent</span></div>
                 <div class="param-field"><label class="param-label">策略类型</label><select class="param-select"><option>促销策略</option><option>价格策略</option><option>渠道策略</option><option>新品上市</option><option>竞争应对</option></select></div>
                 <div class="param-field"><label class="param-label">具体方案</label><select class="param-select"><option>买二送一</option><option>降价10%</option><option>满100减20</option><option>新渠道进入</option></select></div>
                 <div class="param-field"><label class="param-label">市场范围</label><select class="param-select"><option>华东区</option><option>全国</option><option>华南区</option><option>华北大区</option></select></div>
                 <div class="param-field"><label class="param-label">模拟周期(月)</label><input type="number" class="param-input" value="3" min="1" max="12"></div>
                 <div class="param-field"><label class="param-label">蒙特卡洛迭代次数</label><select class="param-select"><option>5000次</option><option>1000次</option><option>10000次</option></select></div>
                 <div class="param-meta"><div><strong>数据来源(内部):</strong> ERP(历史价格/成本) / TPM(促销历史/费用) / DMS(销量/份额) / CRM(消费者数据)</div><div><strong>数据来源(外部):</strong> 竞品价格-爬虫采集(低成本) / 行业报告-购买尼尔森/凯度(中高成本)</div><div><strong>预计耗时:</strong> 约 3-5 秒</div></div>
-                <div class="param-actions"><button class="btn btn-secondary" data-action="cancelDemo">取消</button><button class="btn btn-primary" data-action="executeDemo" data-item="A5" data-name="沙盘推演" data-type="agent">确认执行</button></div>
+                <div class="param-actions"><button class="btn btn-secondary" data-action="cancelDemo" data-i18n="cancel">取消</button><button class="btn btn-primary" data-action="executeDemo" data-item="A5" data-name="沙盘推演" data-type="agent" data-i18n="confirm">确认执行</button></div>
               </div>
             </div>
             <div class="msg-time">刚刚</div>
@@ -390,7 +396,7 @@
   <aside class="right-panel" id="rightPanel">
     <div class="panel-title">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-      角色概览
+      <span data-i18n="roleOverview">角色概览</span>
     </div>
     <div id="rightPanelContent"></div>
   </aside>
@@ -422,6 +428,23 @@ const roles = [
   {id:'subdistributor', name:'分销商业务', abbr:'分销', level:'执行层', tag:'subdistributor'},
   {id:'store', name:'门店老板/店长', abbr:'门店', level:'经营层', tag:'store'}
 ];
+
+/* ==================== I18N ==================== */
+var LANGS=[{code:'zh',label:'中文'},{code:'en',label:'English'},{code:'es',label:'Español'},{code:'ar',label:'العربية'},{code:'th',label:'ไทย'},{code:'ms',label:'Bahasa Melayu'}];
+var currentLang='zh';
+var I18N={"zh": {"newChat": "新建会话", "chatCenter": "会话中心", "allAgents": "全部Agent", "allSkills": "全部Skill", "warRoom": "作战室", "agentCluster": "Agent集群", "outputCenter": "输出中心", "roleOverview": "角色概览", "roleInfo": "角色信息", "role": "角色", "level": "层级", "availableAgents": "可用Agent", "availableSkills": "可用Skill", "quickAgents": "快捷Agent", "quickSkills": "快捷Skill", "selectRole": "选择角色", "inputPlaceholder": "输入消息，使用 @ 调用Agent或Skill...", "paramConfig": "参数配置", "cancel": "取消", "confirm": "确认执行", "execParams": "执行参数", "execResult": "执行结果", "aiInterpret": "AI 解读", "recommendedTools": "💡 推荐工具（点击直接使用）", "thinking": "🤔 思考中…", "uploadData": "上传数据(CSV/TXT)", "downloadTemplate": "下载数据模板", "developing": "功能正在开发中...", "welcomeHello": "您好，", "welcomeSub": "FMCG AI RTM Workbench 为您提供智能决策支持。可使用 @ 调用Agent和Skill。"}, "en": {"newChat": "New Chat", "chatCenter": "Chat Center", "allAgents": "All Agents", "allSkills": "All Skills", "warRoom": "War Room", "agentCluster": "Agent Cluster", "outputCenter": "Output Center", "roleOverview": "Role Overview", "roleInfo": "Role Info", "role": "Role", "level": "Level", "availableAgents": "Available Agents", "availableSkills": "Available Skills", "quickAgents": "Quick Agents", "quickSkills": "Quick Skills", "selectRole": "Select Role", "inputPlaceholder": "Type a message, use @ to call an Agent or Skill...", "paramConfig": "Parameters", "cancel": "Cancel", "confirm": "Run", "execParams": "Input Parameters", "execResult": "Result", "aiInterpret": "AI Interpretation", "recommendedTools": "💡 Recommended tools (tap to use)", "thinking": "🤔 Thinking…", "uploadData": "Upload data (CSV/TXT)", "downloadTemplate": "Download data template", "developing": "This feature is under development...", "welcomeHello": "Hello, ", "welcomeSub": "FMCG AI RTM Workbench provides intelligent decision support. Use @ to call Agents and Skills."}, "es": {"newChat": "Nueva conversación", "chatCenter": "Centro de chat", "allAgents": "Todos los agentes", "allSkills": "Todas las habilidades", "warRoom": "Sala de mando", "agentCluster": "Clúster de agentes", "outputCenter": "Centro de resultados", "roleOverview": "Resumen del rol", "roleInfo": "Información del rol", "role": "Rol", "level": "Nivel", "availableAgents": "Agentes disponibles", "availableSkills": "Habilidades disponibles", "quickAgents": "Agentes rápidos", "quickSkills": "Habilidades rápidas", "selectRole": "Seleccionar rol", "inputPlaceholder": "Escribe un mensaje, usa @ para llamar a un agente o habilidad...", "paramConfig": "Parámetros", "cancel": "Cancelar", "confirm": "Ejecutar", "execParams": "Parámetros de entrada", "execResult": "Resultado", "aiInterpret": "Interpretación de IA", "recommendedTools": "💡 Herramientas recomendadas (toca para usar)", "thinking": "🤔 Pensando…", "uploadData": "Subir datos (CSV/TXT)", "downloadTemplate": "Descargar plantilla de datos", "developing": "Esta función está en desarrollo...", "welcomeHello": "Hola, ", "welcomeSub": "FMCG AI RTM Workbench ofrece soporte inteligente para decisiones. Usa @ para llamar agentes y habilidades."}, "ar": {"newChat": "محادثة جديدة", "chatCenter": "مركز المحادثات", "allAgents": "جميع الوكلاء", "allSkills": "جميع المهارات", "warRoom": "غرفة العمليات", "agentCluster": "مجموعة الوكلاء", "outputCenter": "مركز المخرجات", "roleOverview": "نظرة عامة على الدور", "roleInfo": "معلومات الدور", "role": "الدور", "level": "المستوى", "availableAgents": "الوكلاء المتاحون", "availableSkills": "المهارات المتاحة", "quickAgents": "وكلاء سريعون", "quickSkills": "مهارات سريعة", "selectRole": "اختر الدور", "inputPlaceholder": "اكتب رسالة، استخدم @ لاستدعاء وكيل أو مهارة...", "paramConfig": "الإعدادات", "cancel": "إلغاء", "confirm": "تنفيذ", "execParams": "معاملات التنفيذ", "execResult": "النتيجة", "aiInterpret": "تحليل الذكاء الاصطناعي", "recommendedTools": "💡 الأدوات الموصى بها (انقر للاستخدام)", "thinking": "🤔 جارٍ التفكير…", "uploadData": "رفع البيانات (CSV/TXT)", "downloadTemplate": "تنزيل قالب البيانات", "developing": "هذه الميزة قيد التطوير...", "welcomeHello": "مرحباً، ", "welcomeSub": "يوفر FMCG AI RTM Workbench دعمًا ذكيًا لاتخاذ القرار. استخدم @ لاستدعاء الوكلاء والمهارات."}, "th": {"newChat": "แชทใหม่", "chatCenter": "ศูนย์แชท", "allAgents": "เอเจนต์ทั้งหมด", "allSkills": "ทักษะทั้งหมด", "warRoom": "ห้องวอร์รูม", "agentCluster": "คลัสเตอร์เอเจนต์", "outputCenter": "ศูนย์ผลลัพธ์", "roleOverview": "ภาพรวมบทบาท", "roleInfo": "ข้อมูลบทบาท", "role": "บทบาท", "level": "ระดับ", "availableAgents": "เอเจนต์ที่ใช้ได้", "availableSkills": "ทักษะที่ใช้ได้", "quickAgents": "เอเจนต์ด่วน", "quickSkills": "ทักษะด่วน", "selectRole": "เลือกบทบาท", "inputPlaceholder": "พิมพ์ข้อความ ใช้ @ เพื่อเรียกเอเจนต์หรือทักษะ...", "paramConfig": "ตั้งค่าพารามิเตอร์", "cancel": "ยกเลิก", "confirm": "ยืนยันการทำงาน", "execParams": "พารามิเตอร์ที่ใช้", "execResult": "ผลลัพธ์", "aiInterpret": "การวิเคราะห์โดย AI", "recommendedTools": "💡 เครื่องมือแนะนำ (แตะเพื่อใช้)", "thinking": "🤔 กำลังคิด…", "uploadData": "อัปโหลดข้อมูล (CSV/TXT)", "downloadTemplate": "ดาวน์โหลดเทมเพลตข้อมูล", "developing": "ฟีเจอร์นี้กำลังพัฒนา...", "welcomeHello": "สวัสดี ", "welcomeSub": "FMCG AI RTM Workbench ช่วยสนับสนุนการตัดสินใจอัจฉริยะ ใช้ @ เพื่อเรียกเอเจนต์และทักษะ"}, "ms": {"newChat": "Sembang Baharu", "chatCenter": "Pusat Sembang", "allAgents": "Semua Ejen", "allSkills": "Semua Kemahiran", "warRoom": "Bilik Operasi", "agentCluster": "Kluster Ejen", "outputCenter": "Pusat Output", "roleOverview": "Gambaran Peranan", "roleInfo": "Maklumat Peranan", "role": "Peranan", "level": "Tahap", "availableAgents": "Ejen Tersedia", "availableSkills": "Kemahiran Tersedia", "quickAgents": "Ejen Pantas", "quickSkills": "Kemahiran Pantas", "selectRole": "Pilih Peranan", "inputPlaceholder": "Taip mesej, guna @ untuk panggil Ejen atau Kemahiran...", "paramConfig": "Tetapan Parameter", "cancel": "Batal", "confirm": "Jalankan", "execParams": "Parameter Pelaksanaan", "execResult": "Keputusan", "aiInterpret": "Tafsiran AI", "recommendedTools": "💡 Alat disyorkan (ketik untuk guna)", "thinking": "🤔 Sedang berfikir…", "uploadData": "Muat naik data (CSV/TXT)", "downloadTemplate": "Muat turun templat data", "developing": "Ciri ini sedang dibangunkan...", "welcomeHello": "Salam, ", "welcomeSub": "FMCG AI RTM Workbench menyediakan sokongan keputusan pintar. Guna @ untuk panggil Ejen dan Kemahiran."}};
+var ROLE_I18N={"executive": {"en": "Sales VP/Director", "es": "VP/Director de ventas", "ar": "نائب رئيس/مدير المبيعات", "th": "VP/ผู้อำนวยการฝ่ายขาย", "ms": "VP/Pengarah Jualan"}, "regional": {"en": "Regional Sales Manager", "es": "Gerente regional de ventas", "ar": "مدير مبيعات إقليمي", "th": "ผู้จัดการขายภูมิภาค", "ms": "Pengurus Jualan Wilayah"}, "brand": {"en": "Brand Manager", "es": "Gerente de marca", "ar": "مدير العلامة التجارية", "th": "ผู้จัดการแบรนด์", "ms": "Pengurus Jenama"}, "channel": {"en": "Channel Manager", "es": "Gerente de canal", "ar": "مدير القنوات", "th": "ผู้จัดการช่องทาง", "ms": "Pengurus Saluran"}, "tpm": {"en": "TPM/Promo Manager", "es": "TPM/Gerente de promociones", "ar": "مدير الترويج TPM", "th": "TPM/ผู้จัดการโปรโมชัน", "ms": "TPM/Pengurus Promosi"}, "analyst": {"en": "Data Analyst", "es": "Analista de datos", "ar": "محلل بيانات", "th": "นักวิเคราะห์ข้อมูล", "ms": "Penganalisis Data"}, "salesrep": {"en": "Sales Rep/DSR", "es": "Vendedor/DSR", "ar": "مندوب مبيعات/DSR", "th": "พนักงานขาย/DSR", "ms": "Wakil Jualan/DSR"}, "supervisor": {"en": "Supervisor", "es": "Supervisor", "ar": "مشرف", "th": "หัวหน้างาน", "ms": "Penyelia"}, "promoter": {"en": "Promoter", "es": "Promotor", "ar": "مروّج مبيعات", "th": "พนักงานส่งเสริมการขาย", "ms": "Promoter"}, "distributor": {"en": "Distributor Owner", "es": "Dueño distribuidor", "ar": "صاحب الموزّع", "th": "เจ้าของตัวแทนจำหน่าย", "ms": "Pemilik Pengedar"}, "subdistributor": {"en": "Sub-distributor Rep", "es": "Rep. subdistribuidor", "ar": "مندوب موزّع فرعي", "th": "ตัวแทนผู้จัดจำหน่ายย่อย", "ms": "Wakil Pengedar Kecil"}, "store": {"en": "Store Owner/Manager", "es": "Dueño/gerente de tienda", "ar": "صاحب/مدير المتجر", "th": "เจ้าของ/ผู้จัดการร้าน", "ms": "Pemilik/Pengurus Kedai"}};
+var LEVEL_I18N={"决策层": {"en": "Executive", "es": "Dirección", "ar": "الإدارة العليا", "th": "ระดับบริหาร", "ms": "Eksekutif"}, "管理层": {"en": "Management", "es": "Gerencia", "ar": "الإدارة", "th": "ระดับจัดการ", "ms": "Pengurusan"}, "支持层": {"en": "Support", "es": "Soporte", "ar": "الدعم", "th": "ระดับสนับสนุน", "ms": "Sokongan"}, "执行层": {"en": "Execution", "es": "Ejecución", "ar": "التنفيذ", "th": "ระดับปฏิบัติการ", "ms": "Pelaksanaan"}, "经营层": {"en": "Business Owner", "es": "Propietario", "ar": "الإدارة التشغيلية", "th": "ระดับเจ้าของกิจการ", "ms": "Pemilik Perniagaan"}};
+var LLM_LANG={zh:'中文',en:'英语',es:'西班牙语',ar:'阿拉伯语',th:'泰语',ms:'马来语'};
+function t(k){var L=I18N[currentLang]||{};return (k in L)?L[k]:((I18N.zh[k]!=null)?I18N.zh[k]:k);}
+function tRole(r){if(!r)return'';if(currentLang==='zh')return r.name;var m=ROLE_I18N[r.id];return (m&&m[currentLang])?m[currentLang]:r.name;}
+function tLevel(lv){if(currentLang==='zh')return lv;var m=LEVEL_I18N[lv];return (m&&m[currentLang])?m[currentLang]:lv;}
+function llmLangClause(){return currentLang==='zh'?'':('\n\n重要：请全程用'+(LLM_LANG[currentLang]||'中文')+'回答用户（正文全部用该语言）。');}
+function renderLangMenu(){var m=document.getElementById('langMenu');if(!m)return;m.innerHTML=LANGS.map(function(l){return '<div onclick="applyLanguage(\''+l.code+'\')" style="padding:10px 14px;cursor:pointer;font-size:14px;white-space:nowrap;'+(l.code===currentLang?'background:#E6F0FF;color:#1E2761;font-weight:600;':'')+'">'+l.label+'</div>';}).join('');}
+function toggleLangMenu(){var m=document.getElementById('langMenu');if(!m)return;renderLangMenu();m.style.display=(m.style.display==='block')?'none':'block';}
+function closeLangMenu(){var m=document.getElementById('langMenu');if(m)m.style.display='none';}
+function applyLanguage(lang){currentLang=lang;try{document.documentElement.lang=lang;document.documentElement.dir=(lang==='ar')?'rtl':'ltr';}catch(e){}document.querySelectorAll('[data-i18n]').forEach(function(el){el.textContent=t(el.getAttribute('data-i18n'));});document.querySelectorAll('[data-i18n-title]').forEach(function(el){el.title=t(el.getAttribute('data-i18n-title'));});var ci=document.getElementById('chatInput');if(ci)ci.placeholder=t('inputPlaceholder');var lb=document.getElementById('langBtnLabel');if(lb){var f=LANGS.filter(function(x){return x.code===lang;})[0];lb.textContent=f?f.label:'中文';}if(typeof renderRoleDropdown==='function')renderRoleDropdown();if(currentRole){var cl=document.getElementById('currentRoleLabel');if(cl)cl.textContent=(currentRole.abbr?currentRole.abbr+' - ':'')+tRole(currentRole);var un=document.getElementById('userName');if(un)un.textContent=tRole(currentRole);}if(typeof updateWelcome==='function')updateWelcome();if(typeof renderRightPanel==='function')renderRightPanel();closeLangMenu();}
+document.addEventListener('click',function(e){var d=document.getElementById('langDropdown');if(d&&!d.contains(e.target))closeLangMenu();});
 
 const agents = [
   {id:'A1', name:'潜力门店挖掘', desc:'XGBoost/LightGBM排序,输出Top潜力门店及推荐理由', status:'core', roleTags:['executive','regional','brand','channel','tpm','analyst','distributor','subdistributor'],
@@ -1075,12 +1098,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // Auto-select first role and update UI
   const firstRole = roles[0];
   currentRole = firstRole;
-  document.getElementById('currentRoleLabel').textContent = firstRole.abbr + ' - ' + firstRole.name;
+  document.getElementById('currentRoleLabel').textContent = firstRole.abbr + ' - ' + tRole(firstRole);
   document.getElementById('userAvatar').textContent = firstRole.abbr;
-  document.getElementById('userName').textContent = firstRole.name;
+  document.getElementById('userName').textContent = tRole(firstRole);
   // Update welcome message
-  document.getElementById('welcomeTitle').textContent = '\u60a8\u597d\uff0c' + firstRole.name;
-  document.getElementById('welcomeSubtitle').textContent = 'FMCG AI RTM Workbench \u4e3a\u60a8\u63d0\u4f9b\u667a\u80fd\u51b3\u7b56\u652f\u6301\u3002\u53ef\u4f7f\u7528 @ \u8c03\u7528Agent\u548cSkill\u3002';
+  document.getElementById('welcomeTitle').textContent = t('welcomeHello') + tRole(firstRole);
+  document.getElementById('welcomeSubtitle').textContent = t('welcomeSub');
   const qaItems = getQuickActions(firstRole);
   document.getElementById('quickActions').innerHTML = qaItems.map(function(q){return '<button class="quick-btn" data-action="'+q.id+'" data-type="'+q.type+'">'+q.text+'</button>'}).join('');
   bindQuickActions();
@@ -1279,7 +1302,7 @@ function renderRoleDropdown() {
   Object.entries(groups).forEach(([level, rs]) => {
     const label = document.createElement('div');
     label.className = 'role-group-label';
-    label.textContent = level;
+    label.textContent = tLevel(level);
     menu.appendChild(label);
     rs.forEach(r => {
       const opt = document.createElement('div');
@@ -1298,9 +1321,9 @@ function toggleRoleDropdown() {
 
 function selectRole(role) {
   currentRole = role;
-  document.getElementById('currentRoleLabel').textContent = role.abbr + ' - ' + role.name;
+  document.getElementById('currentRoleLabel').textContent = role.abbr + ' - ' + tRole(role);
   document.getElementById('userAvatar').textContent = role.abbr;
-  document.getElementById('userName').textContent = role.name;
+  document.getElementById('userName').textContent = tRole(role);
   document.querySelectorAll('.role-option').forEach(el => {
     el.classList.toggle('active', el.dataset.roleId === role.id);
   });
@@ -1324,8 +1347,8 @@ function updateWelcome() {
   const subtitle = document.getElementById('welcomeSubtitle');
   const qa = document.getElementById('quickActions');
   if (!currentRole) return;
-  title.textContent = '您好，' + currentRole.name;
-  subtitle.textContent = 'FMCG AI RTM Workbench 为您提供智能决策支持。可使用 @ 调用Agent和Skill。';
+  title.textContent = t('welcomeHello') + tRole(currentRole);
+  subtitle.textContent = t('welcomeSub');
   const items = getQuickActions(currentRole);
   qa.innerHTML = items.map(function(q) { return '<button class="quick-btn" data-action="' + q.id + '" data-type="' + q.type + '">' + q.text + '</button>'; }).join('');
 }
@@ -1379,11 +1402,11 @@ function showSection(section, el) {
   if (section === 'chat') {
     // default
   } else if (section === 'warroom') {
-    addAIMessage('作战室功能正在开发中...');
+    addAIMessage(t('developing'));
   } else if (section === 'cluster') {
-    addAIMessage('Agent集群管理功能正在开发中...');
+    addAIMessage(t('developing'));
   } else if (section === 'output') {
-    addAIMessage('输出中心功能正在开发中...');
+    addAIMessage(t('developing'));
   } else if (section === 'forecast') {
     openParamPanel(agents.find(a => a.id === 'A2'), 'agent');
   }
@@ -1473,18 +1496,18 @@ function renderRightPanel() {
   const roleSkills = skills.filter(s => roleMatch(s));
   container.innerHTML =
     '<div class="info-card">'+
-      '<div class="info-card-title">角色信息</div>'+
-      '<div class="stat-row"><span class="stat-label">角色</span><span class="stat-value">'+currentRole.name+'</span></div>'+
-      '<div class="stat-row"><span class="stat-label">层级</span><span class="stat-value">'+currentRole.level+'</span></div>'+
-      '<div class="stat-row"><span class="stat-label">可用Agent</span><span class="stat-value">'+roleAgents.length+'</span></div>'+
-      '<div class="stat-row"><span class="stat-label">可用Skill</span><span class="stat-value">'+roleSkills.length+'</span></div>'+
+      '<div class="info-card-title">'+t('roleInfo')+'</div>'+
+      '<div class="stat-row"><span class="stat-label">'+t('role')+'</span><span class="stat-value">'+tRole(currentRole)+'</span></div>'+
+      '<div class="stat-row"><span class="stat-label">'+t('level')+'</span><span class="stat-value">'+tLevel(currentRole.level)+'</span></div>'+
+      '<div class="stat-row"><span class="stat-label">'+t('availableAgents')+'</span><span class="stat-value">'+roleAgents.length+'</span></div>'+
+      '<div class="stat-row"><span class="stat-label">'+t('availableSkills')+'</span><span class="stat-value">'+roleSkills.length+'</span></div>'+
     '</div>'+
     '<div class="info-card">'+
-      '<div class="info-card-title">快捷Agent</div>'+
+      '<div class="info-card-title">'+t('quickAgents')+'</div>'+
       '<div class="chip-list">'+roleAgents.slice(0,5).map(function(a){return '<span class="chip" data-aid="'+a.id+'">'+a.id+' '+a.name+'</span>';}).join('')+'</div>'+
     '</div>'+
     '<div class="info-card">'+
-      '<div class="info-card-title">快捷Skill</div>'+
+      '<div class="info-card-title">'+t('quickSkills')+'</div>'+
       '<div class="chip-list">'+roleSkills.slice(0,5).map(function(s){return '<span class="chip" data-sid="'+s.id+'">'+s.id+' '+s.name+'</span>';}).join('')+'</div>'+
     '</div>';
 }
@@ -1523,7 +1546,7 @@ function buildParamForm(item, msgId, type) {
   let html = '<div class="param-card" id="paramCard_' + msgId + '">';
   html += '<div class="param-card-header">';
   html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="' + (item.status==='core'?'#1890FF':'#52C41A') + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>';
-  html += '<span class="param-card-title">' + item.id + ' ' + item.name + ' - 参数配置</span>';
+  html += '<span class="param-card-title">' + item.id + ' ' + item.name + ' - '+t('paramConfig')+'</span>';
   html += '</div>';
 
   if (!item.params || item.params.length === 0) {
@@ -1585,8 +1608,8 @@ function buildParamForm(item, msgId, type) {
   html += '</div>';
 
   html += '<div class="param-actions">';
-  html += '<button class="btn btn-secondary param-cancel-btn" data-cancel-card="paramCard_' + msgId + '">取消</button>';
-  html += '<button class="btn btn-primary param-execute-btn" data-exec-id="' + item.id + '" data-exec-status="' + (item.status || '') + '" data-exec-msgid="' + msgId + '" data-exec-type="' + type + '">确认执行</button>';
+  html += '<button class="btn btn-secondary param-cancel-btn" data-cancel-card="paramCard_' + msgId + '">'+t('cancel')+'</button>';
+  html += '<button class="btn btn-primary param-execute-btn" data-exec-id="' + item.id + '" data-exec-status="' + (item.status || '') + '" data-exec-msgid="' + msgId + '" data-exec-type="' + type + '">'+t('confirm')+'</button>';
   html += '</div>';
   html += '</div>';
   console.log('buildParamForm done, html length', html.length);
@@ -2050,15 +2073,15 @@ function generateResultHtml(item, values, type) {
   html += '</div>';
   html += '<div class="result-body">';
   html += '<div class="result-section">';
-  html += '<div class="result-section-title">执行参数</div>';
+  html += '<div class="result-section-title">'+t('execParams')+'</div>';
   html += '<div style="font-size:13px;color:var(--text-secondary);background:var(--bg);padding:10px;border-radius:6px;">' + formatParamValues(values) + '</div>';
   html += '</div>';
   html += '<div class="result-section">';
-  html += '<div class="result-section-title">执行结果</div>';
+  html += '<div class="result-section-title">'+t('execResult')+'</div>';
   html += '<div style="font-size:14px;line-height:1.8;">' + renderResultBody(item, values) + '</div>';
   html += '</div>';
   html += '<div class="result-section">';
-  html += '<div class="result-section-title">AI 解读</div>';
+  html += '<div class="result-section-title">'+t('aiInterpret')+'</div>';
   html += '<div style="font-size:13px;color:var(--text-secondary);padding:10px;background:var(--primary-light);border-radius:6px;border-left:3px solid var(--primary);">' + generateMockLLM(item, values) + '</div>';
   html += '</div>';
   html += '</div>';
@@ -2297,7 +2320,7 @@ function autoResize(el) {
 const LLM_ENDPOINT = 'https://agent.linda605523.workers.dev';
 async function callLLM(userText) {
   var roleName = (currentRole && currentRole.name) ? currentRole.name : '快消销售';
-  var sys = '你是 eBest 快消行业 AI 工作台助手，服务品牌商/经销商/一线销售。当前使用者角色：' + roleName + '。请用中文回答，专业、简洁、给出可执行建议；涉及具体数据时说明这是示例数据。';
+  var sys = '你是 eBest 快消行业 AI 工作台助手，服务品牌商/经销商/一线销售。当前使用者角色：' + roleName + '。请用中文回答，专业、简洁、给出可执行建议；涉及具体数据时说明这是示例数据。' + llmLangClause();
   var resp = await fetch(LLM_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -2321,7 +2344,7 @@ async function chatWithRouting(userText) {
   var roleName = (currentRole && currentRole.name) ? currentRole.name : '快消销售';
   var sys = '你是 eBest 快消行业 AI 工作台助手。当前使用者角色：' + roleName + '。' +
     '请先用中文专业、简洁地回答用户问题（给可执行建议，涉及数据说明是示例）。' +
-    '然后在回答的最后另起一行，按【推荐工具】ID1,ID2 的格式，从下面"工具清单"里挑出与用户需求最相关的 1-3 个工具 ID 推荐给用户（只能用清单里出现过的 ID，没有合适的就写【推荐工具】无）。\n\n工具清单:\n' + buildToolCatalog();
+    '然后在回答的最后另起一行，严格按 "@@TOOLS@@:ID1,ID2" 的格式输出推荐（保留 @@TOOLS@@ 原样、不要翻译它），从下面"工具清单"里挑出与用户需求最相关的 1-3 个工具 ID（只能用清单里出现过的 ID，没有合适就写 @@TOOLS@@:无）。\n\n工具清单:\n' + buildToolCatalog() + llmLangClause();
   var resp = await fetch(LLM_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -2332,7 +2355,7 @@ async function chatWithRouting(userText) {
   var raw = data.text || '';
   var ids = [];
   var clean = raw;
-  var line = raw.match(/^.*推荐工具.*$/m);
+  var line = raw.match(/^.*(?:@@TOOLS@@|推荐工具).*$/m);
   if (line) {
     ids = (line[0].match(/[ASas]\d+/g) || []).map(function(s){ return s.toUpperCase(); });
     clean = raw.replace(line[0], '').replace(/\n{3,}/g, '\n\n').trim();
@@ -2359,7 +2382,7 @@ function renderAnswerWithChips(text, ids) {
     return null;
   }).filter(Boolean);
   if (valid.length) {
-    html += '<div style="margin-top:12px;font-size:12px;color:var(--text-muted);">💡 推荐工具（点击直接使用）</div>';
+    html += '<div style="margin-top:12px;font-size:12px;color:var(--text-muted);">'+t('recommendedTools')+'</div>';
     valid.forEach(function(t){
       html += '<button onclick="openToolById(\'' + t.id + '\')" style="display:block;width:100%;text-align:left;border:1px solid var(--border);background:#fff;border-radius:10px;padding:10px 12px;margin-top:8px;cursor:pointer;">' +
         '<div style="display:flex;align-items:center;justify-content:space-between;">' +
@@ -2424,7 +2447,7 @@ function handleFileUpload(inp) {
 
 async function analyzeData(name, content) {
   var roleName = (currentRole && currentRole.name) ? currentRole.name : '快消销售';
-  var sys = '你是 eBest 快消行业数据分析助手，当前使用者角色：' + roleName + '。用户上传了一份数据文件，请用中文输出：1) 一句话概括数据内容；2) 3-5 条关键洞察；3) 可执行建议。专业、简洁。';
+  var sys = '你是 eBest 快消行业数据分析助手，当前使用者角色：' + roleName + '。用户上传了一份数据文件，请用中文输出：1) 一句话概括数据内容；2) 3-5 条关键洞察；3) 可执行建议。专业、简洁。' + llmLangClause();
   var prompt = '文件名：' + name + '\n数据内容（可能为节选）：\n' + content;
   var resp = await fetch(LLM_ENDPOINT, {
     method: 'POST',
@@ -2463,7 +2486,7 @@ function sendMessage() {
   // Free-text chat
   if (LLM_ENDPOINT) {
     var mid = 'llm_' + Date.now();
-    addAIMessage('<div style="font-size:14px;color:var(--text-muted);">🤔 思考中…</div>', mid);
+    addAIMessage('<div style="font-size:14px;color:var(--text-muted);">'+t('thinking')+'</div>', mid);
     chatWithRouting(text).then(function(res){
       var el = document.getElementById(mid);
       if (el) el.querySelector('.msg-bubble').innerHTML = renderAnswerWithChips(res.text, res.ids);
