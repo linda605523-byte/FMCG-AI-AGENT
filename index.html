@@ -2399,7 +2399,7 @@ function buildParamForm(item, msgId, type) {
   html += '<div><strong>预计耗时:</strong> 约 ' + (item.status === 'core' ? '3-5' : '2-4') + ' 秒</div>';
   html += '</div>';
 
-  html += '<div class="param-actions">';
+  html += '<div class="param-actions" style="position:sticky;bottom:0;background:var(--bg-card);padding:10px 0 4px;z-index:5;">';
   html += '<button class="btn btn-secondary param-cancel-btn" data-cancel-card="paramCard_' + msgId + '">取消</button>';
   html += '<button class="btn btn-primary param-execute-btn" data-exec-id="' + item.id + '" data-exec-status="' + (item.status || '') + '" data-exec-msgid="' + msgId + '" data-exec-type="' + type + '">确认执行</button>';
   html += '</div>';
@@ -2545,7 +2545,7 @@ function extractVideoFrames(url, count){
     var frames=[], cnv=document.createElement('canvas'), idx=0, times=[], done=false;
     function finish(){ if(done)return; done=true; resolve(frames); }
     function grab(){
-      try{ cnv.width=v.videoWidth||640; cnv.height=v.videoHeight||480; cnv.getContext('2d').drawImage(v,0,0,cnv.width,cnv.height); var d=cnv.toDataURL('image/jpeg',0.85); if(d&&d.length>2000) frames.push(d); }catch(e){}
+      try{ var vw=v.videoWidth||640, vh=v.videoHeight||480; var scale=Math.min(1, 1280/Math.max(vw,vh)); cnv.width=Math.max(2,Math.round(vw*scale)); cnv.height=Math.max(2,Math.round(vh*scale)); cnv.getContext('2d').drawImage(v,0,0,cnv.width,cnv.height); var d=cnv.toDataURL('image/jpeg',0.82); if(d&&d.length>2000) frames.push(d); }catch(e){}
       idx++; seekNext();
     }
     function seekNext(){ if(idx>=times.length){ finish(); return; } try{ v.currentTime=times[idx]; }catch(e){ finish(); } }
