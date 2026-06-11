@@ -1492,7 +1492,7 @@ const agents = [
     params:[
       {name:'storeId', label:'目标门店', type:'select', options:['全家-南京西路店','罗森-淮海中路店','7-Eleven-西湖大道店','喜士多-解放路店'], default:'全家-南京西路店'},
       {name:'captureMode', label:'采集方式', type:'select', options:['多点拍照(8-12张)','环拍视频','全景相机'], default:'多点拍照(8-12张)'},
-      {name:'photoUpload', label:'上传照片/视频', type:'file', accept:'image/*,video/*', multiple:true, hint:'环绕门店采集8-12张照片或一段15秒环拍视频'},
+      {name:'photoUpload', label:'上传照片/视频', type:'file', accept:'image/*,video/*', multiple:true, hint:'在不同点位各拍1张(入口/主货架/陈列/竞品/收银…),即可在点位间VR漫游;也可录一段环店视频'},
       {name:'analyzeFocus', label:'重点分析', type:'multi-select', options:['陈列还原','SKU识别占比','缺货位检测','竞品分布','端架堆头合规'], default:['陈列还原','SKU识别占比','缺货位检测']}
     ],
     dataSources:{internal:'SFA(现场采集照片/视频)/DMS(门店主数据)/品类管理部(陈列标准)', external:'如视Realsee三维重建API/CV货架识别模型'},
@@ -2582,107 +2582,91 @@ function build3DRoom(imgs){
 function build3DRoomSphere(imgs){
   if(typeof THREE==='undefined') throw new Error('three missing');
   var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
+  var srcs=(imgs||[]).slice(0,12); if(!srcs.length) throw new Error('no imgs');
   if(!document.getElementById('s3dCss2')){
     var st=document.createElement('style'); st.id='s3dCss2';
     st.textContent='.s3v-stage{position:fixed;inset:0;background:#070b16;z-index:99999;overflow:hidden;touch-action:none;cursor:grab;}'+
       '.s3v-stage canvas{display:block;}'+
-      '.s3v-bar{position:absolute;top:0;left:0;right:0;padding:14px 16px;color:#fff;font-weight:600;font-size:15px;background:linear-gradient(rgba(0,0,0,.5),transparent);pointer-events:none;z-index:3;}'+
-      '.s3v-close{position:absolute;top:10px;right:12px;width:36px;height:36px;border-radius:50%;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:17px;cursor:pointer;z-index:4;}'+
-      '.s3v-hint{position:absolute;bottom:14px;left:0;right:0;text-align:center;color:#cdd6ee;font-size:12px;pointer-events:none;z-index:3;}'+
-      '.s3v-gyro{position:absolute;bottom:38px;left:50%;transform:translateX(-50%);border:none;background:rgba(0,195,154,.92);color:#fff;border-radius:16px;padding:7px 16px;font-size:12px;cursor:pointer;z-index:4;}'+
+      '.s3v-bar{position:absolute;top:0;left:0;right:0;padding:14px 16px;color:#fff;font-weight:600;font-size:15px;background:linear-gradient(rgba(0,0,0,.55),transparent);pointer-events:none;z-index:3;}'+
+      '.s3v-close{position:absolute;top:10px;right:12px;width:36px;height:36px;border-radius:50%;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:17px;cursor:pointer;z-index:6;}'+
+      '.s3v-hint{position:absolute;bottom:92px;left:0;right:0;text-align:center;color:#cdd6ee;font-size:12px;pointer-events:none;z-index:3;}'+
+      '.s3v-gyro{position:absolute;top:54px;right:12px;border:none;background:rgba(0,195,154,.92);color:#fff;border-radius:16px;padding:6px 14px;font-size:12px;cursor:pointer;z-index:6;}'+
+      '.s3v-arrow{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;border:none;background:rgba(255,255,255,.22);color:#fff;font-size:22px;cursor:pointer;z-index:6;display:flex;align-items:center;justify-content:center;}'+
+      '.s3v-arrow:active{background:rgba(0,195,154,.9);}'+
+      '.s3v-prev{left:14px;} .s3v-next{right:14px;}'+
+      '.s3v-map{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;background:rgba(0,0,0,.5);border-radius:20px;padding:8px 14px;z-index:6;max-width:86%;overflow-x:auto;}'+
+      '.s3v-dot{width:11px;height:11px;border-radius:50%;background:rgba(255,255,255,.45);cursor:pointer;flex-shrink:0;}'+
+      '.s3v-dot.on{background:#00C39A;transform:scale(1.3);}'+
       '.s3v-chip{position:absolute;font-size:11px;color:#fff;background:rgba(0,0,0,.55);border:1px solid rgba(0,195,154,.85);border-radius:12px;padding:3px 9px;white-space:nowrap;z-index:2;pointer-events:none;}'+
+      '.s3v-fade{position:absolute;inset:0;background:#070b16;opacity:0;pointer-events:none;z-index:5;transition:opacity .25s;}'+
       '.s3v-warn{border-color:#FAAD14;}';
     document.head.appendChild(st);
   }
-  var stage=document.createElement('div'); stage.className='s3v-stage';
-  document.body.appendChild(stage);
+  var stage=document.createElement('div'); stage.className='s3v-stage'; document.body.appendChild(stage);
   var W=stage.clientWidth||window.innerWidth, H=stage.clientHeight||window.innerHeight;
-
-  var renderer;
-  try{ renderer=new THREE.WebGLRenderer({antialias:true}); }
-  catch(e){ if(stage.parentNode)stage.parentNode.removeChild(stage); throw e; }
+  var renderer; try{ renderer=new THREE.WebGLRenderer({antialias:true}); }catch(e){ if(stage.parentNode)stage.parentNode.removeChild(stage); throw e; }
   if(!renderer){ if(stage.parentNode)stage.parentNode.removeChild(stage); throw new Error('no webgl'); }
-  renderer.setPixelRatio(window.devicePixelRatio||1);
-  renderer.setSize(W,H);
-  stage.appendChild(renderer.domElement);
-
+  renderer.setPixelRatio(window.devicePixelRatio||1); renderer.setSize(W,H); stage.appendChild(renderer.domElement);
   var scene=new THREE.Scene(); try{ scene.background=new THREE.Color(0x070b16); }catch(e){}
-  var camera=new THREE.PerspectiveCamera(75, W/H, 1, 1100);
-
-  // build equirectangular canvas texture from the photos
-  var cw=2048, ch=1024;
-  var cv=document.createElement('canvas'); cv.width=cw; cv.height=ch;
-  var ctx=cv.getContext('2d');
-  ctx.fillStyle='#0b1020'; ctx.fillRect(0,0,cw,ch);
-  var tex=new THREE.CanvasTexture(cv);
-  tex.colorSpace=THREE.SRGBColorSpace||tex.colorSpace;
+  var camera=new THREE.PerspectiveCamera(78, W/H, 1, 1100);
+  var cw=2048, ch=1024; var cv=document.createElement('canvas'); cv.width=cw; cv.height=ch; var ctx=cv.getContext('2d');
+  var tex=new THREE.CanvasTexture(cv); try{ tex.colorSpace=THREE.SRGBColorSpace||tex.colorSpace; }catch(e){}
   var geo=new THREE.CylinderGeometry(500,500,1570,64,1,true); geo.scale(-1,1,1);
-  var mat=new THREE.MeshBasicMaterial({map:tex});
-  var sphere=new THREE.Mesh(geo,mat); scene.add(sphere);
-
-  function paint(images){
-    var n=Math.max(images.length,1);
-    var sliceW=cw/n;
-    images.forEach(function(im,i){
-      var scale=Math.max(sliceW/im.width, ch/im.height);
-      var dw=im.width*scale, dh=im.height*scale;
-      var dx=i*sliceW+(sliceW-dw)/2, dy=(ch-dh)/2;
-      ctx.save(); ctx.beginPath(); ctx.rect(i*sliceW,0,sliceW,ch); ctx.clip();
-      ctx.drawImage(im,dx,dy,dw,dh); ctx.restore();
-    });
-    if(!images.length){ ctx.fillStyle='#16203c'; ctx.fillRect(0,0,cw,ch); }
+  var mat=new THREE.MeshBasicMaterial({map:tex}); var mesh=new THREE.Mesh(geo,mat); scene.add(mesh);
+  var loaded=new Array(srcs.length); var pend=srcs.length, cur=0;
+  function paintNode(i){
+    var img=loaded[i]; ctx.fillStyle='#0a1020'; ctx.fillRect(0,0,cw,ch);
+    if(img){ var scale=ch/img.height; var tileW=img.width*scale; if(!(tileW>1)) tileW=cw; var x=0; while(x<cw){ ctx.drawImage(img,0,0,img.width,img.height,x,0,tileW,ch); x+=tileW; } }
     tex.needsUpdate=true;
   }
-  var imel=[], pending=imgs.length||0;
-  if(!pending){ paint([]); }
-  imgs.forEach(function(src){ var im=new Image(); im.onload=function(){ imel.push(im); if(--pending<=0) paint(imel); }; im.onerror=function(){ if(--pending<=0) paint(imel); }; im.src=src; });
-
-  // overlay UI
-  var bar=document.createElement('div'); bar.className='s3v-bar'; bar.textContent=EN?'Store 3D Walkthrough':'门店3D漫游';
+  srcs.forEach(function(s,i){ var im=new Image(); im.onload=function(){loaded[i]=im; if(--pend<=0) ready();}; im.onerror=function(){loaded[i]=null; if(--pend<=0) ready();}; im.src=s; });
+  // overlay
+  var multi=srcs.length>1;
+  var bar=document.createElement('div'); bar.className='s3v-bar';
   var closeBtn=document.createElement('button'); closeBtn.className='s3v-close'; closeBtn.textContent='\u2715';
-  var hint=document.createElement('div'); hint.className='s3v-hint'; hint.textContent=EN?'Drag to look around · pinch to zoom':'拖动屏幕环视 · 双指缩放';
-  var gyro=document.createElement('button'); gyro.className='s3v-gyro'; gyro.textContent=EN?'Enable motion':'开启体感';
-  var c1=document.createElement('span'); c1.className='s3v-chip s3v-warn'; c1.style.cssText+='top:44%;left:13%;'; c1.textContent=EN?'Out-of-stock · Sparkling Tea 330ml':'缺货位 · 气泡茶330ml';
-  var c2=document.createElement('span'); c2.className='s3v-chip'; c2.style.cssText+='top:55%;right:13%;'; c2.textContent=EN?'Our shelf share 31%':'本品货架占比 31%';
-  stage.appendChild(bar); stage.appendChild(closeBtn); stage.appendChild(hint); stage.appendChild(gyro); stage.appendChild(c1); stage.appendChild(c2);
-
-  var lon=0, lat=0, dragging=false, lx=0, ly=0, auto=true, pinch=0, raf=0, alive=true;
-  function update(){
-    lat=Math.max(-42,Math.min(42,lat));
-    var phi=THREE.MathUtils.degToRad(90-lat), theta=THREE.MathUtils.degToRad(lon);
-    var tx=500*Math.sin(phi)*Math.cos(theta), ty=500*Math.cos(phi), tz=500*Math.sin(phi)*Math.sin(theta);
-    camera.lookAt(tx,ty,tz);
+  var gyro=document.createElement('button'); gyro.className='s3v-gyro'; gyro.textContent=EN?'Motion':'\u4f53\u611f';
+  var hint=document.createElement('div'); hint.className='s3v-hint'; hint.textContent=multi?(EN?'Drag to look · arrows or dots to move':'\u62d6\u52a8\u73af\u89c6 \u00b7 \u7bad\u5934/\u5c0f\u70b9\u5207\u6362\u70b9\u4f4d'):(EN?'Drag to look around · pinch to zoom':'\u62d6\u52a8\u5c4f\u5e55\u73af\u89c6 \u00b7 \u53cc\u6307\u7f29\u653e');
+  var fade=document.createElement('div'); fade.className='s3v-fade';
+  stage.appendChild(bar); stage.appendChild(closeBtn); stage.appendChild(gyro); stage.appendChild(hint); stage.appendChild(fade);
+  var c1=document.createElement('span'); c1.className='s3v-chip s3v-warn'; c1.style.cssText+='top:42%;left:10%;'; c1.textContent=EN?'Out-of-stock · Sparkling Tea 330ml':'\u7f3a\u8d27\u4f4d \u00b7 \u6c14\u6ce1\u8336330ml';
+  var c2=document.createElement('span'); c2.className='s3v-chip'; c2.style.cssText+='top:56%;right:10%;'; c2.textContent=EN?'Our shelf share 31%':'\u672c\u54c1\u8d27\u67b6\u5360\u6bd4 31%';
+  stage.appendChild(c1); stage.appendChild(c2);
+  var prev,next,map,dots=[];
+  if(multi){
+    prev=document.createElement('button'); prev.className='s3v-arrow s3v-prev'; prev.innerHTML='\u2039';
+    next=document.createElement('button'); next.className='s3v-arrow s3v-next'; next.innerHTML='\u203a';
+    map=document.createElement('div'); map.className='s3v-map';
+    srcs.forEach(function(_,i){ var d=document.createElement('div'); d.className='s3v-dot'; d.addEventListener('click',function(){ goNode(i); }); map.appendChild(d); dots.push(d); });
+    stage.appendChild(prev); stage.appendChild(next); stage.appendChild(map);
+    prev.addEventListener('click',function(){ goNode(cur-1); });
+    next.addEventListener('click',function(){ goNode(cur+1); });
   }
-  function loop(){ if(!alive)return; if(auto) lon+=0.05; update(); renderer.render(scene,camera); raf=requestAnimationFrame(loop); }
-  loop();
-  function down(x,y){ dragging=true; auto=false; lx=x; ly=y; }
-  function move(x,y){ if(!dragging)return; lon-=(x-lx)*0.12; lat+=(y-ly)*0.12; lx=x; ly=y; }
+  function updateUI(){
+    bar.textContent=(EN?'Store VR Walkthrough':'\u95e8\u5e97 VR \u6f2b\u6e38')+(multi?('  \u00b7  '+(EN?'Spot ':'\u70b9\u4f4d ')+(cur+1)+'/'+srcs.length):'');
+    dots.forEach(function(d,i){ d.className='s3v-dot'+(i===cur?' on':''); });
+    var showChips=(cur===0); c1.style.display=showChips?'':'none'; c2.style.display=showChips?'':'none';
+  }
+  function goNode(i){ i=((i%srcs.length)+srcs.length)%srcs.length; if(i===cur) return; auto=false; fade.style.opacity='1'; setTimeout(function(){ cur=i; paintNode(i); updateUI(); fade.style.opacity='0'; },240); }
+  var lon=0, lat=0, dragging=false, lx=0, ly=0, vlon=0, auto=true, pinch=0, raf=0, alive=true, gHandler=null;
+  function update(){ lat=Math.max(-42,Math.min(42,lat)); var phi=THREE.MathUtils.degToRad(90-lat), theta=THREE.MathUtils.degToRad(lon); camera.lookAt(500*Math.sin(phi)*Math.cos(theta),500*Math.cos(phi),500*Math.sin(phi)*Math.sin(theta)); }
+  function loop(){ if(!alive)return; if(auto){ lon+=0.04; } else if(!dragging){ lon+=vlon; vlon*=0.94; if(Math.abs(vlon)<0.01) vlon=0; } update(); renderer.render(scene,camera); raf=requestAnimationFrame(loop); }
+  function down(x,y){ dragging=true; auto=false; lx=x; ly=y; vlon=0; }
+  function move(x,y){ if(!dragging)return; var dx=x-lx, dy=y-ly; lon-=dx*0.12; lat+=dy*0.12; vlon=-dx*0.06; lx=x; ly=y; }
   function up(){ dragging=false; }
   stage.addEventListener('mousedown',function(e){down(e.clientX,e.clientY);});
   stage.addEventListener('mousemove',function(e){move(e.clientX,e.clientY);});
   stage.addEventListener('mouseup',up); stage.addEventListener('mouseleave',up);
   stage.addEventListener('touchstart',function(e){ if(e.touches.length===1)down(e.touches[0].clientX,e.touches[0].clientY); },{passive:true});
-  stage.addEventListener('touchmove',function(e){
-    if(e.touches.length===1){ move(e.touches[0].clientX,e.touches[0].clientY); }
-    else if(e.touches.length===2){ var dx=e.touches[0].clientX-e.touches[1].clientX,dy=e.touches[0].clientY-e.touches[1].clientY,d=Math.sqrt(dx*dx+dy*dy); if(pinch){ camera.fov=Math.max(35,Math.min(90,camera.fov+(pinch-d)*0.1)); camera.updateProjectionMatrix(); } pinch=d; auto=false; }
-  },{passive:true});
+  stage.addEventListener('touchmove',function(e){ if(e.touches.length===1){ move(e.touches[0].clientX,e.touches[0].clientY); } else if(e.touches.length===2){ var dx=e.touches[0].clientX-e.touches[1].clientX,dy=e.touches[0].clientY-e.touches[1].clientY,d=Math.sqrt(dx*dx+dy*dy); if(pinch){ camera.fov=Math.max(40,Math.min(95,camera.fov+(pinch-d)*0.1)); camera.updateProjectionMatrix(); } pinch=d; auto=false; } },{passive:true});
   stage.addEventListener('touchend',function(){ up(); pinch=0; },{passive:true});
-  stage.addEventListener('wheel',function(e){ camera.fov=Math.max(35,Math.min(90,camera.fov+e.deltaY*0.05)); camera.updateProjectionMatrix(); auto=false; e.preventDefault(); },{passive:false});
+  stage.addEventListener('wheel',function(e){ camera.fov=Math.max(40,Math.min(95,camera.fov+e.deltaY*0.05)); camera.updateProjectionMatrix(); auto=false; e.preventDefault(); },{passive:false});
   function onResize(){ var w=stage.clientWidth||window.innerWidth,h=stage.clientHeight||window.innerHeight; camera.aspect=w/h; camera.updateProjectionMatrix(); renderer.setSize(w,h); }
   window.addEventListener('resize',onResize);
-  var gHandler=null;
-  gyro.addEventListener('click',function(){
-    function start(){ auto=false; gyro.style.display='none'; hint.textContent=EN?'Move your phone to look around':'转动手机环视门店'; gHandler=function(ev){ if(ev.alpha==null)return; lon=ev.alpha; lat=Math.max(-42,Math.min(42,(ev.beta||90)-90)); }; window.addEventListener('deviceorientation',gHandler); }
-    if(typeof DeviceOrientationEvent!=='undefined' && typeof DeviceOrientationEvent.requestPermission==='function'){ DeviceOrientationEvent.requestPermission().then(function(s){ if(s==='granted')start(); }).catch(function(){}); }
-    else { start(); }
-  });
-  closeBtn.addEventListener('click',function(){
-    alive=false; if(raf)cancelAnimationFrame(raf);
-    window.removeEventListener('resize',onResize); if(gHandler)window.removeEventListener('deviceorientation',gHandler);
-    try{ geo.dispose(); mat.dispose(); tex.dispose(); renderer.dispose(); }catch(e){}
-    if(stage.parentNode)stage.parentNode.removeChild(stage);
-  });
+  gyro.addEventListener('click',function(){ function start(){ auto=false; gyro.style.display='none'; gHandler=function(ev){ if(ev.alpha==null)return; lon=ev.alpha; lat=Math.max(-42,Math.min(42,(ev.beta||90)-90)); }; window.addEventListener('deviceorientation',gHandler); } if(typeof DeviceOrientationEvent!=='undefined' && typeof DeviceOrientationEvent.requestPermission==='function'){ DeviceOrientationEvent.requestPermission().then(function(s){ if(s==='granted')start(); }).catch(function(){}); } else { start(); } });
+  closeBtn.addEventListener('click',function(){ alive=false; if(raf)cancelAnimationFrame(raf); window.removeEventListener('resize',onResize); if(gHandler)window.removeEventListener('deviceorientation',gHandler); try{ geo.dispose(); mat.dispose(); tex.dispose(); renderer.dispose(); }catch(e){} if(stage.parentNode)stage.parentNode.removeChild(stage); });
+  function ready(){ paintNode(0); updateUI(); loop(); }
 }
+
 
 function build3DRoomCSS(imgs){
   if(!document.getElementById('s3dCss')){
@@ -3470,6 +3454,7 @@ function renderAnswerWithChips(text, ids) {
 var EN_FIX10={"知识库":"Knowledge Base","数据集":"Dataset","上传你的专业资料(txt/md/csv)，AI 回答时会优先参考这些内容，更懂你的业务。":"Upload your domain files (txt/md/csv). The AI prioritizes them when answering, so it understands your business better.","+ 上传知识文件":"+ Upload knowledge files","上传你的业务数据(csv/txt)，AI 分析与回答时可结合这些数据。":"Upload your business data (csv/txt). The AI can use it when analyzing and answering.","+ 上传数据集":"+ Upload dataset"};for(var _f10 in EN_FIX10){EN_DICT[_f10]=EN_FIX10[_f10];}EN_KEYS=Object.keys(EN_DICT).sort(function(a,b){return b.length-a.length;});
 var EN_FIX11={"区域下滑归因": "Regional decline attribution", "查看智能预警": "Smart alerts", "沙盘推演": "Scenario simulation", "组织效能诊断": "Org efficiency diagnosis", "经营周报": "Weekly report", "竞品应对话术": "Competitor response scripts", "高管问答助手": "Exec Q&A assistant", "补货预测": "Replenishment forecast", "路径规划": "Route planning", "绩效教练": "Performance coach", "拜访任务包": "Visit task pack", "新品追踪": "New-product tracking", "品类趋势": "Category trends", "营销内容包": "Marketing content pack", "促销Brief": "Promo brief", "客户画像": "Customer profiling", "价格监测": "Price monitoring", "机会门店分析": "Opportunity store analysis", "KA客户管理": "KA account management", "核销费效": "Redemption ROI", "促销日历": "Promo calendar", "费用审计": "Spend audit", "店主文案": "Store-owner copy", "潜力门店挖掘": "Potential store mining", "数据质量": "Data quality", "订单趋势分析": "Order trend analysis", "门店三维重建": "Store 3D reconstruction", "订单推荐": "Order recommendation", "客情记忆": "Relationship memory", "现场异议处理": "On-site objection handling", "DSR助手": "DSR assistant", "巡店评分": "Store-visit scoring", "整改追踪": "Remediation tracking", "督导任务": "Supervisor tasks", "陈列标准": "Display standard", "销量追踪": "Sales tracking", "智能排班": "Smart scheduling", "导购话术": "Promoter scripts", "即时激励看板": "Live incentive board", "进销存优化": "Inventory optimization", "信用评估": "Credit assessment", "账款追踪": "Receivables tracking", "经营利润分析": "Profit analysis", "经销商对账": "Distributor reconciliation", "智能配载": "Smart load planning", "退货处理": "Returns handling", "智能选品": "Smart assortment", "定价建议": "Pricing advice", "动销分析": "Sell-through analysis", "库存优化": "Stock optimization"};for(var _f11 in EN_FIX11){EN_DICT[_f11]=EN_FIX11[_f11];}EN_KEYS=Object.keys(EN_DICT).sort(function(a,b){return b.length-a.length;});
 var EN_FIX12={"未选择文件":"No file chosen","选择文件":"Choose file"};for(var _f12 in EN_FIX12){EN_DICT[_f12]=EN_FIX12[_f12];}EN_KEYS=Object.keys(EN_DICT).sort(function(a,b){return b.length-a.length;});
+var EN_FIX13={"在不同点位各拍1张(入口/主货架/陈列/竞品/收银…),即可在点位间VR漫游;也可录一段环店视频":"Take one photo at each spot (entrance / main shelf / display / competitor / checkout…) to walk between them in VR; or record a walkaround video"};for(var _f13 in EN_FIX13){EN_DICT[_f13]=EN_FIX13[_f13];}EN_KEYS=Object.keys(EN_DICT).sort(function(a,b){return b.length-a.length;});
 // ==================== 知识库 / 数据集（localStorage + 关键词检索注入） ====================
 function _kbRead(key){ try{ return JSON.parse(localStorage.getItem(key)||'[]'); }catch(e){ return []; } }
 function _kbWrite(key,arr){ try{ localStorage.setItem(key, JSON.stringify(arr)); }catch(e){ alert('存储空间不足，请删除部分文件'); } }
