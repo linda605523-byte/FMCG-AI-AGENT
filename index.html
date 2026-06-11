@@ -2011,6 +2011,7 @@ function setupEventListeners() {
 function bindQuickActions() {
   const qa = document.getElementById('quickActions');
   if (!qa) return;
+  if (qa._qaBound) return; qa._qaBound = true;
   qa.addEventListener('click', function(e) {
     const btn = e.target.closest('.quick-btn');
     if (!btn) return;
@@ -3440,8 +3441,11 @@ function _posterFallback(text){
   return {title:title,slogan:slogan,mechanic:mech,price:price,period:period,theme:'mint'};
 }
 async function genPromoPoster(idx){
-  var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
   var text=(window._promoBriefs&&window._promoBriefs[idx])||'';
+  return posterFromText(text);
+}
+async function posterFromText(text){
+  var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
   var toast=_s3dToast(EN?'Generating poster…':'正在生成海报…');
   var fields=null;
   try{
@@ -3708,6 +3712,15 @@ function sendMessage() {
       setTimeout(() => openParamPanel(skill, 'skill'), 500);
       return;
     }
+  }
+
+  // Poster intent -> generate directly (DeepSeek has no poster tool)
+  if (/海报|poster/i.test(text) && !mentionMatch) {
+    var _src = (window._promoBriefs && window._promoBriefs.length) ? window._promoBriefs[window._promoBriefs.length-1] : text;
+    addAIMessage('<div style="font-size:14px;">'+(currentLang==='en'?'Generating your promo poster…':'正在为您生成促销海报…')+'</div>');
+    posterFromText(_src);
+    document.getElementById('sendBtn').disabled = false;
+    return;
   }
 
   // Free-text -> DeepSeek (smart: orchestrate multiple agents, or answer directly)
