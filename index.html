@@ -298,6 +298,14 @@
         <span data-i18n="allSkills">全部Skill</span>
         <span class="nav-expand" id="navSkillExpand">&#9654;</span>
       </div>
+      <div class="nav-item" id="navKB" onclick="toggleKBPanel()">
+        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <span data-i18n="kbNav">知识库</span>
+      </div>
+      <div class="nav-item" id="navDS" onclick="toggleDSPanel()">
+        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        <span data-i18n="dsNav">数据集</span>
+      </div>
       <div class="nav-item" onclick="showSection('warroom', this)">
         <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
         <span data-i18n="warRoom">作战室</span>
@@ -332,6 +340,32 @@
       </div>
       <div style="padding:8px 12px;font-size:12px;color:var(--text-muted);" id="skillCount">40 个Skill</div>
       <div id="skillListContent"></div>
+    </div>
+    <!-- Knowledge Base Panel -->
+    <div class="sidebar-content hidden" id="knowledgePanel">
+      <div style="padding:12px;">
+        <div style="font-size:15px;font-weight:700;margin-bottom:4px;">知识库</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:10px;">上传你的专业资料(txt/md/csv)，AI 回答时会优先参考这些内容，更懂你的业务。</div>
+        <label style="display:block;border:1.5px dashed var(--primary);border-radius:10px;padding:14px;text-align:center;color:var(--primary);font-size:13px;font-weight:600;cursor:pointer;background:var(--primary-light);">
+          + 上传知识文件
+          <input type="file" multiple accept=".txt,.md,.csv,.json,text/plain" style="display:none;" onchange="kbAddFiles(this.files); this.value='';">
+        </label>
+        <div id="kbStatus" style="font-size:12px;color:var(--text-muted);margin:10px 0 4px;"></div>
+        <div id="kbList"></div>
+      </div>
+    </div>
+    <!-- Dataset Panel -->
+    <div class="sidebar-content hidden" id="datasetPanel">
+      <div style="padding:12px;">
+        <div style="font-size:15px;font-weight:700;margin-bottom:4px;">数据集</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:10px;">上传你的业务数据(csv/txt)，AI 分析与回答时可结合这些数据。</div>
+        <label style="display:block;border:1.5px dashed var(--primary);border-radius:10px;padding:14px;text-align:center;color:var(--primary);font-size:13px;font-weight:600;cursor:pointer;background:var(--primary-light);">
+          + 上传数据集
+          <input type="file" multiple accept=".csv,.txt,.tsv,.json" style="display:none;" onchange="dsAddFiles(this.files); this.value='';">
+        </label>
+        <div id="dsStatus" style="font-size:12px;color:var(--text-muted);margin:10px 0 4px;"></div>
+        <div id="dsList"></div>
+      </div>
     </div>
   </aside>
 
@@ -422,7 +456,7 @@ const roles = [
 /* ==================== I18N ==================== */
 var LANGS=[{code:'zh',label:'中文'},{code:'en',label:'English'}];
 var currentLang='zh';
-var I18N={"zh": {"newChat": "新建会话", "chatCenter": "会话中心", "allAgents": "全部Agent", "allSkills": "全部Skill", "warRoom": "作战室", "agentCluster": "Agent集群", "outputCenter": "输出中心", "roleOverview": "角色概览", "roleInfo": "角色信息", "role": "角色", "level": "层级", "availableAgents": "可用Agent", "availableSkills": "可用Skill", "quickAgents": "快捷Agent", "quickSkills": "快捷Skill", "selectRole": "选择角色", "inputPlaceholder": "输入消息，使用 @ 调用Agent或Skill...", "paramConfig": "参数配置", "cancel": "取消", "confirm": "确认执行", "execParams": "执行参数", "execResult": "执行结果", "aiInterpret": "AI 解读", "recommendedTools": "💡 推荐工具（点击直接使用）", "thinking": "🤔 思考中…", "uploadData": "上传数据(CSV/TXT)", "downloadTemplate": "下载数据模板", "developing": "功能正在开发中...", "welcomeHello": "您好，", "welcomeSub": "FMCG AI RTM Workbench 为您提供智能决策支持。可使用 @ 调用Agent和Skill。"}, "en": {"newChat": "New Chat", "chatCenter": "Chat Center", "allAgents": "All Agents", "allSkills": "All Skills", "warRoom": "War Room", "agentCluster": "Agent Cluster", "outputCenter": "Output Center", "roleOverview": "Role Overview", "roleInfo": "Role Info", "role": "Role", "level": "Level", "availableAgents": "Available Agents", "availableSkills": "Available Skills", "quickAgents": "Quick Agents", "quickSkills": "Quick Skills", "selectRole": "Select Role", "inputPlaceholder": "Type a message, use @ to call an Agent or Skill...", "paramConfig": "Parameters", "cancel": "Cancel", "confirm": "Run", "execParams": "Input Parameters", "execResult": "Result", "aiInterpret": "AI Interpretation", "recommendedTools": "💡 Recommended tools (tap to use)", "thinking": "🤔 Thinking…", "uploadData": "Upload data (CSV/TXT)", "downloadTemplate": "Download data template", "developing": "This feature is under development...", "welcomeHello": "Hello, ", "welcomeSub": "FMCG AI RTM Workbench provides intelligent decision support. Use @ to call Agents and Skills."}, "es": {"newChat": "Nueva conversación", "chatCenter": "Centro de chat", "allAgents": "Todos los agentes", "allSkills": "Todas las habilidades", "warRoom": "Sala de mando", "agentCluster": "Clúster de agentes", "outputCenter": "Centro de resultados", "roleOverview": "Resumen del rol", "roleInfo": "Información del rol", "role": "Rol", "level": "Nivel", "availableAgents": "Agentes disponibles", "availableSkills": "Habilidades disponibles", "quickAgents": "Agentes rápidos", "quickSkills": "Habilidades rápidas", "selectRole": "Seleccionar rol", "inputPlaceholder": "Escribe un mensaje, usa @ para llamar a un agente o habilidad...", "paramConfig": "Parámetros", "cancel": "Cancelar", "confirm": "Ejecutar", "execParams": "Parámetros de entrada", "execResult": "Resultado", "aiInterpret": "Interpretación de IA", "recommendedTools": "💡 Herramientas recomendadas (toca para usar)", "thinking": "🤔 Pensando…", "uploadData": "Subir datos (CSV/TXT)", "downloadTemplate": "Descargar plantilla de datos", "developing": "Esta función está en desarrollo...", "welcomeHello": "Hola, ", "welcomeSub": "FMCG AI RTM Workbench ofrece soporte inteligente para decisiones. Usa @ para llamar agentes y habilidades."}, "ar": {"newChat": "محادثة جديدة", "chatCenter": "مركز المحادثات", "allAgents": "جميع الوكلاء", "allSkills": "جميع المهارات", "warRoom": "غرفة العمليات", "agentCluster": "مجموعة الوكلاء", "outputCenter": "مركز المخرجات", "roleOverview": "نظرة عامة على الدور", "roleInfo": "معلومات الدور", "role": "الدور", "level": "المستوى", "availableAgents": "الوكلاء المتاحون", "availableSkills": "المهارات المتاحة", "quickAgents": "وكلاء سريعون", "quickSkills": "مهارات سريعة", "selectRole": "اختر الدور", "inputPlaceholder": "اكتب رسالة، استخدم @ لاستدعاء وكيل أو مهارة...", "paramConfig": "الإعدادات", "cancel": "إلغاء", "confirm": "تنفيذ", "execParams": "معاملات التنفيذ", "execResult": "النتيجة", "aiInterpret": "تحليل الذكاء الاصطناعي", "recommendedTools": "💡 الأدوات الموصى بها (انقر للاستخدام)", "thinking": "🤔 جارٍ التفكير…", "uploadData": "رفع البيانات (CSV/TXT)", "downloadTemplate": "تنزيل قالب البيانات", "developing": "هذه الميزة قيد التطوير...", "welcomeHello": "مرحباً، ", "welcomeSub": "يوفر FMCG AI RTM Workbench دعمًا ذكيًا لاتخاذ القرار. استخدم @ لاستدعاء الوكلاء والمهارات."}, "th": {"newChat": "แชทใหม่", "chatCenter": "ศูนย์แชท", "allAgents": "เอเจนต์ทั้งหมด", "allSkills": "ทักษะทั้งหมด", "warRoom": "ห้องวอร์รูม", "agentCluster": "คลัสเตอร์เอเจนต์", "outputCenter": "ศูนย์ผลลัพธ์", "roleOverview": "ภาพรวมบทบาท", "roleInfo": "ข้อมูลบทบาท", "role": "บทบาท", "level": "ระดับ", "availableAgents": "เอเจนต์ที่ใช้ได้", "availableSkills": "ทักษะที่ใช้ได้", "quickAgents": "เอเจนต์ด่วน", "quickSkills": "ทักษะด่วน", "selectRole": "เลือกบทบาท", "inputPlaceholder": "พิมพ์ข้อความ ใช้ @ เพื่อเรียกเอเจนต์หรือทักษะ...", "paramConfig": "ตั้งค่าพารามิเตอร์", "cancel": "ยกเลิก", "confirm": "ยืนยันการทำงาน", "execParams": "พารามิเตอร์ที่ใช้", "execResult": "ผลลัพธ์", "aiInterpret": "การวิเคราะห์โดย AI", "recommendedTools": "💡 เครื่องมือแนะนำ (แตะเพื่อใช้)", "thinking": "🤔 กำลังคิด…", "uploadData": "อัปโหลดข้อมูล (CSV/TXT)", "downloadTemplate": "ดาวน์โหลดเทมเพลตข้อมูล", "developing": "ฟีเจอร์นี้กำลังพัฒนา...", "welcomeHello": "สวัสดี ", "welcomeSub": "FMCG AI RTM Workbench ช่วยสนับสนุนการตัดสินใจอัจฉริยะ ใช้ @ เพื่อเรียกเอเจนต์และทักษะ"}, "ms": {"newChat": "Sembang Baharu", "chatCenter": "Pusat Sembang", "allAgents": "Semua Ejen", "allSkills": "Semua Kemahiran", "warRoom": "Bilik Operasi", "agentCluster": "Kluster Ejen", "outputCenter": "Pusat Output", "roleOverview": "Gambaran Peranan", "roleInfo": "Maklumat Peranan", "role": "Peranan", "level": "Tahap", "availableAgents": "Ejen Tersedia", "availableSkills": "Kemahiran Tersedia", "quickAgents": "Ejen Pantas", "quickSkills": "Kemahiran Pantas", "selectRole": "Pilih Peranan", "inputPlaceholder": "Taip mesej, guna @ untuk panggil Ejen atau Kemahiran...", "paramConfig": "Tetapan Parameter", "cancel": "Batal", "confirm": "Jalankan", "execParams": "Parameter Pelaksanaan", "execResult": "Keputusan", "aiInterpret": "Tafsiran AI", "recommendedTools": "💡 Alat disyorkan (ketik untuk guna)", "thinking": "🤔 Sedang berfikir…", "uploadData": "Muat naik data (CSV/TXT)", "downloadTemplate": "Muat turun templat data", "developing": "Ciri ini sedang dibangunkan...", "welcomeHello": "Salam, ", "welcomeSub": "FMCG AI RTM Workbench menyediakan sokongan keputusan pintar. Guna @ untuk panggil Ejen dan Kemahiran."}};
+var I18N={"zh": {"newChat": "新建会话", "chatCenter": "会话中心", "allAgents": "全部Agent", "allSkills": "全部Skill", "warRoom": "作战室", "agentCluster": "Agent集群", "outputCenter": "输出中心", "kbNav": "知识库", "dsNav": "数据集", "roleOverview": "角色概览", "roleInfo": "角色信息", "role": "角色", "level": "层级", "availableAgents": "可用Agent", "availableSkills": "可用Skill", "quickAgents": "快捷Agent", "quickSkills": "快捷Skill", "selectRole": "选择角色", "inputPlaceholder": "输入消息，使用 @ 调用Agent或Skill...", "paramConfig": "参数配置", "cancel": "取消", "confirm": "确认执行", "execParams": "执行参数", "execResult": "执行结果", "aiInterpret": "AI 解读", "recommendedTools": "💡 推荐工具（点击直接使用）", "thinking": "🤔 思考中…", "uploadData": "上传数据(CSV/TXT)", "downloadTemplate": "下载数据模板", "developing": "功能正在开发中...", "welcomeHello": "您好，", "welcomeSub": "FMCG AI RTM Workbench 为您提供智能决策支持。可使用 @ 调用Agent和Skill。"}, "en": {"newChat": "New Chat", "chatCenter": "Chat Center", "allAgents": "All Agents", "allSkills": "All Skills", "warRoom": "War Room", "agentCluster": "Agent Cluster", "outputCenter": "Output Center", "kbNav": "Knowledge Base", "dsNav": "Dataset", "roleOverview": "Role Overview", "roleInfo": "Role Info", "role": "Role", "level": "Level", "availableAgents": "Available Agents", "availableSkills": "Available Skills", "quickAgents": "Quick Agents", "quickSkills": "Quick Skills", "selectRole": "Select Role", "inputPlaceholder": "Type a message, use @ to call an Agent or Skill...", "paramConfig": "Parameters", "cancel": "Cancel", "confirm": "Run", "execParams": "Input Parameters", "execResult": "Result", "aiInterpret": "AI Interpretation", "recommendedTools": "💡 Recommended tools (tap to use)", "thinking": "🤔 Thinking…", "uploadData": "Upload data (CSV/TXT)", "downloadTemplate": "Download data template", "developing": "This feature is under development...", "welcomeHello": "Hello, ", "welcomeSub": "FMCG AI RTM Workbench provides intelligent decision support. Use @ to call Agents and Skills."}, "es": {"newChat": "Nueva conversación", "chatCenter": "Centro de chat", "allAgents": "Todos los agentes", "allSkills": "Todas las habilidades", "warRoom": "Sala de mando", "agentCluster": "Clúster de agentes", "outputCenter": "Centro de resultados", "roleOverview": "Resumen del rol", "roleInfo": "Información del rol", "role": "Rol", "level": "Nivel", "availableAgents": "Agentes disponibles", "availableSkills": "Habilidades disponibles", "quickAgents": "Agentes rápidos", "quickSkills": "Habilidades rápidas", "selectRole": "Seleccionar rol", "inputPlaceholder": "Escribe un mensaje, usa @ para llamar a un agente o habilidad...", "paramConfig": "Parámetros", "cancel": "Cancelar", "confirm": "Ejecutar", "execParams": "Parámetros de entrada", "execResult": "Resultado", "aiInterpret": "Interpretación de IA", "recommendedTools": "💡 Herramientas recomendadas (toca para usar)", "thinking": "🤔 Pensando…", "uploadData": "Subir datos (CSV/TXT)", "downloadTemplate": "Descargar plantilla de datos", "developing": "Esta función está en desarrollo...", "welcomeHello": "Hola, ", "welcomeSub": "FMCG AI RTM Workbench ofrece soporte inteligente para decisiones. Usa @ para llamar agentes y habilidades."}, "ar": {"newChat": "محادثة جديدة", "chatCenter": "مركز المحادثات", "allAgents": "جميع الوكلاء", "allSkills": "جميع المهارات", "warRoom": "غرفة العمليات", "agentCluster": "مجموعة الوكلاء", "outputCenter": "مركز المخرجات", "roleOverview": "نظرة عامة على الدور", "roleInfo": "معلومات الدور", "role": "الدور", "level": "المستوى", "availableAgents": "الوكلاء المتاحون", "availableSkills": "المهارات المتاحة", "quickAgents": "وكلاء سريعون", "quickSkills": "مهارات سريعة", "selectRole": "اختر الدور", "inputPlaceholder": "اكتب رسالة، استخدم @ لاستدعاء وكيل أو مهارة...", "paramConfig": "الإعدادات", "cancel": "إلغاء", "confirm": "تنفيذ", "execParams": "معاملات التنفيذ", "execResult": "النتيجة", "aiInterpret": "تحليل الذكاء الاصطناعي", "recommendedTools": "💡 الأدوات الموصى بها (انقر للاستخدام)", "thinking": "🤔 جارٍ التفكير…", "uploadData": "رفع البيانات (CSV/TXT)", "downloadTemplate": "تنزيل قالب البيانات", "developing": "هذه الميزة قيد التطوير...", "welcomeHello": "مرحباً، ", "welcomeSub": "يوفر FMCG AI RTM Workbench دعمًا ذكيًا لاتخاذ القرار. استخدم @ لاستدعاء الوكلاء والمهارات."}, "th": {"newChat": "แชทใหม่", "chatCenter": "ศูนย์แชท", "allAgents": "เอเจนต์ทั้งหมด", "allSkills": "ทักษะทั้งหมด", "warRoom": "ห้องวอร์รูม", "agentCluster": "คลัสเตอร์เอเจนต์", "outputCenter": "ศูนย์ผลลัพธ์", "roleOverview": "ภาพรวมบทบาท", "roleInfo": "ข้อมูลบทบาท", "role": "บทบาท", "level": "ระดับ", "availableAgents": "เอเจนต์ที่ใช้ได้", "availableSkills": "ทักษะที่ใช้ได้", "quickAgents": "เอเจนต์ด่วน", "quickSkills": "ทักษะด่วน", "selectRole": "เลือกบทบาท", "inputPlaceholder": "พิมพ์ข้อความ ใช้ @ เพื่อเรียกเอเจนต์หรือทักษะ...", "paramConfig": "ตั้งค่าพารามิเตอร์", "cancel": "ยกเลิก", "confirm": "ยืนยันการทำงาน", "execParams": "พารามิเตอร์ที่ใช้", "execResult": "ผลลัพธ์", "aiInterpret": "การวิเคราะห์โดย AI", "recommendedTools": "💡 เครื่องมือแนะนำ (แตะเพื่อใช้)", "thinking": "🤔 กำลังคิด…", "uploadData": "อัปโหลดข้อมูล (CSV/TXT)", "downloadTemplate": "ดาวน์โหลดเทมเพลตข้อมูล", "developing": "ฟีเจอร์นี้กำลังพัฒนา...", "welcomeHello": "สวัสดี ", "welcomeSub": "FMCG AI RTM Workbench ช่วยสนับสนุนการตัดสินใจอัจฉริยะ ใช้ @ เพื่อเรียกเอเจนต์และทักษะ"}, "ms": {"newChat": "Sembang Baharu", "chatCenter": "Pusat Sembang", "allAgents": "Semua Ejen", "allSkills": "Semua Kemahiran", "warRoom": "Bilik Operasi", "agentCluster": "Kluster Ejen", "outputCenter": "Pusat Output", "roleOverview": "Gambaran Peranan", "roleInfo": "Maklumat Peranan", "role": "Peranan", "level": "Tahap", "availableAgents": "Ejen Tersedia", "availableSkills": "Kemahiran Tersedia", "quickAgents": "Ejen Pantas", "quickSkills": "Kemahiran Pantas", "selectRole": "Pilih Peranan", "inputPlaceholder": "Taip mesej, guna @ untuk panggil Ejen atau Kemahiran...", "paramConfig": "Tetapan Parameter", "cancel": "Batal", "confirm": "Jalankan", "execParams": "Parameter Pelaksanaan", "execResult": "Keputusan", "aiInterpret": "Tafsiran AI", "recommendedTools": "💡 Alat disyorkan (ketik untuk guna)", "thinking": "🤔 Sedang berfikir…", "uploadData": "Muat naik data (CSV/TXT)", "downloadTemplate": "Muat turun templat data", "developing": "Ciri ini sedang dibangunkan...", "welcomeHello": "Salam, ", "welcomeSub": "FMCG AI RTM Workbench menyediakan sokongan keputusan pintar. Guna @ untuk panggil Ejen dan Kemahiran."}};
 var ROLE_I18N={"executive": {"en": "Sales VP/Director", "es": "VP/Director de ventas", "ar": "نائب رئيس/مدير المبيعات", "th": "VP/ผู้อำนวยการฝ่ายขาย", "ms": "VP/Pengarah Jualan"}, "regional": {"en": "Regional Sales Manager", "es": "Gerente regional de ventas", "ar": "مدير مبيعات إقليمي", "th": "ผู้จัดการขายภูมิภาค", "ms": "Pengurus Jualan Wilayah"}, "brand": {"en": "Brand Manager", "es": "Gerente de marca", "ar": "مدير العلامة التجارية", "th": "ผู้จัดการแบรนด์", "ms": "Pengurus Jenama"}, "channel": {"en": "Channel Manager", "es": "Gerente de canal", "ar": "مدير القنوات", "th": "ผู้จัดการช่องทาง", "ms": "Pengurus Saluran"}, "tpm": {"en": "TPM/Promo Manager", "es": "TPM/Gerente de promociones", "ar": "مدير الترويج TPM", "th": "TPM/ผู้จัดการโปรโมชัน", "ms": "TPM/Pengurus Promosi"}, "analyst": {"en": "Data Analyst", "es": "Analista de datos", "ar": "محلل بيانات", "th": "นักวิเคราะห์ข้อมูล", "ms": "Penganalisis Data"}, "salesrep": {"en": "Sales Rep/DSR", "es": "Vendedor/DSR", "ar": "مندوب مبيعات/DSR", "th": "พนักงานขาย/DSR", "ms": "Wakil Jualan/DSR"}, "supervisor": {"en": "Supervisor", "es": "Supervisor", "ar": "مشرف", "th": "หัวหน้างาน", "ms": "Penyelia"}, "promoter": {"en": "Promoter", "es": "Promotor", "ar": "مروّج مبيعات", "th": "พนักงานส่งเสริมการขาย", "ms": "Promoter"}, "distributor": {"en": "Distributor Owner", "es": "Dueño distribuidor", "ar": "صاحب الموزّع", "th": "เจ้าของตัวแทนจำหน่าย", "ms": "Pemilik Pengedar"}, "subdistributor": {"en": "Sub-distributor Rep", "es": "Rep. subdistribuidor", "ar": "مندوب موزّع فرعي", "th": "ตัวแทนผู้จัดจำหน่ายย่อย", "ms": "Wakil Pengedar Kecil"}, "store": {"en": "Store Owner/Manager", "es": "Dueño/gerente de tienda", "ar": "صاحب/مدير المتجر", "th": "เจ้าของ/ผู้จัดการร้าน", "ms": "Pemilik/Pengurus Kedai"}};
 var LEVEL_I18N={"决策层": {"en": "Executive", "es": "Dirección", "ar": "الإدارة العليا", "th": "ระดับบริหาร", "ms": "Eksekutif"}, "管理层": {"en": "Management", "es": "Gerencia", "ar": "الإدارة", "th": "ระดับจัดการ", "ms": "Pengurusan"}, "支持层": {"en": "Support", "es": "Soporte", "ar": "الدعم", "th": "ระดับสนับสนุน", "ms": "Sokongan"}, "执行层": {"en": "Execution", "es": "Ejecución", "ar": "التنفيذ", "th": "ระดับปฏิบัติการ", "ms": "Pelaksanaan"}, "经营层": {"en": "Business Owner", "es": "Propietario", "ar": "الإدارة التشغيلية", "th": "ระดับเจ้าของกิจการ", "ms": "Pemilik Perniagaan"}};
 var LLM_LANG={zh:'中文',en:'英语',es:'西班牙语',ar:'阿拉伯语',th:'泰语',ms:'马来语'};
@@ -3429,6 +3463,66 @@ function renderAnswerWithChips(text, ids) {
   return html;
 }
 
+var EN_FIX10={"知识库":"Knowledge Base","数据集":"Dataset","上传你的专业资料(txt/md/csv)，AI 回答时会优先参考这些内容，更懂你的业务。":"Upload your domain files (txt/md/csv). The AI prioritizes them when answering, so it understands your business better.","+ 上传知识文件":"+ Upload knowledge files","上传你的业务数据(csv/txt)，AI 分析与回答时可结合这些数据。":"Upload your business data (csv/txt). The AI can use it when analyzing and answering.","+ 上传数据集":"+ Upload dataset"};for(var _f10 in EN_FIX10){EN_DICT[_f10]=EN_FIX10[_f10];}EN_KEYS=Object.keys(EN_DICT).sort(function(a,b){return b.length-a.length;});
+// ==================== 知识库 / 数据集（localStorage + 关键词检索注入） ====================
+function _kbRead(key){ try{ return JSON.parse(localStorage.getItem(key)||'[]'); }catch(e){ return []; } }
+function _kbWrite(key,arr){ try{ localStorage.setItem(key, JSON.stringify(arr)); }catch(e){ alert('存储空间不足，请删除部分文件'); } }
+function kbGet(){ return _kbRead('ebest_kb'); }
+function dsGet(){ return _kbRead('ebest_ds'); }
+function _chunk(text){ var t=(text||'').replace(/\r/g,''); var parts=t.split(/\n{2,}/); var out=[]; parts.forEach(function(p){ p=p.trim(); if(!p)return; if(p.length<=400){ out.push(p); } else { for(var i=0;i<p.length;i+=400){ out.push(p.slice(i,i+400)); } } }); return out.length?out:[t.slice(0,400)]; }
+function _fmtSize(n){ return n<1024?n+'B':(n<1048576?(n/1024).toFixed(1)+'KB':(n/1048576).toFixed(1)+'MB'); }
+function _addFiles(key, files, renderFn){
+  var arr=_kbRead(key); var pending=files.length; if(!pending)return;
+  Array.prototype.slice.call(files).forEach(function(f){
+    var r=new FileReader();
+    r.onload=function(){ var text=String(r.result||''); arr.push({id:'f'+Date.now()+Math.floor(Math.random()*1000), name:f.name, type:f.type||'', size:f.size, text:text, chunks:_chunk(text), at:Date.now()}); if(--pending<=0){ _kbWrite(key,arr); renderFn(); } };
+    r.onerror=function(){ if(--pending<=0){ _kbWrite(key,arr); renderFn(); } };
+    r.readAsText(f);
+  });
+}
+function kbAddFiles(files){ _addFiles('ebest_kb', files, renderKBList); }
+function dsAddFiles(files){ _addFiles('ebest_ds', files, renderDSList); }
+function kbDelete(id){ _kbWrite('ebest_kb', kbGet().filter(function(f){return f.id!==id;})); renderKBList(); }
+function dsDelete(id){ _kbWrite('ebest_ds', dsGet().filter(function(f){return f.id!==id;})); renderDSList(); }
+function _renderList(items, listId, statusId, delFn, kind){
+  var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
+  var totalChunks=items.reduce(function(a,f){return a+((f.chunks&&f.chunks.length)||0);},0);
+  var st=document.getElementById(statusId);
+  if(st){ st.innerHTML = items.length ? ('<span style="color:#00A37A;font-weight:600;">● </span>'+(EN?'AI connected · ':'AI 已接入 · ')+items.length+(EN?' file(s) / ':' 个文件 / ')+totalChunks+(EN?' chunks':' 段')) : (EN?'No files yet. Uploads are stored in this browser.':'暂无文件。上传内容仅保存在本浏览器。'); }
+  var box=document.getElementById(listId); if(!box)return;
+  box.innerHTML = items.map(function(f){
+    return '<div style="display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--border);border-radius:8px;margin-top:6px;">'+
+      '<span style="font-size:16px;">📄</span>'+
+      '<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escapeHtml(f.name)+'</div>'+
+      '<div style="font-size:11px;color:var(--text-muted);">'+_fmtSize(f.size||0)+' · '+((f.chunks&&f.chunks.length)||0)+(EN?' chunks':' 段')+'</div></div>'+
+      '<button onclick="'+(kind==='kb'?'kbDelete':'dsDelete')+'(\''+f.id+'\')" style="border:none;background:none;color:#C0392B;font-size:13px;cursor:pointer;padding:4px;">'+(EN?'Delete':'删除')+'</button>'+
+      '</div>';
+  }).join('');
+}
+function renderKBList(){ _renderList(kbGet(),'kbList','kbStatus',kbDelete,'kb'); }
+function renderDSList(){ _renderList(dsGet(),'dsList','dsStatus',dsDelete,'ds'); }
+function _showPanel(showId){
+  ['agentListPanel','skillListPanel','knowledgePanel','datasetPanel'].forEach(function(pid){ var p=document.getElementById(pid); if(p) p.classList.toggle('hidden', pid!==showId); });
+  var ae=document.getElementById('navAgentExpand'); if(ae) ae.classList.remove('rotated');
+  var se=document.getElementById('navSkillExpand'); if(se) se.classList.remove('rotated');
+  if(typeof agentListExpanded!=='undefined') agentListExpanded=false;
+  if(typeof skillListExpanded!=='undefined') skillListExpanded=false;
+}
+function toggleKBPanel(){ var p=document.getElementById('knowledgePanel'); var open=p.classList.contains('hidden'); if(open){ _showPanel('knowledgePanel'); renderKBList(); if(currentLang==='en'){try{localizeEl(p);}catch(e){}} } else { p.classList.add('hidden'); } }
+function toggleDSPanel(){ var p=document.getElementById('datasetPanel'); var open=p.classList.contains('hidden'); if(open){ _showPanel('datasetPanel'); renderDSList(); if(currentLang==='en'){try{localizeEl(p);}catch(e){}} } else { p.classList.add('hidden'); } }
+function _grams(s){ s=(s||'').replace(/\s+/g,'').toLowerCase(); var g={}; for(var i=0;i<s.length-1;i++){ g[s.substr(i,2)]=1; } return g; }
+function retrieveContext(query){
+  var items=kbGet().concat(dsGet()); if(!items.length) return '';
+  var qg=_grams(query); if(!Object.keys(qg).length) return '';
+  var scored=[];
+  items.forEach(function(f){ (f.chunks||[f.text||'']).forEach(function(c){ if(!c)return; var cg=_grams(c); var sc=0; for(var k in qg){ if(cg[k]) sc++; } if(sc>1) scored.push({c:c,sc:sc,src:f.name}); }); });
+  if(!scored.length) return '';
+  scored.sort(function(a,b){return b.sc-a.sc;});
+  var out=[],total=0;
+  for(var i=0;i<scored.length && i<4;i++){ var seg='【'+scored[i].src+'】'+scored[i].c; if(total+seg.length>1500) break; out.push(seg); total+=seg.length; }
+  return out.join('\n---\n');
+}
+
 // ==================== 促销海报生成（前端 canvas，离线可用） ====================
 function _posterFallback(text){
   var t=text||'';
@@ -3519,6 +3613,8 @@ async function chatWithOrchestration(userText){
     '若涉及促销/活动，所有agent围绕同一活动保持一致，推荐机制要说明落到哪个月。\n'+
     '若不需要协同：直接用自然语言简洁回答；可在最后单独一行写 @@TOOLS@@: ID1,ID2 推荐相关工具。\n\n'+
     '工具清单:\n'+buildToolCatalog()+llmLangClause();
+  var __ctx=retrieveContext(userText);
+  if(__ctx){ sys='【用户上传的知识库/数据集中与本问题最相关的参考资料，回答时请优先依据这些资料，并在用到时注明来源文件名】\n'+__ctx+'\n\n'+sys; }
   var resp=await fetch(LLM_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:sys,messages:[{role:'user',content:userText}]})});
   if(!resp.ok) throw new Error('HTTP '+resp.status);
   var data=await resp.json();
