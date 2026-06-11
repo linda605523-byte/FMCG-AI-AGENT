@@ -3503,25 +3503,49 @@ function showPosterModal(fields){
 async function chatWithOrchestration(userText){
   var roleName=(currentRole&&currentRole.name)?currentRole.name:'快消销售';
   var sys='你是 eBest 快消行业 AI 工作台的智能编排引擎。当前使用者角色：'+roleName+'。'+
-    '判断用户问题是否需要「多Agent协同分析」（需要拆成多个子任务、分别用不同工具完成后再汇总归因）。'+
-    '严格只返回一个 JSON 对象，不要任何解释、不要 markdown 代码块。字段：'+
-    '{"orchestrate":布尔值,"intent":"一句话意图","agents":[{"id":"工具ID","task":"该工具负责的子任务(一句话)","output":"该工具的完整产出物本身，要紧扣用户请求的具体范围(时间/区域/品类等)，给出有结构、有具体数字的可交付结果；可用 markdown(加粗、短横线列表、分行)；可用示例数据但需标注‘示例’；不要只写一句话结论"}],"synthesis":"综合所有产出的归因结论与可执行建议(分点)","answer":"若不需要编排则在此直接回答","tools":["相关工具ID"]}。'+
-    'orchestrate=true 时填 agents(2-5个) 与 synthesis；false 时填 answer 与 tools(0-3个)。'+
-    '关键要求：每个 agent 的 output 必须与用户问题的范围严格一致——例如用户说“七月份/一个月”，就要给整月的计划(如按周拆解、月度汇总数字)，绝不能只给单独一天；用户指定了区域/品类，也要体现在产出里。'+
-    '若问题涉及促销/活动：所有 agent 的产出要围绕同一个具体活动(同一目标月份/主题/机制)展开并保持一致；当沙盘推演推荐了某机制(如买二送一)，必须说明它对应促销日历中的哪个月/哪个活动，synthesis 也要点明该机制落地到哪个月，不要出现“只推荐机制却不说放哪个月”的脱节。'+
-    '所有 id 只能来自下面"工具清单"中出现过的 ID。\n\n工具清单:\n'+buildToolCatalog()+llmLangClause();
+    '判断用户问题是否需要「多Agent协同分析」（拆成多个子任务、用不同工具完成后再汇总）。'+
+    '若需要：严格按下面纯文本格式输出，不要用JSON、不要用代码块：\n'+
+    '@@ORCH@@\n'+
+    'INTENT: 一句话意图\n'+
+    '@@AGENT@@ 工具ID | 该工具负责的子任务(一句话)\n'+
+    '<该工具的完整产出物：markdown(加粗、短横线列表、分行)，紧扣用户请求的范围(时间/区域/品类)，有结构有数字，示例数据需标注示例>\n'+
+    '@@AGENT@@ 工具ID | 子任务\n'+
+    '<产出物>\n'+
+    '@@SYNTH@@\n'+
+    '<综合所有产出的归因结论与可执行建议，分点>\n'+
+    '@@END@@\n'+
+    '规则：agents 2-5个；每个产出聚焦关键、避免冗长(控制在8行内)；工具ID只能来自下面清单；'+
+    '产出必须与用户范围一致(说“七月份”就给整月计划而非单天)；'+
+    '若涉及促销/活动，所有agent围绕同一活动保持一致，推荐机制要说明落到哪个月。\n'+
+    '若不需要协同：直接用自然语言简洁回答；可在最后单独一行写 @@TOOLS@@: ID1,ID2 推荐相关工具。\n\n'+
+    '工具清单:\n'+buildToolCatalog()+llmLangClause();
   var resp=await fetch(LLM_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:sys,messages:[{role:'user',content:userText}]})});
   if(!resp.ok) throw new Error('HTTP '+resp.status);
   var data=await resp.json();
-  var raw=(data.text||'').trim();
-  raw=raw.replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'').trim();
-  var m=raw.match(/\{[\s\S]*\}/);
-  var obj=null;
-  if(m){ try{ obj=JSON.parse(m[0]); }catch(e){ obj=null; } }
-  if(!obj){ return {orchestrate:false, answer:raw, tools:[]}; }
-  return obj;
+  var raw=(data.text||'').replace(/```[a-z]*\n?/gi,'').trim();
+  return parseOrchestration(raw);
 }
-
+function parseOrchestration(raw){
+  raw=(raw||'').trim();
+  if(raw.indexOf('@@ORCH@@')===-1){
+    var tools=[]; var tm=raw.match(/@@TOOLS@@:?\s*([A-Za-z0-9,\s]+)/i);
+    if(tm){ tools=tm[1].split(',').map(function(s){return s.trim().toUpperCase();}).filter(Boolean); raw=raw.replace(tm[0],'').trim(); }
+    return {orchestrate:false, answer:raw, tools:tools};
+  }
+  var body=raw.split('@@ORCH@@')[1]||raw;
+  body=body.replace(/@@END@@[\s\S]*$/,'');
+  var intent=''; var im=body.match(/INTENT:\s*([^\n]+)/); if(im) intent=im[1].trim();
+  var synth=''; var sp=body.split('@@SYNTH@@'); if(sp.length>1){ synth=sp[1].trim(); body=sp[0]; }
+  var agents=[]; var segs=body.split('@@AGENT@@');
+  for(var i=1;i<segs.length;i++){
+    var seg=segs[i]; var nl=seg.indexOf('\n');
+    var header=(nl>=0?seg.slice(0,nl):seg).trim();
+    var out=(nl>=0?seg.slice(nl+1):'').trim();
+    var hp=header.split('|'); var id=(hp[0]||'').trim().toUpperCase(); var task=(hp[1]||'').trim();
+    if(id) agents.push({id:id, task:task, output:out});
+  }
+  return {orchestrate:true, intent:intent, agents:agents, synthesis:synth};
+}
 function renderOrchestration(res){
   var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
   var L=function(zh,en){return EN?en:zh;};
