@@ -3514,7 +3514,7 @@ async function chatWithOrchestration(userText){
     '@@SYNTH@@\n'+
     '<综合所有产出的归因结论与可执行建议，分点>\n'+
     '@@END@@\n'+
-    '规则：agents 2-5个；每个产出聚焦关键、避免冗长(控制在8行内)；工具ID只能来自下面清单；'+
+    '规则：agents 2-5个，必须先输出每个 @@AGENT@@ 块、再写 @@SYNTH@@，不要把各 Agent 的产出直接并进结论里；每个产出聚焦关键、避免冗长(控制在8行内)；工具ID只能来自下面清单；'+
     '产出必须与用户范围一致(说“七月份”就给整月计划而非单天)；'+
     '若涉及促销/活动，所有agent围绕同一活动保持一致，推荐机制要说明落到哪个月。\n'+
     '若不需要协同：直接用自然语言简洁回答；可在最后单独一行写 @@TOOLS@@: ID1,ID2 推荐相关工具。\n\n'+
@@ -3527,6 +3527,12 @@ async function chatWithOrchestration(userText){
 }
 function parseOrchestration(raw){
   raw=(raw||'').trim();
+  // tolerate case/space/markdown variants of the markers
+  raw=raw.replace(/\**@@\s*orch\s*@@\**/gi,'@@ORCH@@')
+         .replace(/\**@@\s*agent\s*@@\**/gi,'@@AGENT@@')
+         .replace(/\**@@\s*synth\s*@@\**/gi,'@@SYNTH@@')
+         .replace(/\**@@\s*end\s*@@\**/gi,'@@END@@')
+         .replace(/\**@@\s*tools\s*@@\**/gi,'@@TOOLS@@');
   if(raw.indexOf('@@ORCH@@')===-1){
     var tools=[]; var tm=raw.match(/@@TOOLS@@:?\s*([A-Za-z0-9,\s]+)/i);
     if(tm){ tools=tm[1].split(',').map(function(s){return s.trim().toUpperCase();}).filter(Boolean); raw=raw.replace(tm[0],'').trim(); }
@@ -3534,14 +3540,15 @@ function parseOrchestration(raw){
   }
   var body=raw.split('@@ORCH@@')[1]||raw;
   body=body.replace(/@@END@@[\s\S]*$/,'');
-  var intent=''; var im=body.match(/INTENT:\s*([^\n]+)/); if(im) intent=im[1].trim();
+  var intent=''; var im=body.match(/INTENT[:：]\s*([^\n]+)/i); if(im) intent=im[1].trim();
   var synth=''; var sp=body.split('@@SYNTH@@'); if(sp.length>1){ synth=sp[1].trim(); body=sp[0]; }
   var agents=[]; var segs=body.split('@@AGENT@@');
   for(var i=1;i<segs.length;i++){
     var seg=segs[i]; var nl=seg.indexOf('\n');
     var header=(nl>=0?seg.slice(0,nl):seg).trim();
     var out=(nl>=0?seg.slice(nl+1):'').trim();
-    var hp=header.split('|'); var id=(hp[0]||'').trim().toUpperCase(); var task=(hp[1]||'').trim();
+    var idm=header.match(/[A-Za-z]\s?\d+/); var id=idm?idm[0].replace(/\s/g,'').toUpperCase():'';
+    var task=header.replace(/[A-Za-z]\s?\d+/,'').replace(/^[\s|:：-]+/,'').trim();
     if(id) agents.push({id:id, task:task, output:out});
   }
   return {orchestrate:true, intent:intent, agents:agents, synthesis:synth};
@@ -3549,11 +3556,12 @@ function parseOrchestration(raw){
 function renderOrchestration(res){
   var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
   var L=function(zh,en){return EN?en:zh;};
-  var list=(res.agents||[]).filter(function(a){return a&&a.id&&getItemById(String(a.id).toUpperCase());});
+  var list=(res.agents||[]).filter(function(a){return a&&a.id&&/^[A-Za-z]\d+$/.test(String(a.id).toUpperCase());});
   var h='<div class="result-card">';
   h+='<div class="result-header"><span style="font-size:18px;">🧩</span><span class="result-title">'+L('多Agent智能编排','Multi-Agent Orchestration')+'</span><span class="result-status status-success">DeepSeek</span></div>';
   h+='<div class="result-body">';
   if(res.intent){ h+='<div class="result-section"><div class="result-section-title">'+L('意图识别','Intent')+'</div><div style="font-size:13px;color:var(--text-secondary);background:var(--bg);padding:10px;border-radius:6px;">'+escapeHtml(res.intent)+'</div></div>'; }
+  if(list.length){
   // 编排方案概览
   h+='<div class="result-section"><div class="result-section-title">'+L('编排方案','Plan')+' · '+list.length+' '+L('个 Agent','agents')+'</div>';
   list.forEach(function(a){ var id=String(a.id).toUpperCase(); var it=getItemById(id); var nm=it?aName(it):id;
@@ -3563,9 +3571,11 @@ function renderOrchestration(res){
        '<span style="flex-shrink:0;color:#52C41A;font-size:13px;">✓</span></div>';
   });
   h+='</div>';
+  }
   // 每个 Agent 的真实产出物（由 DeepSeek 按用户请求实时生成）
+  if(list.length){
   h+='<div class="result-section"><div class="result-section-title">'+L('各 Agent 产出','Agent deliverables')+'</div>';
-  list.forEach(function(a){ var id=String(a.id).toUpperCase(); var it=getItemById(id); if(!it)return; var nm=aName(it);
+  list.forEach(function(a){ var id=String(a.id).toUpperCase(); var it=getItemById(id); var nm=it?aName(it):id;
     var outRaw=a.output||a.finding||'';
     var inner='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'+
          '<span style="font-size:11px;font-weight:700;color:#fff;background:var(--primary);border-radius:6px;padding:2px 8px;">'+id+'</span>'+
@@ -3573,13 +3583,14 @@ function renderOrchestration(res){
        '</div>'+
        (a.task?'<div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">'+escapeHtml(a.task)+'</div>':'')+
        '<div style="font-size:13px;line-height:1.75;color:var(--text);white-space:pre-line;">'+mdLite(outRaw)+'</div>';
-    if(/促销|Brief|海报|活动|TPM/i.test((it.name||'')+' '+(it.desc||'')+' '+id) && outRaw){
+    if(/促销|Brief|海报|活动|TPM/i.test(((it&&it.name)||'')+' '+((it&&it.desc)||'')+' '+id) && outRaw){
       window._promoBriefs=window._promoBriefs||[]; var pIdx=window._promoBriefs.push(outRaw)-1;
       inner+='<button onclick="genPromoPoster('+pIdx+')" style="margin-top:10px;border:none;background:linear-gradient(135deg,#00C39A,#1E2761);color:#fff;border-radius:18px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">🎨 '+L('生成促销海报','Generate promo poster')+'</button>';
     }
     h+='<div style="margin:10px 0 4px;padding:12px;border:1px solid var(--border);border-radius:10px;background:#fff;">'+inner+'</div>';
   });
   h+='</div>';
+  }
   if(res.synthesis){ h+='<div class="result-section"><div class="result-section-title">'+L('🎯 AI 综合归因结论','🎯 AI root-cause synthesis')+'</div><div style="font-size:13px;line-height:1.85;color:var(--text);padding:12px;background:var(--primary-light);border-radius:8px;border-left:3px solid var(--primary);white-space:pre-line;">'+mdLite(res.synthesis)+'</div></div>'; }
   h+='</div>';
   h+='</div>';
