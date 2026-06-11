@@ -348,7 +348,7 @@
         <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:10px;">上传你的专业资料(txt/md/csv)，AI 回答时会优先参考这些内容，更懂你的业务。</div>
         <label style="display:block;border:1.5px dashed var(--primary);border-radius:10px;padding:14px;text-align:center;color:var(--primary);font-size:13px;font-weight:600;cursor:pointer;background:var(--primary-light);">
           + 上传知识文件
-          <input type="file" multiple accept=".txt,.md,.csv,.json,text/plain" style="display:none;" onchange="kbAddFiles(this.files); this.value='';">
+          <input type="file" multiple style="display:none;" onchange="kbAddFiles(this.files); this.value='';">
         </label>
         <div id="kbStatus" style="font-size:12px;color:var(--text-muted);margin:10px 0 4px;"></div>
         <div id="kbList"></div>
@@ -361,7 +361,7 @@
         <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:10px;">上传你的业务数据(csv/txt)，AI 分析与回答时可结合这些数据。</div>
         <label style="display:block;border:1.5px dashed var(--primary);border-radius:10px;padding:14px;text-align:center;color:var(--primary);font-size:13px;font-weight:600;cursor:pointer;background:var(--primary-light);">
           + 上传数据集
-          <input type="file" multiple accept=".csv,.txt,.tsv,.json" style="display:none;" onchange="dsAddFiles(this.files); this.value='';">
+          <input type="file" multiple style="display:none;" onchange="dsAddFiles(this.files); this.value='';">
         </label>
         <div id="dsStatus" style="font-size:12px;color:var(--text-muted);margin:10px 0 4px;"></div>
         <div id="dsList"></div>
@@ -3472,10 +3472,18 @@ function dsGet(){ return _kbRead('ebest_ds'); }
 function _chunk(text){ var t=(text||'').replace(/\r/g,''); var parts=t.split(/\n{2,}/); var out=[]; parts.forEach(function(p){ p=p.trim(); if(!p)return; if(p.length<=400){ out.push(p); } else { for(var i=0;i<p.length;i+=400){ out.push(p.slice(i,i+400)); } } }); return out.length?out:[t.slice(0,400)]; }
 function _fmtSize(n){ return n<1024?n+'B':(n<1048576?(n/1024).toFixed(1)+'KB':(n/1048576).toFixed(1)+'MB'); }
 function _addFiles(key, files, renderFn){
-  var arr=_kbRead(key); var pending=files.length; if(!pending)return;
-  Array.prototype.slice.call(files).forEach(function(f){
+  var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
+  var arr=_kbRead(key);
+  var list=Array.prototype.slice.call(files||[]);
+  var textExt=/\.(txt|md|markdown|csv|tsv|json|log|text|htm|html|yaml|yml)$/i;
+  var good=list.filter(function(f){return textExt.test(f.name);});
+  var bad=list.filter(function(f){return !textExt.test(f.name);});
+  if(bad.length){ alert((EN?'These formats aren\'t supported in the demo (please convert to txt/md/csv):\n':'以下格式 demo 版暂不支持，请先转成 txt/md/csv 再上传：\n')+bad.map(function(f){return f.name;}).join('\n')); }
+  if(!good.length){ return; }
+  var pending=good.length;
+  good.forEach(function(f){
     var r=new FileReader();
-    r.onload=function(){ var text=String(r.result||''); arr.push({id:'f'+Date.now()+Math.floor(Math.random()*1000), name:f.name, type:f.type||'', size:f.size, text:text, chunks:_chunk(text), at:Date.now()}); if(--pending<=0){ _kbWrite(key,arr); renderFn(); } };
+    r.onload=function(){ var text=String(r.result||'').slice(0,1000000); arr.push({id:'f'+Date.now()+Math.floor(Math.random()*1000), name:f.name, type:f.type||'', size:f.size, text:text, chunks:_chunk(text), at:Date.now()}); if(--pending<=0){ _kbWrite(key,arr); renderFn(); } };
     r.onerror=function(){ if(--pending<=0){ _kbWrite(key,arr); renderFn(); } };
     r.readAsText(f);
   });
