@@ -2383,7 +2383,11 @@ function buildParamForm(item, msgId, type) {
         html += '<input type="date" class="param-input param-input-' + p.name + '-end" value="' + (p.end || '') + '" style="flex:1">';
         html += '</div>';
       } else if (p.type === 'file') {
-        html += '<input type="file" class="param-input param-input-' + p.name + '" data-param="' + p.name + '" accept="' + (p.accept || '*') + '"' + (p.multiple?' multiple':'') + '>';
+        html += '<label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;max-width:100%;">'+
+          '<span style="flex-shrink:0;background:var(--primary-light);color:var(--primary);border-radius:6px;padding:3px 10px;font-weight:600;">选择文件</span>'+
+          '<span class="param-file-name" style="color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">未选择文件</span>'+
+          '<input type="file" class="param-input param-input-' + p.name + '" data-param="' + p.name + '" accept="' + (p.accept || '*') + '"' + (p.multiple?' multiple':'') + ' style="display:none;" onchange="var s=this.parentNode.querySelector(\'.param-file-name\'); if(s){ if(this.files&&this.files.length){ s.textContent=this.files.length>1?(this.files.length+(currentLang===\'en\'?\' files\':\' 个文件\')):this.files[0].name; } else { s.textContent=(currentLang===\'en\'?\'No file chosen\':\'未选择文件\'); } }">'+
+          '</label>';
       }
       html += '</div>';
     });
@@ -2602,7 +2606,7 @@ function build3DRoomSphere(imgs){
   renderer.setSize(W,H);
   stage.appendChild(renderer.domElement);
 
-  var scene=new THREE.Scene();
+  var scene=new THREE.Scene(); try{ scene.background=new THREE.Color(0x070b16); }catch(e){}
   var camera=new THREE.PerspectiveCamera(75, W/H, 1, 1100);
 
   // build equirectangular canvas texture from the photos
@@ -2612,7 +2616,7 @@ function build3DRoomSphere(imgs){
   ctx.fillStyle='#0b1020'; ctx.fillRect(0,0,cw,ch);
   var tex=new THREE.CanvasTexture(cv);
   tex.colorSpace=THREE.SRGBColorSpace||tex.colorSpace;
-  var geo=new THREE.SphereGeometry(500,64,40); geo.scale(-1,1,1);
+  var geo=new THREE.CylinderGeometry(500,500,1570,64,1,true); geo.scale(-1,1,1);
   var mat=new THREE.MeshBasicMaterial({map:tex});
   var sphere=new THREE.Mesh(geo,mat); scene.add(sphere);
 
@@ -2644,7 +2648,7 @@ function build3DRoomSphere(imgs){
 
   var lon=0, lat=0, dragging=false, lx=0, ly=0, auto=true, pinch=0, raf=0, alive=true;
   function update(){
-    lat=Math.max(-85,Math.min(85,lat));
+    lat=Math.max(-42,Math.min(42,lat));
     var phi=THREE.MathUtils.degToRad(90-lat), theta=THREE.MathUtils.degToRad(lon);
     var tx=500*Math.sin(phi)*Math.cos(theta), ty=500*Math.cos(phi), tz=500*Math.sin(phi)*Math.sin(theta);
     camera.lookAt(tx,ty,tz);
@@ -2668,7 +2672,7 @@ function build3DRoomSphere(imgs){
   window.addEventListener('resize',onResize);
   var gHandler=null;
   gyro.addEventListener('click',function(){
-    function start(){ auto=false; gyro.style.display='none'; hint.textContent=EN?'Move your phone to look around':'转动手机环视门店'; gHandler=function(ev){ if(ev.alpha==null)return; lon=ev.alpha; lat=Math.max(-85,Math.min(85,(ev.beta||90)-90)); }; window.addEventListener('deviceorientation',gHandler); }
+    function start(){ auto=false; gyro.style.display='none'; hint.textContent=EN?'Move your phone to look around':'转动手机环视门店'; gHandler=function(ev){ if(ev.alpha==null)return; lon=ev.alpha; lat=Math.max(-42,Math.min(42,(ev.beta||90)-90)); }; window.addEventListener('deviceorientation',gHandler); }
     if(typeof DeviceOrientationEvent!=='undefined' && typeof DeviceOrientationEvent.requestPermission==='function'){ DeviceOrientationEvent.requestPermission().then(function(s){ if(s==='granted')start(); }).catch(function(){}); }
     else { start(); }
   });
@@ -3464,6 +3468,8 @@ function renderAnswerWithChips(text, ids) {
 }
 
 var EN_FIX10={"知识库":"Knowledge Base","数据集":"Dataset","上传你的专业资料(txt/md/csv)，AI 回答时会优先参考这些内容，更懂你的业务。":"Upload your domain files (txt/md/csv). The AI prioritizes them when answering, so it understands your business better.","+ 上传知识文件":"+ Upload knowledge files","上传你的业务数据(csv/txt)，AI 分析与回答时可结合这些数据。":"Upload your business data (csv/txt). The AI can use it when analyzing and answering.","+ 上传数据集":"+ Upload dataset"};for(var _f10 in EN_FIX10){EN_DICT[_f10]=EN_FIX10[_f10];}EN_KEYS=Object.keys(EN_DICT).sort(function(a,b){return b.length-a.length;});
+var EN_FIX11={"区域下滑归因": "Regional decline attribution", "查看智能预警": "Smart alerts", "沙盘推演": "Scenario simulation", "组织效能诊断": "Org efficiency diagnosis", "经营周报": "Weekly report", "竞品应对话术": "Competitor response scripts", "高管问答助手": "Exec Q&A assistant", "补货预测": "Replenishment forecast", "路径规划": "Route planning", "绩效教练": "Performance coach", "拜访任务包": "Visit task pack", "新品追踪": "New-product tracking", "品类趋势": "Category trends", "营销内容包": "Marketing content pack", "促销Brief": "Promo brief", "客户画像": "Customer profiling", "价格监测": "Price monitoring", "机会门店分析": "Opportunity store analysis", "KA客户管理": "KA account management", "核销费效": "Redemption ROI", "促销日历": "Promo calendar", "费用审计": "Spend audit", "店主文案": "Store-owner copy", "潜力门店挖掘": "Potential store mining", "数据质量": "Data quality", "订单趋势分析": "Order trend analysis", "门店三维重建": "Store 3D reconstruction", "订单推荐": "Order recommendation", "客情记忆": "Relationship memory", "现场异议处理": "On-site objection handling", "DSR助手": "DSR assistant", "巡店评分": "Store-visit scoring", "整改追踪": "Remediation tracking", "督导任务": "Supervisor tasks", "陈列标准": "Display standard", "销量追踪": "Sales tracking", "智能排班": "Smart scheduling", "导购话术": "Promoter scripts", "即时激励看板": "Live incentive board", "进销存优化": "Inventory optimization", "信用评估": "Credit assessment", "账款追踪": "Receivables tracking", "经营利润分析": "Profit analysis", "经销商对账": "Distributor reconciliation", "智能配载": "Smart load planning", "退货处理": "Returns handling", "智能选品": "Smart assortment", "定价建议": "Pricing advice", "动销分析": "Sell-through analysis", "库存优化": "Stock optimization"};for(var _f11 in EN_FIX11){EN_DICT[_f11]=EN_FIX11[_f11];}EN_KEYS=Object.keys(EN_DICT).sort(function(a,b){return b.length-a.length;});
+var EN_FIX12={"未选择文件":"No file chosen","选择文件":"Choose file"};for(var _f12 in EN_FIX12){EN_DICT[_f12]=EN_FIX12[_f12];}EN_KEYS=Object.keys(EN_DICT).sort(function(a,b){return b.length-a.length;});
 // ==================== 知识库 / 数据集（localStorage + 关键词检索注入） ====================
 function _kbRead(key){ try{ return JSON.parse(localStorage.getItem(key)||'[]'); }catch(e){ return []; } }
 function _kbWrite(key,arr){ try{ localStorage.setItem(key, JSON.stringify(arr)); }catch(e){ alert('存储空间不足，请删除部分文件'); } }
