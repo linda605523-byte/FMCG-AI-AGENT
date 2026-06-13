@@ -2053,7 +2053,8 @@ function bindQuickActions() {
     const type = btn.dataset.type;
     if (type === 'cluster') {
       var _c = CLUSTERS.find(function(c){ return c.key === id; });
-      var q = (_c && _c.sampleZh) || '分析上月业绩下滑的原因';
+      var _en = (typeof currentLang!=='undefined'&&currentLang==='en');
+      var q = (_c && (_en ? (_c.sampleEn||_c.sampleZh) : _c.sampleZh)) || (_en?'Analyze why sales declined last month':'分析上月业绩下滑的原因');
       var inp = document.getElementById('chatInput');
       if (inp) inp.value = q;
       sendMessage();
@@ -3531,7 +3532,8 @@ function _posterFallback(text){
   var price=(t.match(/¥\s?\d+(\.\d+)?(\/[^\s，。,；;]+)?/)||[''])[0];
   var period=(t.match(/\d{4}-\d{2}-\d{2}\s*[~至到\-]+\s*\d{4}-\d{2}-\d{2}|\d{1,2}\s?月(份)?/)||[''])[0];
   var slogan=(lines.find(function(l){return l.length>=4&&l.length<=16&&l!==title;})||'');
-  return {title:title,slogan:slogan,mechanic:mech,price:price,period:period,theme:'mint'};
+  var scope=(t.match(/覆盖\s?\d+\s?家(门店|店)?|\d+\s?家(门店|店)|华东|华北|华南|华中|西南|西北|东北/)||[''])[0];
+  return {title:title,slogan:slogan,mechanic:mech,price:price,period:period,scope:scope,theme:'mint'};
 }
 async function genPromoPoster(idx){
   var text=(window._promoBriefs&&window._promoBriefs[idx])||'';
@@ -3543,7 +3545,7 @@ async function posterFromText(text){
   var fields=null;
   try{
     if(typeof LLM_ENDPOINT!=='undefined' && LLM_ENDPOINT){
-      var sys='你是促销海报文案助手。从用户给的促销brief中提取海报字段，严格只返回一个JSON对象、不要解释、不要markdown代码块：{"title":"主标题(产品或活动名,≤12字)","slogan":"一句卖点(≤16字)","mechanic":"促销机制(如 买二送一,≤8字)","price":"价格(如 ¥3.5/瓶，没有就留空)","period":"活动时间(没有就留空)","theme":"从 mint/navy/orange/red 中选最贴合的一个"}。'+(EN?'字段值用英文。':'');
+      var sys='你是促销海报文案助手。从用户给的促销brief中提取海报字段，严格只返回一个JSON对象、不要解释、不要markdown代码块：{"title":"主标题(产品或活动名,≤12字)","slogan":"一句卖点(≤16字)","mechanic":"促销机制(如 买二送一,≤8字)","price":"价格(如 ¥3.5/瓶，没有就留空)","period":"活动时间(没有就留空)","scope":"覆盖范围(如 覆盖500家门店 或 华东区，没有就留空)","theme":"从 mint/navy/orange/red 中选最贴合的一个"}。'+(EN?'字段值用英文。':'');
       var resp=await fetch(LLM_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:sys,messages:[{role:'user',content:text}]})});
       if(resp.ok){ var d=await resp.json(); var raw=(d.text||'').replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'').trim(); var m=raw.match(/\{[\s\S]*\}/); if(m){ try{ fields=JSON.parse(m[0]); }catch(e){} } }
     }
@@ -3556,25 +3558,48 @@ function _roundRect(x,rx,ry,rw,rh,r){ x.beginPath(); x.moveTo(rx+r,ry); x.arcTo(
 function _wrapText(x, text, px, py, maxW, lh, font){ x.font=font; var chars=String(text).split(''); var line=''; var yy=py;
   for(var i=0;i<chars.length;i++){ var test=line+chars[i]; if(x.measureText(test).width>maxW && line){ x.fillText(line,px,yy); line=chars[i]; yy+=lh; } else line=test; }
   if(line){ x.fillText(line,px,yy); yy+=lh; } return yy; }
+function _star(x,cx,cy,ro,ri,pts){ x.beginPath(); for(var i=0;i<pts*2;i++){ var r=(i%2===0)?ro:ri; var a=Math.PI/pts*i-Math.PI/2; var px=cx+Math.cos(a)*r, py=cy+Math.sin(a)*r; if(i===0)x.moveTo(px,py); else x.lineTo(px,py); } x.closePath(); }
 function _drawPromoPoster(fields){
+  var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
   var W=1080,H=1440, cv=document.createElement('canvas'); cv.width=W; cv.height=H; var x=cv.getContext('2d');
   var themes={mint:['#00C39A','#0c7a63','#062b24'],navy:['#3a4aa0','#1E2761','#0a1130'],orange:['#FF9A4D','#E5631E','#5e2600'],red:['#FF5A60','#C62A30','#5e0f12']};
   var th=themes[(fields.theme||'mint')]||themes.mint;
-  var g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,th[0]); g.addColorStop(0.55,th[1]); g.addColorStop(1,th[2]); x.fillStyle=g; x.fillRect(0,0,W,H);
-  x.globalAlpha=0.12; x.fillStyle='#fff';
-  x.beginPath(); x.arc(W*0.85,H*0.13,190,0,7); x.fill();
-  x.beginPath(); x.arc(W*0.12,H*0.92,240,0,7); x.fill(); x.globalAlpha=1;
+  var g=x.createLinearGradient(0,0,W,H); g.addColorStop(0,th[0]); g.addColorStop(0.55,th[1]); g.addColorStop(1,th[2]); x.fillStyle=g; x.fillRect(0,0,W,H);
+  // decorative bubbles
+  var dots=[[0.86,0.11,210,0.12],[0.12,0.9,250,0.10],[0.22,0.2,95,0.10],[0.93,0.62,120,0.07],[0.66,0.88,80,0.10]];
+  dots.forEach(function(d){ x.globalAlpha=d[3]; x.fillStyle='#fff'; x.beginPath(); x.arc(W*d[0],H*d[1],d[2],0,7); x.fill(); }); x.globalAlpha=1;
   x.textAlign='left';
-  x.fillStyle='rgba(255,255,255,.85)'; x.font='600 30px sans-serif'; x.fillText('eBest · 门店促销', 80, 120);
-  x.fillStyle='#fff'; var ty=_wrapText(x, fields.title||'促销活动', 80, 290, W-160, 100, 'bold 94px sans-serif');
-  if(fields.slogan){ x.fillStyle='rgba(255,255,255,.92)'; ty=_wrapText(x, fields.slogan, 80, ty+34, W-160, 56, '500 46px sans-serif'); }
-  if(fields.mechanic){ var by=Math.max(ty+60, 740); x.font='bold 72px sans-serif'; var mw=x.measureText(fields.mechanic).width; var bw=Math.min(mw+100,W-160), bh=132;
-    x.fillStyle='#fff'; _roundRect(x,80,by,bw,bh,30); x.fill(); x.fillStyle=th[1]; x.fillText(fields.mechanic, 130, by+bh/2+26); ty=by+bh; }
-  var iy=Math.max(ty+90, 1080);
-  if(fields.price){ x.fillStyle='#FFE7A3'; x.font='bold 66px sans-serif'; x.fillText(fields.price, 80, iy); iy+=92; }
-  if(fields.period){ x.fillStyle='rgba(255,255,255,.92)'; x.font='500 40px sans-serif'; x.fillText((currentLang==='en'?'Period · ':'活动时间 · ')+fields.period, 80, iy); iy+=70; }
-  x.strokeStyle='rgba(255,255,255,.3)'; x.lineWidth=2; x.beginPath(); x.moveTo(80,H-150); x.lineTo(W-80,H-150); x.stroke();
-  x.fillStyle='rgba(255,255,255,.8)'; x.font='400 30px sans-serif'; x.fillText(currentLang==='en'?'AI-generated sample · demo only':'AI 生成示例 · 仅供演示', 80, H-90);
+  // brand chip
+  x.fillStyle='rgba(255,255,255,.16)'; _roundRect(x,72,68,430,76,38); x.fill();
+  x.fillStyle='#fff'; x.beginPath(); x.arc(118,106,17,0,7); x.fill();
+  x.fillStyle='#fff'; x.font='600 34px sans-serif'; x.fillText('eBest · '+(EN?'Store Promo':'门店促销'), 152, 119);
+  // title
+  x.fillStyle='#fff'; var ty=_wrapText(x, fields.title||(EN?'Promotion':'促销活动'), 72, 300, W-340, 98, 'bold 90px sans-serif');
+  // slogan
+  if(fields.slogan){ x.fillStyle='rgba(255,255,255,.92)'; ty=_wrapText(x, fields.slogan, 72, ty+30, W-360, 54, '500 44px sans-serif'); }
+  // hero mechanic seal (top-right)
+  if(fields.mechanic){ var cx=W-225, cy=455; x.save(); x.translate(cx,cy); x.rotate(-0.1);
+    x.fillStyle='#FFE7A3'; _star(x,0,0,168,122,14); x.fill();
+    x.fillStyle=th[1]; x.textAlign='center'; var mt=String(fields.mechanic);
+    if(mt.length>4){ x.font='bold 50px sans-serif'; var h=Math.ceil(mt.length/2); x.fillText(mt.slice(0,h),0,-2); x.fillText(mt.slice(h),0,54); }
+    else { x.font='bold 60px sans-serif'; x.fillText(mt,0,22); }
+    x.restore(); x.textAlign='left'; }
+  // price tag
+  var iy=Math.max(ty+130, 880);
+  if(fields.price){ x.fillStyle='#fff'; var pw=Math.min(x.measureText(fields.price).width+260,W-144); _roundRect(x,72,iy-78,pw,150,26); x.fill();
+    x.fillStyle=th[1]; x.font='bold 96px sans-serif'; x.fillText(fields.price,112,iy+24); iy+=158; }
+  // info chips: period + scope
+  function chip(label,px,py){ x.font='500 38px sans-serif'; var w=x.measureText(label).width+72; x.fillStyle='rgba(255,255,255,.18)'; _roundRect(x,px,py,w,74,37); x.fill(); x.fillStyle='#fff'; x.fillText(label,px+36,py+49); return px+w+22; }
+  var cyy=iy+10, nx=72;
+  if(fields.period){ nx=chip('🗓 '+fields.period, nx, cyy); }
+  if(fields.scope){ if(nx+x.measureText('🏪 '+fields.scope).width+94>W-72){ nx=72; cyy+=92; } chip('🏪 '+fields.scope, nx, cyy); }
+  // CTA banner
+  var cta=fields.cta||(EN?'Order Now →':'立即下单参与 →');
+  x.fillStyle='#fff'; _roundRect(x,72,H-302,W-144,118,59); x.fill();
+  x.fillStyle=th[1]; x.textAlign='center'; x.font='bold 50px sans-serif'; x.fillText(cta, W/2, H-226); x.textAlign='left';
+  // footer
+  x.strokeStyle='rgba(255,255,255,.3)'; x.lineWidth=2; x.beginPath(); x.moveTo(72,H-150); x.lineTo(W-72,H-150); x.stroke();
+  x.fillStyle='rgba(255,255,255,.8)'; x.font='400 30px sans-serif'; x.fillText(EN?'AI-generated sample · demo only':'AI 生成示例 · 仅供演示', 72, H-90);
   return cv;
 }
 function showPosterModal(fields){
@@ -3760,6 +3785,7 @@ var CLUSTERS=[
   {
     key:'decline',
     sampleZh:'分析华东区上月为什么下滑',
+    sampleEn:'Analyze why East China sales declined last month',
     match:/(下滑|下降|下跌|跌得|未达标|没达标|没完成|掉了|低迷|不理想|为什么.{0,6}(降|滑|跌|低|差)|诊断|复盘|归因|分析.{0,8}(市场|区域|大区|业绩|销售).{0,6}(原因|为什么|下滑)?)/,
     steps:[
       {id:'S10', reason:'拆解订单趋势，定位下滑的时点与品类',
