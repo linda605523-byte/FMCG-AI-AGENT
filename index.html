@@ -2389,6 +2389,7 @@ function buildParamForm(item, msgId, type) {
           '<span class="param-file-name" style="color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">未选择文件</span>'+
           '<input type="file" class="param-input param-input-' + p.name + '" data-param="' + p.name + '" accept="' + (p.accept || '*') + '"' + (p.multiple?' multiple':'') + ' style="display:none;" onchange="var s=this.parentNode.querySelector(\'.param-file-name\'); if(s){ if(this.files&&this.files.length){ s.textContent=this.files.length>1?(this.files.length+(currentLang===\'en\'?\' files\':\' 个文件\')):this.files[0].name; } else { s.textContent=(currentLang===\'en\'?\'No file chosen\':\'未选择文件\'); } }">'+
           '</label>';
+        if(item && item.id==='A30'){ html += '<div style="margin-top:10px;"><button type="button" onclick="startGuidedCapture()" style="width:100%;border:1px solid #00C39A;background:#fff;color:#0c7a63;border-radius:10px;padding:11px;font-size:13px;font-weight:600;cursor:pointer;">📸 引导环拍360°（站着原地转一圈·自动拍）</button></div>'; }
       }
       html += '</div>';
     });
@@ -3036,7 +3037,6 @@ function renderResultBody(item, values){
         '<div style="width:80px;height:80px;border:2px solid #00C39A;border-radius:10px;transform:rotate(45deg) skewX(-8deg);box-shadow:0 0 24px rgba(0,195,154,.5);"></div>'+
         '<div style="position:absolute;bottom:8px;right:10px;font-size:11px;color:#fff;background:rgba(0,195,154,.95);border-radius:12px;padding:4px 12px;font-weight:600;">'+btn30+'</div>'+
       '</div>'+
-      '<button onclick="startGuidedCapture()" style="width:100%;margin:0 0 10px;border:1px solid #00C39A;background:#fff;color:#0c7a63;border-radius:10px;padding:11px;font-size:13px;font-weight:600;cursor:pointer;">📸 引导环拍360°（站着原地转一圈·自动拍）</button>'+
       rKPI([{label:'重建耗时',value:'2分18秒'},{label:'识别SKU数',value:'28'},{label:'本品货架占比',value:'31%',color:'#FAAD14',sub:'目标40%'},{label:'陈列合规分',value:'76',sub:'满分100',color:'#FAAD14'}])+
       '<div style="font-weight:600;font-size:13px;margin:10px 0 4px;">货架占比（本品 vs 竞品）</div>'+
       rBars([{label:'本品',value:'31%',pct:31,color:'#00C39A'},{label:'竞品A（元气森林）',value:'38%',pct:38,color:'#1E2761'},{label:'竞品B（农夫山泉）',value:'21%',pct:21,color:'#9AA7C7'},{label:'其他',value:'10%',pct:10,color:'#D0D7E6'}])+
