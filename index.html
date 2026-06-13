@@ -2137,7 +2137,7 @@ function updateWelcome() {
   title.textContent = t('welcomeHello') + tRole(currentRole);
   subtitle.textContent = t('welcomeSub');
   const items = getQuickActions(currentRole);
-  qa.innerHTML = items.map(function(q) { return '<button class="quick-btn" data-action="' + q.id + '" data-type="' + q.type + '">' + q.text + '</button>'; }).join('');
+  qa.innerHTML = items.map(function(q) { var _qt=(typeof currentLang!=='undefined'&&currentLang==='en'&&typeof localizeEN==='function')?localizeEN(q.text):q.text; return '<button class="quick-btn" data-action="' + q.id + '" data-type="' + q.type + '">' + _qt + '</button>'; }).join('');
 }
 
 function getQuickActions(role) {
