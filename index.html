@@ -2580,52 +2580,73 @@ function prepareMediaThenBuild(media){
 // ==================== 如视式 引导环拍（站立旋转 8 张 -> 360 全景） ====================
 function startGuidedCapture(){
   var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
-  var N=8, step=360/N;
+  var N=8, step=360/N, TOL=8;
   var stage=document.createElement('div'); stage.style.cssText='position:fixed;inset:0;z-index:100000;background:#000;overflow:hidden;';
   var video=document.createElement('video'); video.autoplay=true; video.muted=true; video.playsInline=true;
   video.setAttribute('playsinline',''); video.setAttribute('webkit-playsinline',''); video.setAttribute('muted','');
   video.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;';
   stage.appendChild(video);
-  var ring=document.createElement('div'); ring.style.cssText='position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:120px;height:120px;border-radius:50%;border:4px solid rgba(255,255,255,.55);box-shadow:0 0 0 9999px rgba(0,0,0,.32);';
-  var prog=document.createElement('div'); prog.style.cssText='position:absolute;left:50%;top:46%;transform:translate(-50%,-50%) rotate(0deg);width:146px;height:146px;border-radius:50%;border:5px solid transparent;border-top-color:#00C39A;';
-  var counter=document.createElement('div'); counter.style.cssText='position:absolute;top:60px;left:0;right:0;text-align:center;color:#fff;font-size:22px;font-weight:700;text-shadow:0 1px 4px #000;';
-  var hint=document.createElement('div'); hint.style.cssText='position:absolute;left:0;right:0;top:56%;margin-top:60px;text-align:center;color:#fff;font-size:15px;text-shadow:0 1px 4px #000;padding:0 30px;';
-  var closeX=document.createElement('button'); closeX.textContent='\u2715'; closeX.style.cssText='position:absolute;top:50px;left:16px;width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:18px;z-index:5;';
-  var shutter=document.createElement('button'); shutter.textContent=EN?'Capture':'\u62cd\u8fd9\u5f20'; shutter.style.cssText='position:absolute;bottom:56px;left:50%;transform:translateX(-50%);background:#00C39A;color:#fff;border:none;border-radius:24px;padding:13px 30px;font-size:15px;font-weight:600;z-index:5;';
-  var msg=document.createElement('div'); msg.style.cssText='position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;color:#fff;font-size:15px;line-height:1.6;text-align:center;padding:36px;';
-  stage.appendChild(ring); stage.appendChild(prog); stage.appendChild(counter); stage.appendChild(hint); stage.appendChild(closeX); stage.appendChild(shutter); stage.appendChild(msg);
+  // progress dots row
+  var dotsWrap=document.createElement('div'); dotsWrap.style.cssText='position:absolute;top:92px;left:0;right:0;display:flex;justify-content:center;gap:9px;z-index:4;';
+  var dotEls=[]; for(var di=0;di<N;di++){ var dd=document.createElement('div'); dd.style.cssText='width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.4);'; dotsWrap.appendChild(dd); dotEls.push(dd); }
+  var counter=document.createElement('div'); counter.style.cssText='position:absolute;top:56px;left:0;right:0;text-align:center;color:#fff;font-size:22px;font-weight:700;text-shadow:0 1px 4px #000;z-index:4;';
+  // fixed center reticle + dim
+  var reticle=document.createElement('div'); reticle.style.cssText='position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);width:88px;height:88px;border-radius:50%;border:3px solid rgba(255,255,255,.92);box-shadow:0 0 0 9999px rgba(0,0,0,.30);z-index:3;';
+  var centerDot=document.createElement('div'); centerDot.style.cssText='position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.95);z-index:3;';
+  // moving target dot
+  var target=document.createElement('div'); target.style.cssText='position:absolute;top:48%;left:50%;transform:translate(-50%,-50%) scale(1);width:54px;height:54px;border-radius:50%;background:rgba(0,195,154,.78);border:3px solid #fff;box-shadow:0 0 16px rgba(0,195,154,.7);z-index:4;';
+  var arrow=document.createElement('div'); arrow.style.cssText='position:absolute;left:0;right:0;top:48%;margin-top:74px;text-align:center;color:#fff;font-size:17px;font-weight:600;text-shadow:0 1px 4px #000;z-index:4;';
+  var closeX=document.createElement('button'); closeX.textContent='\u2715'; closeX.style.cssText='position:absolute;top:50px;left:16px;width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:18px;z-index:6;';
+  var shutter=document.createElement('button'); shutter.textContent=EN?'Capture':'\u62cd\u8fd9\u5f20'; shutter.style.cssText='position:absolute;bottom:54px;left:50%;transform:translateX(-50%);background:#00C39A;color:#fff;border:none;border-radius:24px;padding:13px 30px;font-size:15px;font-weight:600;z-index:6;display:none;';
+  var msg=document.createElement('div'); msg.style.cssText='position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;color:#fff;font-size:15px;line-height:1.6;text-align:center;padding:36px;z-index:7;';
+  [video,reticle,centerDot,target,dotsWrap,counter,arrow,closeX,shutter,msg].forEach(function(el){ stage.appendChild(el); });
   document.body.appendChild(stage);
 
-  var frames=[], captured=0, prev=null, accum=0, stream=null, gHandler=null, alive=true, oriOK=false;
-  function setUI(){ counter.textContent=captured+'/'+N; hint.textContent= oriOK ? (EN?'Rotate slowly to the next dot \u2014 auto-captures':'\u7f13\u6162\u8f6c\u5411\u4e0b\u4e00\u4e2a\u5706\u70b9\uff0c\u5230\u4f4d\u81ea\u52a8\u62cd') : (EN?'Tap Capture, rotate ~45\u00b0, repeat 8\u00d7':'\u70b9"\u62cd\u8fd9\u5f20"\uff0c\u8f6c\u7ea6 45\u00b0\uff0c\u5171 8 \u5f20'); }
-  function setProg(frac){ prog.style.transform='translate(-50%,-50%) rotate('+(frac*360)+'deg)'; }
+  var frames=[], captured=0, heading=null, h0=null, alive=true, oriOK=false, stream=null, gHandler=null, cooldown=false;
+  function angDelta(a,b){ var d=a-b; while(d>180)d-=360; while(d<-180)d+=360; return d; }
+  function setDots(){ dotEls.forEach(function(d,i){ d.style.background=i<captured?'#00C39A':'rgba(255,255,255,.4)'; }); counter.textContent=captured+'/'+N; }
+  function flash(){ var f=document.createElement('div'); f.style.cssText='position:absolute;inset:0;background:#fff;opacity:.6;z-index:8;pointer-events:none;transition:opacity .3s;'; stage.appendChild(f); requestAnimationFrame(function(){ f.style.opacity='0'; }); setTimeout(function(){ if(f.parentNode)f.parentNode.removeChild(f); },350); }
   function cleanup(){ alive=false; try{ if(stream) stream.getTracks().forEach(function(t){t.stop();}); }catch(e){} if(gHandler) window.removeEventListener('deviceorientation',gHandler); if(stage.parentNode) stage.parentNode.removeChild(stage); }
-  function flash(){ var f=document.createElement('div'); f.style.cssText='position:absolute;inset:0;background:#fff;opacity:.6;z-index:6;pointer-events:none;transition:opacity .3s;'; stage.appendChild(f); requestAnimationFrame(function(){ f.style.opacity='0'; }); setTimeout(function(){ if(f.parentNode)f.parentNode.removeChild(f); },350); }
-  function grab(){ if(!alive||captured>=N) return; try{ var vw=video.videoWidth||0, vh=video.videoHeight||0; if(!vw){ return; } var sc=Math.min(1,1280/Math.max(vw,vh)); var cv=document.createElement('canvas'); cv.width=Math.round(vw*sc); cv.height=Math.round(vh*sc); cv.getContext('2d').drawImage(video,0,0,cv.width,cv.height); frames.push(cv.toDataURL('image/jpeg',0.82)); flash(); }catch(e){} captured++; setUI(); if(captured>=N){ finishCap(); } }
-  function finishCap(){ var fs=frames.slice(); cleanup(); if(fs.length>=2){ build3DRoom(fs, {pano:true}); } else if(fs.length===1){ build3DRoom(fs); } }
+  function grab(){ if(!alive||captured>=N||cooldown) return; var vw=video.videoWidth||0, vh=video.videoHeight||0; if(!vw){ return; } cooldown=true;
+    try{ var sc=Math.min(1,1280/Math.max(vw,vh)); var cv=document.createElement('canvas'); cv.width=Math.round(vw*sc); cv.height=Math.round(vh*sc); cv.getContext('2d').drawImage(video,0,0,cv.width,cv.height); frames.push(cv.toDataURL('image/jpeg',0.82)); }catch(e){}
+    flash(); captured++; setDots();
+    if(captured>=N){ finishCap(); return; }
+    setTimeout(function(){ cooldown=false; place(); }, 550);
+  }
+  function finishCap(){ var fs=frames.slice(); cleanup(); if(fs.length>=2){ build3DRoom(fs,{pano:true}); } else if(fs.length===1){ build3DRoom(fs); } }
+  function place(){ if(!alive||cooldown) return;
+    if(heading==null||h0==null){ return; }
+    var nt=h0+step*captured; var dl=angDelta(nt,heading);
+    var W=stage.clientWidth||window.innerWidth; var frac=Math.max(-1,Math.min(1,dl/90));
+    target.style.left=(W/2 + frac*(W*0.42))+'px';
+    var near=Math.abs(dl)<=TOL;
+    target.style.background= near?'rgba(0,195,154,1)':'rgba(0,195,154,.72)';
+    target.style.transform='translate(-50%,-50%) scale('+(near?1.3:1)+')';
+    arrow.textContent = near?(EN?'Hold steady\u2026':'\u5bf9\u51c6\u4e86\uff0c\u4fdd\u6301\u2026') : (dl>0?(EN?'Turn right \u2192':'\u5411\u53f3\u8f6c \u2192'):(EN?'\u2190 Turn left':'\u2190 \u5411\u5de6\u8f6c'));
+    if(near){ grab(); }
+  }
   closeX.onclick=cleanup;
-  shutter.onclick=function(){ grab(); accum=0; prev=null; setProg(0); };
-
+  shutter.onclick=function(){ if(h0==null) h0=(heading==null?0:heading); grab(); };
   function startOri(){
-    gHandler=function(ev){ if(!alive) return; var hd=(typeof ev.webkitCompassHeading==='number')?ev.webkitCompassHeading:ev.alpha; if(hd==null) return; oriOK=true; setUI();
-      if(prev==null){ prev=hd; if(captured===0){ setTimeout(grab,600); } return; }
-      var d=hd-prev; if(d>180)d-=360; if(d<-180)d+=360; accum+=Math.abs(d); prev=hd;
-      setProg(Math.max(0,Math.min(1,(accum-captured*step)/step)));
-      if(captured>0 && accum >= captured*step){ grab(); }
+    gHandler=function(ev){ if(!alive) return; var hd=(typeof ev.webkitCompassHeading==='number')?ev.webkitCompassHeading:ev.alpha; if(hd==null) return; oriOK=true; shutter.style.display='none'; heading=hd;
+      if(h0==null){ h0=hd; }
+      place();
     };
     window.addEventListener('deviceorientation',gHandler,true);
   }
-  function showMsg(text){ shutter.style.display='none'; ring.style.display='none'; prog.style.display='none'; counter.style.display='none'; hint.style.display='none';
+  function showMsg(text){ [reticle,centerDot,target,dotsWrap,counter,arrow,shutter].forEach(function(e){e.style.display='none';});
     msg.style.display='flex'; msg.innerHTML='<div>'+text+'</div>';
     var b=document.createElement('button'); b.textContent=EN?'Use photo library':'\u6539\u7528\u76f8\u518c\u591a\u9009'; b.style.cssText='background:#00C39A;color:#fff;border:none;border-radius:22px;padding:12px 26px;font-size:15px;font-weight:600;'; b.onclick=function(){ cleanup(); openStore3D(); }; msg.appendChild(b);
   }
-  setUI();
+  setDots(); arrow.textContent=EN?'Starting camera\u2026':'\u542f\u52a8\u76f8\u673a\u2026';
   if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
-    navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}, audio:false}).then(function(s){ stream=s; video.srcObject=s; var p=video.play(); if(p&&p.catch)p.catch(function(){});
-      if(typeof DeviceOrientationEvent!=='undefined' && typeof DeviceOrientationEvent.requestPermission==='function'){ DeviceOrientationEvent.requestPermission().then(function(st){ if(st==='granted') startOri(); }).catch(function(){}); } else { startOri(); }
-    }).catch(function(){ showMsg(EN?'Camera unavailable here (in-app browsers often block it). Open in Safari, or use your photo library.':'\u6b64\u5904\u65e0\u6cd5\u8bbf\u95ee\u76f8\u673a\uff08App \u5185\u7f6e\u6d4f\u89c8\u5668\u5e38\u62e6\u622a\uff09\u3002\u8bf7\u5728 Safari \u6253\u5f00\uff0c\u6216\u6539\u7528\u76f8\u518c\u3002'); });
+    navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}, audio:false}).then(function(s){ stream=s; video.srcObject=s; var p=video.play(); if(p&&p.catch)p.catch(function(){}); arrow.textContent=EN?'Rotate to the dot':'\u8f6c\u52a8\u624b\u673a\u5bf9\u51c6\u5706\u70b9';
+      if(typeof DeviceOrientationEvent!=='undefined' && typeof DeviceOrientationEvent.requestPermission==='function'){ DeviceOrientationEvent.requestPermission().then(function(st){ if(st==='granted'){ startOri(); } else { shutter.style.display='block'; arrow.textContent=EN?'Motion denied \u2014 tap Capture, rotate, repeat':'\u672a\u5141\u8bb8\u52a8\u4f5c\u6743\u9650\uff0c\u8bf7\u624b\u52a8\u62cd'; } }).catch(function(){ shutter.style.display='block'; }); }
+      else { startOri(); setTimeout(function(){ if(!oriOK){ shutter.style.display='block'; arrow.textContent=EN?'No motion sensor \u2014 tap Capture, rotate, repeat':'\u65e0\u4f53\u611f\u4f20\u611f\u5668\uff0c\u8bf7\u624b\u52a8\u62cd'; } }, 2500); }
+    }).catch(function(){ showMsg(EN?'Camera unavailable here (in-app browsers block it). Open in Safari, or use your photo library.':'\u6b64\u5904\u65e0\u6cd5\u8bbf\u95ee\u76f8\u673a\uff08App \u5185\u7f6e\u6d4f\u89c8\u5668\u4f1a\u62e6\u622a\uff09\u3002\u8bf7\u5728 Safari \u6253\u5f00\uff0c\u6216\u6539\u7528\u76f8\u518c\u3002'); });
   } else { showMsg(EN?'Camera not supported here. Use your photo library.':'\u5f53\u524d\u73af\u5883\u4e0d\u652f\u6301\u76f8\u673a\uff0c\u8bf7\u6539\u7528\u76f8\u518c\u3002'); }
 }
+
 
 function build3DRoom(imgs, opts){
   try { if(typeof THREE!=='undefined'){ build3DRoomSphere(imgs, opts); return; } } catch(e){ console.warn('sphere failed, fallback CSS', e); }
