@@ -2514,7 +2514,7 @@ function enterStore3D(){
 function openStore3D(){
   var inp=document.createElement('input');
   inp.type='file'; inp.accept='image/*,video/*'; inp.multiple=true;
-  try{inp.setAttribute('capture','environment');}catch(e){}
+  // no 'capture' attribute: lets iOS offer Photo Library multi-select (camera single-shot is the wrong fit for multi-point capture)
   inp.style.position='fixed'; inp.style.left='-9999px'; inp.style.top='0';
   document.body.appendChild(inp);
   var cleaned=false;
