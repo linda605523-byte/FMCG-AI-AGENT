@@ -3545,7 +3545,7 @@ async function posterFromText(text){
   var fields=null;
   try{
     if(typeof LLM_ENDPOINT!=='undefined' && LLM_ENDPOINT){
-      var sys='你是促销海报文案助手。从用户给的促销brief中提取海报字段，严格只返回一个JSON对象、不要解释、不要markdown代码块：{"title":"主标题(产品或活动名,≤12字)","slogan":"一句卖点(≤16字)","mechanic":"促销机制(如 买二送一,≤8字)","price":"价格(如 ¥3.5/瓶，没有就留空)","period":"活动时间(没有就留空)","scope":"覆盖范围(如 覆盖500家门店 或 华东区，没有就留空)","theme":"从 mint/navy/orange/red 中选最贴合的一个"}。'+(EN?'字段值用英文。':'');
+      var sys='你是促销海报文案助手。把输入内容转成一张【面向消费者/门店店主】的促销海报文案。严格只返回一个JSON对象，不要解释、不要markdown代码块：{"title":"促销活动主标题(产品或活动名，吸睛，≤12字)","slogan":"一句消费者能看懂的卖点(≤16字)","mechanic":"真实促销机制，必须是消费端玩法如 买二送一/第二件半价/满50减10/加价购；绝不能是内部动作(如 修复执行/补货/整改/审计/复盘)；≤8字","price":"零售价(如 ¥3.5/瓶)，没有就留空","period":"活动时间，没有就留空","scope":"覆盖范围(如 覆盖500家门店/华东区)，没有就留空","theme":"从 mint/navy/orange/red 中选最贴合的一个"}。重要：若输入是分析/归因/报告而非促销方案，请基于其中的产品/区域，合理设定一个具体可执行的促销(机制+价格+时间)，让海报像真实门店促销，绝不要把分析结论或内部动作塞进文案。'+(EN?'所有字段值用自然的英文。':'');
       var resp=await fetch(LLM_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:sys,messages:[{role:'user',content:text}]})});
       if(resp.ok){ var d=await resp.json(); var raw=(d.text||'').replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'').trim(); var m=raw.match(/\{[\s\S]*\}/); if(m){ try{ fields=JSON.parse(m[0]); }catch(e){} } }
     }
@@ -3580,9 +3580,14 @@ function _drawPromoPoster(fields){
   // hero mechanic seal (top-right)
   if(fields.mechanic){ var cx=W-225, cy=455; x.save(); x.translate(cx,cy); x.rotate(-0.1);
     x.fillStyle='#FFE7A3'; _star(x,0,0,168,122,14); x.fill();
-    x.fillStyle=th[1]; x.textAlign='center'; var mt=String(fields.mechanic);
-    if(mt.length>4){ x.font='bold 50px sans-serif'; var h=Math.ceil(mt.length/2); x.fillText(mt.slice(0,h),0,-2); x.fillText(mt.slice(h),0,54); }
-    else { x.font='bold 60px sans-serif'; x.fillText(mt,0,22); }
+    x.fillStyle=th[1]; x.textAlign='center';
+    var mt=String(fields.mechanic).trim(); var hasSpace=/\s/.test(mt);
+    var fs = mt.length<=4?60 : (mt.length<=8?44:34); x.font='bold '+fs+'px sans-serif';
+    var maxW=212, words=hasSpace?mt.split(/\s+/):mt.split(''), lines=[], cur='';
+    for(var wi=0;wi<words.length;wi++){ var test=cur?(hasSpace?cur+' '+words[wi]:cur+words[wi]):words[wi]; if(x.measureText(test).width>maxW && cur){ lines.push(cur); cur=words[wi]; } else cur=test; }
+    if(cur) lines.push(cur); if(lines.length>3) lines=lines.slice(0,3);
+    var lh=fs+8, sy=-(lines.length-1)*lh/2 + fs/3;
+    lines.forEach(function(ln,li){ x.fillText(ln,0,sy+li*lh); });
     x.restore(); x.textAlign='left'; }
   // price tag
   var iy=Math.max(ty+130, 880);
@@ -3597,9 +3602,6 @@ function _drawPromoPoster(fields){
   var cta=fields.cta||(EN?'Order Now →':'立即下单参与 →');
   x.fillStyle='#fff'; _roundRect(x,72,H-302,W-144,118,59); x.fill();
   x.fillStyle=th[1]; x.textAlign='center'; x.font='bold 50px sans-serif'; x.fillText(cta, W/2, H-226); x.textAlign='left';
-  // footer
-  x.strokeStyle='rgba(255,255,255,.3)'; x.lineWidth=2; x.beginPath(); x.moveTo(72,H-150); x.lineTo(W-72,H-150); x.stroke();
-  x.fillStyle='rgba(255,255,255,.8)'; x.font='400 30px sans-serif'; x.fillText(EN?'AI-generated sample · demo only':'AI 生成示例 · 仅供演示', 72, H-90);
   return cv;
 }
 function showPosterModal(fields){
@@ -3703,7 +3705,8 @@ function renderOrchestration(res){
        '</div>'+
        (a.task?'<div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">'+escapeHtml(a.task)+'</div>':'')+
        '<div style="font-size:13px;line-height:1.75;color:var(--text);white-space:pre-line;">'+mdLite(outRaw)+'</div>';
-    if(/促销|Brief|海报|活动|TPM/i.test(((it&&it.name)||'')+' '+((it&&it.desc)||'')+' '+id) && outRaw){
+    var _promoSig=/买\s*[一二三四1-4]\s*送|第二件|满\s*\d+\s*减|\d+\s*折(?!扣率)|买赠|加价购|换购|促销机制|机制[:：]|buy\s*\d+\s*get|gift[\s-]?with[\s-]?purchase|\bBOGO\b|%\s*off|bundle|second\s+item/i;
+    if(_promoSig.test(outRaw||'')){
       window._promoBriefs=window._promoBriefs||[]; var pIdx=window._promoBriefs.push(outRaw)-1;
       inner+='<button onclick="genPromoPoster('+pIdx+')" style="margin-top:10px;border:none;background:linear-gradient(135deg,#00C39A,#1E2761);color:#fff;border-radius:18px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">🎨 '+L('生成促销海报','Generate promo poster')+'</button>';
     }
