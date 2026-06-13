@@ -2576,11 +2576,62 @@ function prepareMediaThenBuild(media){
   }).catch(function(){ if(toast&&toast.parentNode) toast.parentNode.removeChild(toast); if(imgs.length) build3DRoom(imgs); });
 }
 
-function build3DRoom(imgs){
-  try { if(typeof THREE!=='undefined'){ build3DRoomSphere(imgs); return; } } catch(e){ console.warn('sphere failed, fallback CSS', e); }
+// ==================== 如视式 引导环拍（站立旋转 8 张 -> 360 全景） ====================
+function startGuidedCapture(){
+  var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
+  var N=8, step=360/N;
+  var stage=document.createElement('div'); stage.style.cssText='position:fixed;inset:0;z-index:100000;background:#000;overflow:hidden;';
+  var video=document.createElement('video'); video.autoplay=true; video.muted=true; video.playsInline=true;
+  video.setAttribute('playsinline',''); video.setAttribute('webkit-playsinline',''); video.setAttribute('muted','');
+  video.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;';
+  stage.appendChild(video);
+  var ring=document.createElement('div'); ring.style.cssText='position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:120px;height:120px;border-radius:50%;border:4px solid rgba(255,255,255,.55);box-shadow:0 0 0 9999px rgba(0,0,0,.32);';
+  var prog=document.createElement('div'); prog.style.cssText='position:absolute;left:50%;top:46%;transform:translate(-50%,-50%) rotate(0deg);width:146px;height:146px;border-radius:50%;border:5px solid transparent;border-top-color:#00C39A;';
+  var counter=document.createElement('div'); counter.style.cssText='position:absolute;top:60px;left:0;right:0;text-align:center;color:#fff;font-size:22px;font-weight:700;text-shadow:0 1px 4px #000;';
+  var hint=document.createElement('div'); hint.style.cssText='position:absolute;left:0;right:0;top:56%;margin-top:60px;text-align:center;color:#fff;font-size:15px;text-shadow:0 1px 4px #000;padding:0 30px;';
+  var closeX=document.createElement('button'); closeX.textContent='\u2715'; closeX.style.cssText='position:absolute;top:50px;left:16px;width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:18px;z-index:5;';
+  var shutter=document.createElement('button'); shutter.textContent=EN?'Capture':'\u62cd\u8fd9\u5f20'; shutter.style.cssText='position:absolute;bottom:56px;left:50%;transform:translateX(-50%);background:#00C39A;color:#fff;border:none;border-radius:24px;padding:13px 30px;font-size:15px;font-weight:600;z-index:5;';
+  var msg=document.createElement('div'); msg.style.cssText='position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;color:#fff;font-size:15px;line-height:1.6;text-align:center;padding:36px;';
+  stage.appendChild(ring); stage.appendChild(prog); stage.appendChild(counter); stage.appendChild(hint); stage.appendChild(closeX); stage.appendChild(shutter); stage.appendChild(msg);
+  document.body.appendChild(stage);
+
+  var frames=[], captured=0, prev=null, accum=0, stream=null, gHandler=null, alive=true, oriOK=false;
+  function setUI(){ counter.textContent=captured+'/'+N; hint.textContent= oriOK ? (EN?'Rotate slowly to the next dot \u2014 auto-captures':'\u7f13\u6162\u8f6c\u5411\u4e0b\u4e00\u4e2a\u5706\u70b9\uff0c\u5230\u4f4d\u81ea\u52a8\u62cd') : (EN?'Tap Capture, rotate ~45\u00b0, repeat 8\u00d7':'\u70b9"\u62cd\u8fd9\u5f20"\uff0c\u8f6c\u7ea6 45\u00b0\uff0c\u5171 8 \u5f20'); }
+  function setProg(frac){ prog.style.transform='translate(-50%,-50%) rotate('+(frac*360)+'deg)'; }
+  function cleanup(){ alive=false; try{ if(stream) stream.getTracks().forEach(function(t){t.stop();}); }catch(e){} if(gHandler) window.removeEventListener('deviceorientation',gHandler); if(stage.parentNode) stage.parentNode.removeChild(stage); }
+  function flash(){ var f=document.createElement('div'); f.style.cssText='position:absolute;inset:0;background:#fff;opacity:.6;z-index:6;pointer-events:none;transition:opacity .3s;'; stage.appendChild(f); requestAnimationFrame(function(){ f.style.opacity='0'; }); setTimeout(function(){ if(f.parentNode)f.parentNode.removeChild(f); },350); }
+  function grab(){ if(!alive||captured>=N) return; try{ var vw=video.videoWidth||0, vh=video.videoHeight||0; if(!vw){ return; } var sc=Math.min(1,1280/Math.max(vw,vh)); var cv=document.createElement('canvas'); cv.width=Math.round(vw*sc); cv.height=Math.round(vh*sc); cv.getContext('2d').drawImage(video,0,0,cv.width,cv.height); frames.push(cv.toDataURL('image/jpeg',0.82)); flash(); }catch(e){} captured++; setUI(); if(captured>=N){ finishCap(); } }
+  function finishCap(){ var fs=frames.slice(); cleanup(); if(fs.length>=2){ build3DRoom(fs, {pano:true}); } else if(fs.length===1){ build3DRoom(fs); } }
+  closeX.onclick=cleanup;
+  shutter.onclick=function(){ grab(); accum=0; prev=null; setProg(0); };
+
+  function startOri(){
+    gHandler=function(ev){ if(!alive) return; var hd=(typeof ev.webkitCompassHeading==='number')?ev.webkitCompassHeading:ev.alpha; if(hd==null) return; oriOK=true; setUI();
+      if(prev==null){ prev=hd; if(captured===0){ setTimeout(grab,600); } return; }
+      var d=hd-prev; if(d>180)d-=360; if(d<-180)d+=360; accum+=Math.abs(d); prev=hd;
+      setProg(Math.max(0,Math.min(1,(accum-captured*step)/step)));
+      if(captured>0 && accum >= captured*step){ grab(); }
+    };
+    window.addEventListener('deviceorientation',gHandler,true);
+  }
+  function showMsg(text){ shutter.style.display='none'; ring.style.display='none'; prog.style.display='none'; counter.style.display='none'; hint.style.display='none';
+    msg.style.display='flex'; msg.innerHTML='<div>'+text+'</div>';
+    var b=document.createElement('button'); b.textContent=EN?'Use photo library':'\u6539\u7528\u76f8\u518c\u591a\u9009'; b.style.cssText='background:#00C39A;color:#fff;border:none;border-radius:22px;padding:12px 26px;font-size:15px;font-weight:600;'; b.onclick=function(){ cleanup(); openStore3D(); }; msg.appendChild(b);
+  }
+  setUI();
+  if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
+    navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}, audio:false}).then(function(s){ stream=s; video.srcObject=s; var p=video.play(); if(p&&p.catch)p.catch(function(){});
+      if(typeof DeviceOrientationEvent!=='undefined' && typeof DeviceOrientationEvent.requestPermission==='function'){ DeviceOrientationEvent.requestPermission().then(function(st){ if(st==='granted') startOri(); }).catch(function(){}); } else { startOri(); }
+    }).catch(function(){ showMsg(EN?'Camera unavailable here (in-app browsers often block it). Open in Safari, or use your photo library.':'\u6b64\u5904\u65e0\u6cd5\u8bbf\u95ee\u76f8\u673a\uff08App \u5185\u7f6e\u6d4f\u89c8\u5668\u5e38\u62e6\u622a\uff09\u3002\u8bf7\u5728 Safari \u6253\u5f00\uff0c\u6216\u6539\u7528\u76f8\u518c\u3002'); });
+  } else { showMsg(EN?'Camera not supported here. Use your photo library.':'\u5f53\u524d\u73af\u5883\u4e0d\u652f\u6301\u76f8\u673a\uff0c\u8bf7\u6539\u7528\u76f8\u518c\u3002'); }
+}
+
+function build3DRoom(imgs, opts){
+  try { if(typeof THREE!=='undefined'){ build3DRoomSphere(imgs, opts); return; } } catch(e){ console.warn('sphere failed, fallback CSS', e); }
   build3DRoomCSS(imgs);
 }
-function build3DRoomSphere(imgs){
+function build3DRoomSphere(imgs, opts){
+  var PANO=!!(opts&&opts.pano);
   if(typeof THREE==='undefined') throw new Error('three missing');
   var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
   var srcs=(imgs||[]).slice(0,12); if(!srcs.length) throw new Error('no imgs');
@@ -2616,13 +2667,19 @@ function build3DRoomSphere(imgs){
   var mat=new THREE.MeshBasicMaterial({map:tex}); var mesh=new THREE.Mesh(geo,mat); scene.add(mesh);
   var loaded=new Array(srcs.length); var pend=srcs.length, cur=0;
   function paintNode(i){
-    var img=loaded[i]; ctx.fillStyle='#0a1020'; ctx.fillRect(0,0,cw,ch);
-    if(img){ var scale=ch/img.height; var tileW=img.width*scale; if(!(tileW>1)) tileW=cw; var x=0; while(x<cw){ ctx.drawImage(img,0,0,img.width,img.height,x,0,tileW,ch); x+=tileW; } }
+    ctx.fillStyle='#0a1020'; ctx.fillRect(0,0,cw,ch);
+    if(PANO){
+      var imgsL=loaded.filter(function(z){return z;}); var n=imgsL.length||1; var sw=cw/n;
+      for(var k=0;k<imgsL.length;k++){ var im=imgsL[k]; var sc=Math.max(sw/im.width, ch/im.height); var dw=im.width*sc, dh=im.height*sc; var dx=k*sw+(sw-dw)/2, dy=(ch-dh)/2;
+        ctx.save(); ctx.beginPath(); ctx.rect(k*sw,0,sw,ch); ctx.clip(); ctx.drawImage(im,dx,dy,dw,dh); ctx.restore(); }
+    } else {
+      var img=loaded[i]; if(img){ var scale=ch/img.height; var tileW=img.width*scale; if(!(tileW>1)) tileW=cw; var x=0; while(x<cw){ ctx.drawImage(img,0,0,img.width,img.height,x,0,tileW,ch); x+=tileW; } }
+    }
     tex.needsUpdate=true;
   }
   srcs.forEach(function(s,i){ var im=new Image(); im.onload=function(){loaded[i]=im; if(--pend<=0) ready();}; im.onerror=function(){loaded[i]=null; if(--pend<=0) ready();}; im.src=s; });
   // overlay
-  var multi=srcs.length>1;
+  var multi=PANO?false:(srcs.length>1);
   var bar=document.createElement('div'); bar.className='s3v-bar';
   var closeBtn=document.createElement('button'); closeBtn.className='s3v-close'; closeBtn.textContent='\u2715';
   var gyro=document.createElement('button'); gyro.className='s3v-gyro'; gyro.textContent=EN?'Motion':'\u4f53\u611f';
@@ -2979,6 +3036,7 @@ function renderResultBody(item, values){
         '<div style="width:80px;height:80px;border:2px solid #00C39A;border-radius:10px;transform:rotate(45deg) skewX(-8deg);box-shadow:0 0 24px rgba(0,195,154,.5);"></div>'+
         '<div style="position:absolute;bottom:8px;right:10px;font-size:11px;color:#fff;background:rgba(0,195,154,.95);border-radius:12px;padding:4px 12px;font-weight:600;">'+btn30+'</div>'+
       '</div>'+
+      '<button onclick="startGuidedCapture()" style="width:100%;margin:0 0 10px;border:1px solid #00C39A;background:#fff;color:#0c7a63;border-radius:10px;padding:11px;font-size:13px;font-weight:600;cursor:pointer;">📸 引导环拍360°（站着原地转一圈·自动拍）</button>'+
       rKPI([{label:'重建耗时',value:'2分18秒'},{label:'识别SKU数',value:'28'},{label:'本品货架占比',value:'31%',color:'#FAAD14',sub:'目标40%'},{label:'陈列合规分',value:'76',sub:'满分100',color:'#FAAD14'}])+
       '<div style="font-weight:600;font-size:13px;margin:10px 0 4px;">货架占比（本品 vs 竞品）</div>'+
       rBars([{label:'本品',value:'31%',pct:31,color:'#00C39A'},{label:'竞品A（元气森林）',value:'38%',pct:38,color:'#1E2761'},{label:'竞品B（农夫山泉）',value:'21%',pct:21,color:'#9AA7C7'},{label:'其他',value:'10%',pct:10,color:'#D0D7E6'}])+
@@ -3456,6 +3514,7 @@ var EN_FIX10={"知识库":"Knowledge Base","数据集":"Dataset","上传你的�
 var EN_FIX11={"区域下滑归因": "Regional decline attribution", "查看智能预警": "Smart alerts", "沙盘推演": "Scenario simulation", "组织效能诊断": "Org efficiency diagnosis", "经营周报": "Weekly report", "竞品应对话术": "Competitor response scripts", "高管问答助手": "Exec Q&A assistant", "补货预测": "Replenishment forecast", "路径规划": "Route planning", "绩效教练": "Performance coach", "拜访任务包": "Visit task pack", "新品追踪": "New-product tracking", "品类趋势": "Category trends", "营销内容包": "Marketing content pack", "促销Brief": "Promo brief", "客户画像": "Customer profiling", "价格监测": "Price monitoring", "机会门店分析": "Opportunity store analysis", "KA客户管理": "KA account management", "核销费效": "Redemption ROI", "促销日历": "Promo calendar", "费用审计": "Spend audit", "店主文案": "Store-owner copy", "潜力门店挖掘": "Potential store mining", "数据质量": "Data quality", "订单趋势分析": "Order trend analysis", "门店三维重建": "Store 3D reconstruction", "订单推荐": "Order recommendation", "客情记忆": "Relationship memory", "现场异议处理": "On-site objection handling", "DSR助手": "DSR assistant", "巡店评分": "Store-visit scoring", "整改追踪": "Remediation tracking", "督导任务": "Supervisor tasks", "陈列标准": "Display standard", "销量追踪": "Sales tracking", "智能排班": "Smart scheduling", "导购话术": "Promoter scripts", "即时激励看板": "Live incentive board", "进销存优化": "Inventory optimization", "信用评估": "Credit assessment", "账款追踪": "Receivables tracking", "经营利润分析": "Profit analysis", "经销商对账": "Distributor reconciliation", "智能配载": "Smart load planning", "退货处理": "Returns handling", "智能选品": "Smart assortment", "定价建议": "Pricing advice", "动销分析": "Sell-through analysis", "库存优化": "Stock optimization"};for(var _f11 in EN_FIX11){EN_DICT[_f11]=EN_FIX11[_f11];}EN_KEYS=Object.keys(EN_DICT).sort(function(a,b){return b.length-a.length;});
 var EN_FIX12={"未选择文件":"No file chosen","选择文件":"Choose file"};for(var _f12 in EN_FIX12){EN_DICT[_f12]=EN_FIX12[_f12];}EN_KEYS=Object.keys(EN_DICT).sort(function(a,b){return b.length-a.length;});
 var EN_FIX13={"在不同点位各拍1张(入口/主货架/陈列/竞品/收银…),即可在点位间VR漫游;也可录一段环店视频":"Take one photo at each spot (entrance / main shelf / display / competitor / checkout…) to walk between them in VR; or record a walkaround video"};for(var _f13 in EN_FIX13){EN_DICT[_f13]=EN_FIX13[_f13];}EN_KEYS=Object.keys(EN_DICT).sort(function(a,b){return b.length-a.length;});
+var EN_FIX14={"引导环拍360°（站着原地转一圈·自动拍）":"Guided 360° capture (stand & rotate in place)"};for(var _f14 in EN_FIX14){EN_DICT[_f14]=EN_FIX14[_f14];}EN_KEYS=Object.keys(EN_DICT).sort(function(a,b){return b.length-a.length;});
 // ==================== 知识库 / 数据集（localStorage + 关键词检索注入） ====================
 function _kbRead(key){ try{ return JSON.parse(localStorage.getItem(key)||'[]'); }catch(e){ return []; } }
 function _kbWrite(key,arr){ try{ localStorage.setItem(key, JSON.stringify(arr)); }catch(e){ alert('存储空间不足，请删除部分文件'); } }
