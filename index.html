@@ -2389,7 +2389,6 @@ function buildParamForm(item, msgId, type) {
           '<span class="param-file-name" style="color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">未选择文件</span>'+
           '<input type="file" class="param-input param-input-' + p.name + '" data-param="' + p.name + '" accept="' + (p.accept || '*') + '"' + (p.multiple?' multiple':'') + ' style="display:none;" onchange="var s=this.parentNode.querySelector(\'.param-file-name\'); if(s){ if(this.files&&this.files.length){ s.textContent=this.files.length>1?(this.files.length+(currentLang===\'en\'?\' files\':\' 个文件\')):this.files[0].name; } else { s.textContent=(currentLang===\'en\'?\'No file chosen\':\'未选择文件\'); } }">'+
           '</label>';
-        if(item && item.id==='A30'){ html += '<div style="margin-top:10px;"><button type="button" onclick="startGuidedCapture()" style="width:100%;border:1px solid #00C39A;background:#fff;color:#0c7a63;border-radius:10px;padding:11px;font-size:13px;font-weight:600;cursor:pointer;">📸 引导环拍360°（站着原地转一圈·自动拍）</button></div>'; }
       }
       html += '</div>';
     });
@@ -3071,12 +3070,9 @@ function renderResultBody(item, values){
         '<div style="flex:1;background:#FEF2F2;border:1px solid #F6C9C9;border-radius:10px;padding:8px;text-align:center;"><div style="font-size:20px;font-weight:800;color:#D64545;">3 处</div><div style="font-size:11px;color:#6B7280;">缺货/问题点</div></div>'+
         '<div style="flex:1;background:#FFF8EC;border:1px solid #F3E0B8;border-radius:10px;padding:8px;text-align:center;"><div style="font-size:20px;font-weight:800;color:#E8910A;">76</div><div style="font-size:11px;color:#6B7280;">陈列合规分</div></div>'+
       '</div>'+
-      '<div onclick="enterStore3D()" style="position:relative;border-radius:12px;overflow:hidden;margin:8px 0;height:160px;cursor:pointer;">'+
-        '<img src="store/01_entrance.jpg" style="width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.82);"/>'+
-        '<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(30,39,97,.05),rgba(30,39,97,.5));"></div>'+
-        '<div style="position:absolute;top:8px;left:10px;font-size:11px;color:#fff;">门店数字孪生 · 8 个点位</div>'+
-        '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.92);display:flex;align-items:center;justify-content:center;font-size:22px;color:#1E2761;">▶</div>'+
-        '<div style="position:absolute;bottom:8px;right:10px;font-size:12px;color:#fff;background:rgba(0,195,154,.95);border-radius:12px;padding:5px 14px;font-weight:600;">🧊 进入3D漫游</div>'+
+      '<div style="font-weight:700;font-size:14px;margin:12px 0 6px;color:#1E2761;">🏪 门店实拍（点击放大）</div>'+
+      '<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:4px;">'+
+        STORE_IMAGES.map(function(u){ return '<img src="'+u+'" onclick="openImgLightbox(\''+u+'\')" loading="lazy" style="height:112px;border-radius:8px;border:1px solid #E2E8F4;cursor:pointer;flex:0 0 auto;"/>'; }).join('')+
       '</div>'+
       rKPI([{label:'重建耗时',value:'2分18秒'},{label:'识别SKU数',value:'28'},{label:'本品货架占比',value:'31%',color:'#FAAD14',sub:'目标40%'},{label:'陈列合规分',value:'76',sub:'满分100',color:'#FAAD14'}])+
       '<div style="font-weight:600;font-size:13px;margin:10px 0 4px;">货架占比（本品 vs 竞品）</div>'+
@@ -3557,6 +3553,7 @@ var EN_FIX12={"未选择文件":"No file chosen","选择文件":"Choose file"};f
 var EN_FIX13={"在不同点位各拍1张(入口/主货架/陈列/竞品/收银…),即可在点位间VR漫游;也可录一段环店视频":"Take one photo at each spot (entrance / main shelf / display / competitor / checkout…) to walk between them in VR; or record a walkaround video"};for(var _f13 in EN_FIX13){EN_DICT[_f13]=EN_FIX13[_f13];}EN_KEYS=Object.keys(EN_DICT).sort(function(a,b){return b.length-a.length;});
 var EN_FIX14={"引导环拍360°（站着原地转一圈·自动拍）":"Guided 360° capture (stand & rotate in place)"};for(var _f14 in EN_FIX14){EN_DICT[_f14]=EN_FIX14[_f14];}EN_KEYS=Object.keys(EN_DICT).sort(function(a,b){return b.length-a.length;});
 var EN_FIX15={"AI 货架识别（本品 vs 竞品 · 缺货位）":"AI Shelf Reading (ours vs competitors · OOS)","的三维重建与货架智能分析":"3D reconstruction & shelf intelligence","门店数字孪生 · 8 个点位":"Store digital twin · 8 spots","进入3D漫游":"Enter 3D Walkthrough","点击看大图":"Tap to enlarge","本品货架占比":"Our share of shelf","缺货/问题点":"OOS / issues","陈列合规分":"Compliance score","3 处":"3"};for(var _f15 in EN_FIX15){EN_DICT[_f15]=EN_FIX15[_f15];}EN_KEYS=Object.keys(EN_DICT).sort(function(a,b){return b.length-a.length;});
+var EN_FIX16={"门店实拍（点击放大）":"Store photos (tap to enlarge)"};for(var _f16 in EN_FIX16){EN_DICT[_f16]=EN_FIX16[_f16];}EN_KEYS=Object.keys(EN_DICT).sort(function(a,b){return b.length-a.length;});
 // ==================== 知识库 / 数据集（localStorage + 关键词检索注入） ====================
 function _kbRead(key){ try{ return JSON.parse(localStorage.getItem(key)||'[]'); }catch(e){ return []; } }
 function _kbWrite(key,arr){ try{ localStorage.setItem(key, JSON.stringify(arr)); }catch(e){ alert('存储空间不足，请删除部分文件'); } }
