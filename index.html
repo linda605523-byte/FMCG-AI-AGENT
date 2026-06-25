@@ -2941,14 +2941,21 @@ function renderResultBody(item, values){
       if(sd&&sd.rows&&sd.rows.length){
         var fc=computeForecast(sd,days),top=fc.slice(0,6);
         var maxRep=Math.max.apply(null,fc.map(function(x){return x.rep||1}))||1;
+        var t0=fc[0],chart='';
+        if(t0&&t0.hist&&t0.hist.length){
+          var hv=t0.hist.slice(-28).map(function(x){return x.sales;});
+          var fv=(t0.daily||[]).map(function(x){return x.val;});
+          chart='<div style="font-size:12px;font-weight:600;margin:6px 0 0;">'+t0.sku+' 销量走势（趋势 '+trendBadge(t0.trendPct)+'）</div>'+rForecastChart(hv,fv,days);
+        }
         var bars=top.map(function(o){
-          return {label:o.sku+' \u00b7 日均'+o.avg+' \u00b7 库存'+o.stock,value:'建议补'+o.rep,pct:Math.max(6,Math.round(o.rep/maxRep*100)),color:(o.cover<days?'#FAAD14':'#00C39A')};
+          return {label:o.sku+' \u00b7 日均'+o.avg+' '+trendBadge(o.trendPct)+' \u00b7 库存'+o.stock,value:'建议补'+o.rep,pct:Math.max(6,Math.round(o.rep/maxRep*100)),color:(o.cover<days?'#FAAD14':'#00C39A')};
         });
         var risk=top.some(function(o){return o.cover<days;});
         var rows=top.map(function(o){return [o.sku,String(o.avg),String(o.need),String(o.stock),(o.cover>=999?'充足':o.cover.toFixed(1)+'天'),'<b>'+o.rep+'</b>'];});
-        return '<div style="margin-bottom:6px;">基于你上传的 <b>'+sd.rows.length+'</b> 行销量数据（'+sd.skus.length+' 个SKU，'+(sd.minDate||'')+'~'+(sd.maxDate||'')+'），未来 <b>'+days+'</b> 天预测与建议补货：</div>'+
+        return '<div style="margin-bottom:6px;">基于你上传的 <b>'+sd.rows.length+'</b> 行历史销量（'+sd.skus.length+' 个SKU，'+(sd.minDate||'')+'~'+(sd.maxDate||'')+'），用 <b>趋势+周季节性</b> 预测未来 <b>'+days+'</b> 天：</div>'+
+          chart+
           rBars(bars)+
-          rTable(['SKU','日均',days+'天需求','当前库存','可撑','建议补货'],rows)+
+          rTable(['SKU','日均(预测)',days+'天需求','当前库存','可撑','建议补货'],rows)+
           '<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">库存风险：'+(risk?'<span style="color:#FAAD14;font-weight:600;">\ud83d\udfe1 部分SKU可撑天数 < 预测周期，需尽快补货</span>':'<span style="color:#52C41A;font-weight:600;">\ud83d\udfe2 绿色（安全）</span>')+'</div>';
       }
       var cat=v.skuCategory||'气泡茶', days2=v.forecastDays||'7天';
@@ -3355,7 +3362,7 @@ function generateMockLLM(item, values) {
   // 参数感知解读：仅覆盖会被参数筛选/改变、否则会与结果矛盾的场景
   if(currentLang!=='en') switch(item.id){
     case 'A1': { var r1=v.range||'华东大区', t1=v.topN||20; return '已在'+r1+'按所选维度排序输出 Top '+t1+'。建议优先攻坚榜单前列的 CVS 便利连锁，转化潜力更高；可衔接 A3 路径规划串点拜访。'; }
-    case 'A2': { var sd2=loadSales('A2'); if(sd2&&sd2.rows&&sd2.rows.length){ var _d=parseInt((v.forecastDays||'7天'),10)||7; var fc2=computeForecast(sd2,_d); var topo=fc2[0]; var urg=fc2.filter(function(x){return x.cover<_d;}); return '已按你上传的 '+sd2.rows.length+' 行真实销量计算。最需补货的是 '+(topo?topo.sku:'-')+'（建议补 '+(topo?topo.rep:0)+'）。'+(urg.length?('有 '+urg.length+' 个SKU库存可撑天数低于预测周期，建议优先补货以防断货。'):'整体库存可支撑预测周期，按建议量补货即可。'); } var c2=v.skuCategory||'气泡茶', d2=v.forecastDays||'7天'; return '未来'+d2+'，'+c2+'受高温推动需求上行，建议提前增加安全库存；其余品类按常规补货，避免资金占用。'; }
+    case 'A2': { var sd2=loadSales('A2'); if(sd2&&sd2.rows&&sd2.rows.length){ var _d=parseInt((v.forecastDays||'7天'),10)||7; var fc2=computeForecast(sd2,_d); var topo=fc2[0]; var urg=fc2.filter(function(x){return x.cover<_d;}); var trd=topo?(topo.trendPct>5?('呈上升趋势(+'+topo.trendPct+'%)'):(topo.trendPct<-5?('呈下降趋势('+topo.trendPct+'%)'):'走势平稳')):''; return '已按你上传的 '+sd2.rows.length+' 行历史销量，用趋势+周季节性预测。最需补货的是 '+(topo?topo.sku:'-')+'（'+trd+'，建议补 '+(topo?topo.rep:0)+'）。'+(urg.length?('有 '+urg.length+' 个SKU库存可撑天数低于预测周期，建议优先补货以防断货。'):'整体库存可支撑预测周期，按建议量补货即可。'); } var c2=v.skuCategory||'气泡茶', d2=v.forecastDays||'7天'; return '未来'+d2+'，'+c2+'受高温推动需求上行，建议提前增加安全库存；其余品类按常规补货，避免资金占用。'; }
     case 'A4': { var ct=v.checkType||'两者都执行'; if(ct==='ROI费效计算') return 'ROI 1.35 表现良好，增量销量 +12.5%（vs 对照组）。建议把预算向高 ROI 活动集中，低效活动及时止损。'; if(ct==='照片合规审核') return '陈列合规通过率 85%，10% 驳回多因排面不足。建议对驳回门店限期整改并复查照片真实性。'; return '费效与合规一并核验：ROI 1.35 良好，仍有 10% 陈列驳回需跟进，建议对存疑门店复查。'; }
     case 'A5': { var sc=v.scenario||'买二送一'; return '在所选「'+sc+'」等方案中，买二送一达成概率最高(78%)、性价比最优，建议采用；注意备货以防旺季缺货。'; }
     case 'A14': { var c14=v.category||'全部品类'; if(c14==='全部品类') return '促销日历已平衡各品类冲突；果汁新品推广 ROI 最高(2.1)，建议配合中秋节点加大投入。'; return '已按「'+c14+'」筛选排期，该品类活动 ROI 稳健；建议聚焦其旺季节点，避免与竞品同期撞档。'; }
@@ -3879,21 +3886,73 @@ function parseSalesCSV(text){
   }
   return {rows:rows,skus:Object.keys(sk),minDate:minD,maxDate:maxD};
 }
+function _fcDow(dstr){var t=Date.parse(dstr);if(isNaN(t))return -1;return new Date(t).getDay();}
+function _fcAddDays(dstr,k){var t=Date.parse(dstr);if(isNaN(t))return '';var d=new Date(t+k*86400000);var m=('0'+(d.getMonth()+1)).slice(-2),day=('0'+d.getDate()).slice(-2);return d.getFullYear()+'-'+m+'-'+day;}
+/* 预留：外部数据(天气/节假日)加权钩子 —— 第二步接入真API后在此返回每天乘数(>1升/<1降) */
+var WEATHER_ENDPOINT='';
+function externalDayFactor(sku,dateStr){ return 1; }
+function forecastSeries(pts,days){
+  var n=pts.length,sx=0,sy=0,sxx=0,sxy=0;
+  for(var i=0;i<n;i++){var y=pts[i].sales;sx+=i;sy+=y;sxx+=i*i;sxy+=i*y;}
+  var slope=0,intercept=n?sy/n:0,denom=n*sxx-sx*sx;
+  if(n>=2&&denom!==0){slope=(n*sxy-sx*sy)/denom;intercept=(sy-slope*sx)/n;}
+  var wdSum={},wdCnt={};
+  for(var j=0;j<n;j++){var fit=intercept+slope*j;var wd=_fcDow(pts[j].date);if(wd<0||fit<=0)continue;var ratio=pts[j].sales/fit;wdSum[wd]=(wdSum[wd]||0)+ratio;wdCnt[wd]=(wdCnt[wd]||0)+1;}
+  var wf={},fsum=0,fcn=0,d;
+  for(d=0;d<7;d++){wf[d]=wdCnt[d]?wdSum[d]/wdCnt[d]:1;if(wdCnt[d]){fsum+=wf[d];fcn++;}}
+  var fmean=fcn?fsum/fcn:1;
+  for(d=0;d<7;d++){wf[d]=fmean>0?wf[d]/fmean:1;}
+  var lastDate=n?pts[n-1].date:'',daily=[],need=0;
+  for(var k=1;k<=days;k++){
+    var idx=(n-1)+k,base=intercept+slope*idx;if(base<0)base=0;
+    var fd=_fcAddDays(lastDate,k),wdk=_fcDow(fd);
+    var val=base*(wdk>=0?wf[wdk]:1)*externalDayFactor('',fd);if(val<0)val=0;
+    daily.push({date:fd,val:Math.round(val)});need+=val;
+  }
+  need=Math.round(need);
+  var avgDaily=days?need/days:0,histAvg=n?sy/n:0;
+  var trendPct=histAvg>0?Math.round((slope*n)/histAvg*100):0;
+  return {daily:daily,need:need,avgDaily:avgDaily,trendPct:trendPct,histAvg:histAvg};
+}
 function computeForecast(p,days){
   var by={};
   p.rows.forEach(function(r){
-    if(!by[r.sku])by[r.sku]={sum:0,n:0,stock:NaN,last:''};
-    by[r.sku].sum+=r.sales;by[r.sku].n++;
+    if(!by[r.sku])by[r.sku]={pts:[],stock:NaN,last:''};
+    by[r.sku].pts.push({date:r.date,sales:r.sales});
     if(!isNaN(r.stock)&&(r.date>=by[r.sku].last)){by[r.sku].stock=r.stock;by[r.sku].last=r.date;}
   });
   var out=[];
   Object.keys(by).forEach(function(s){
-    var o=by[s],avg=o.n?o.sum/o.n:0,need=Math.round(avg*days),stock=isNaN(o.stock)?0:o.stock;
-    var safety=Math.round(avg*3),rep=Math.max(0,need+safety-stock),cover=avg>0?stock/avg:999;
-    out.push({sku:s,avg:Math.round(avg),need:need,stock:stock,rep:rep,cover:cover});
+    var o=by[s];
+    o.pts.sort(function(a,b){return a.date<b.date?-1:(a.date>b.date?1:0);});
+    var fs=forecastSeries(o.pts,days);
+    var stock=isNaN(o.stock)?0:o.stock,avgDaily=fs.avgDaily,need=fs.need;
+    var safety=Math.round(avgDaily*3),rep=Math.max(0,need+safety-stock),cover=avgDaily>0?stock/avgDaily:999;
+    out.push({sku:s,avg:Math.round(avgDaily),avgHist:Math.round(fs.histAvg),need:need,stock:stock,rep:rep,cover:cover,trendPct:fs.trendPct,daily:fs.daily,hist:o.pts});
   });
   out.sort(function(a,b){return b.rep-a.rep;});
   return out;
+}
+function trendBadge(pct){if(pct>5)return '<span style="color:#00C39A;font-weight:600;">\u2197'+pct+'%</span>';if(pct<-5)return '<span style="color:#F5222D;font-weight:600;">\u2198'+Math.abs(pct)+'%</span>';return '<span style="color:#999;">\u2192平稳</span>';}
+function rForecastChart(histVals,fcVals,days){
+  if(!histVals.length&&!fcVals.length)return '';
+  var all=histVals.concat(fcVals),W=320,H=96,pad=6;
+  var max=Math.max.apply(null,all),min=Math.min.apply(null,all);if(max===min)max=min+1;
+  var n=all.length;
+  function X(i){return pad+(n<=1?0:i*(W-2*pad)/(n-1));}
+  function Y(v){return H-pad-(v-min)*(H-2*pad)/(max-min);}
+  var hp=histVals.map(function(v,i){return X(i)+','+Y(v);}).join(' ');
+  var si=histVals.length-1;
+  var fp=[X(si)+','+Y(histVals[si]||min)];
+  fcVals.forEach(function(v,i){fp.push(X(si+1+i)+','+Y(v));});
+  fp=fp.join(' ');
+  var sx=X(si);
+  return '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:96px;margin:6px 0;">'+
+    '<line x1="'+sx+'" y1="'+pad+'" x2="'+sx+'" y2="'+(H-pad)+'" stroke="#ddd" stroke-dasharray="2 2"/>'+
+    '<polyline points="'+hp+'" fill="none" stroke="#1890FF" stroke-width="2"/>'+
+    '<polyline points="'+fp+'" fill="none" stroke="#00C39A" stroke-width="2" stroke-dasharray="5 3"/>'+
+    '</svg>'+
+    '<div style="font-size:11px;color:var(--text-secondary);text-align:center;margin-top:-4px;"><span style="color:#1890FF;">\u2014 历史实绩</span>\u3000<span style="color:#00C39A;">--- 未来'+days+'天预测</span></div>';
 }
 function downloadSalesTemplate(){
   var csv='SKU,日期,当日销量,当前库存\n气泡茶330ml,2026-05-01,120,800\n气泡茶330ml,2026-05-02,135,665\n气泡茶330ml,2026-05-03,128,537\n矿泉水550ml,2026-05-01,210,1500\n矿泉水550ml,2026-05-02,198,1290\n矿泉水550ml,2026-05-03,225,1065\n';
