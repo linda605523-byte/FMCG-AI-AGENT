@@ -3075,7 +3075,7 @@ function renderResultBody(item, values){
     case 'A17': return '<div style="margin-bottom:6px;">AutoML 调参 · 模型对比：</div>'+
       rTable(['模型','AUC','提升','状态'],[['LightGBM(调参后)','0.91','+6.2%','✅ 推荐部署'],['XGBoost','0.88','基线','—'],['RandomForest','0.83','-5%','—']])+
       rKPI([{label:'最优模型',value:'LightGBM',color:'#52C41A'},{label:'性能提升',value:'+6.2%'},{label:'建议',value:'一键部署'}]);
-    case 'A18': return '<div style="margin-bottom:6px;">智能补货推荐单：</div>'+
+    case 'A18': { var _dv18=dvSalesRender('A18','order',v); if(_dv18) return _dv18; } return '<div style="margin-bottom:6px;">智能补货推荐单：</div>'+
       rTable(['SKU','建议量','预期毛利','理由'],[['气泡茶330ml','30箱','¥420','动销快+周末'],['矿泉水550ml','50箱','¥350','低于安全线'],['果汁250ml(新)','10箱','¥180','试销/高毛利']])+
       rKPI([{label:'推荐成功率',value:'78%',sub:'历史同类',color:'#52C41A'},{label:'预期总毛利',value:'¥950'}]);
     case 'A19': return rDoc([{h:'客户：全家-南京西路店（王老板）',body:'合作 3 年；偏好节前压货；上次承诺补气泡茶陈列位。'},{h:'关键客情',body:'女儿高考（6 月）；爱聊本地球队；忌迟到。'},{h:'下次拜访提醒',body:'6/12 前回访，兑现陈列位承诺 + 带新品试饮。'},{h:'个性化开场白（AI）',body:'"王哥，高考结束了吧，辛苦一阵！上次说的端架我给您协调好了……"'}]);
@@ -3194,7 +3194,7 @@ function renderResultBody(item, values){
     case 'S20': return rKPI([{label:'动销率',value:'88%',color:'#52C41A'},{label:'周转天数',value:'9天'},{label:'滞销SKU',value:'4个',color:'#FAAD14'}])+
       rTable(['SKU','动销','排行'],[['气泡茶330ml','快','🔥 畅销Top1'],['矿泉水550ml','正常','—'],['果汁250ml','慢','⚠️ 滞销']])+
       rDoc([{h:'补货建议',body:'气泡茶加订 30 箱；果汁转促销清库。'}]);
-    case 'S21': return rKPI([{label:'当前周转',value:'25天'},{label:'目标',value:'18天',color:'#52C41A'},{label:'差距',value:'-7天',color:'#FAAD14'}])+
+    case 'S21': { var _dv21=dvSalesRender('S21','turnover',v); if(_dv21) return _dv21; } return rKPI([{label:'当前周转',value:'25天'},{label:'目标',value:'18天',color:'#52C41A'},{label:'差距',value:'-7天',color:'#FAAD14'}])+
       rBars([{label:'气泡茶',value:'12天',pct:32,color:'#00C39A'},{label:'矿泉水',value:'20天',pct:53},{label:'果汁',value:'38天',pct:100,color:'#FAAD14'}])+
       rDoc([{h:'优化建议',body:'果汁降订货 30% + 捆绑促销；气泡茶维持高频小批。'}]);
     case 'S22': { var obj22=v.objection||'价格太高';
@@ -3240,7 +3240,7 @@ function renderResultBody(item, values){
       rTable(['可兑商品','所需积分','库存'],[['品牌冰柜贴','500','充足'],['加油卡¥100','2,000','少量'],['新品试用装','300','充足']]);
     case 'S38': return '<div style="font-size:13px;padding:10px;background:#F6FFED;border-left:3px solid #52C41A;border-radius:6px;margin-bottom:8px;">✅ 核销成功：气泡茶买二送一 × 1</div>'+
       rKPI([{label:'本次核销',value:'1笔'},{label:'累计核销',value:'238笔',color:'#52C41A'},{label:'剩余配额',value:'762'}]);
-    case 'S39': return '<div style="margin-bottom:6px;">下游需求协同预测：</div>'+
+    case 'S39': { var _dv39=dvSalesRender('S39','demand',v); if(_dv39) return _dv39; } return '<div style="margin-bottom:6px;">下游需求协同预测：</div>'+
       rBars([{label:'经销商上报',value:'8,200箱',pct:82},{label:'模型预测',value:'9,000箱',pct:90,color:'#00C39A'},{label:'上期实际',value:'8,600箱',pct:86}])+
       rDoc([{h:'差异分析 / 订货',body:'下游低报约 9%（旺季保守），建议按模型 9,000 箱备货并留 5% 安全库存。'}]);
     case 'S40': return rDoc([
@@ -3864,10 +3864,10 @@ function renderOrchestration(res){
 
 // 下载数据分析模板(供用户填好后上传)
 /* ===== A2 销量数据驱动 (真实可用样板) ===== */
-var DATADRIVEN={A2:{kind:'sales'}};
+var DATADRIVEN={A2:{kind:'sales'},A18:{kind:'sales'},S39:{kind:'sales'},S21:{kind:'sales'}};
 function salesKey(id){return 'ebest_sales_'+id;}
-function saveSales(id,p){try{localStorage.setItem(salesKey(id),JSON.stringify(p));}catch(e){}}
-function loadSales(id){try{var r=localStorage.getItem(salesKey(id));if(r)return JSON.parse(r);}catch(e){}return null;}
+function saveSales(id,p){try{var s=JSON.stringify(p);localStorage.setItem(salesKey(id),s);localStorage.setItem('ebest_sales__shared',s);}catch(e){}}
+function loadSales(id){try{var r=localStorage.getItem(salesKey(id));if(!r)r=localStorage.getItem('ebest_sales__shared');if(r)return JSON.parse(r);}catch(e){}return null;}
 function clearSales(id){try{localStorage.removeItem(salesKey(id));}catch(e){}}
 function parseSalesCSV(text){
   var lines=String(text).split(/\r?\n/).filter(function(l){return l.trim();});
@@ -3994,6 +3994,35 @@ function rForecastChart(histVals,fcVals,days){
     '<polyline points="'+fp+'" fill="none" stroke="#00C39A" stroke-width="2" stroke-dasharray="5 3"/>'+
     '</svg>'+
     '<div style="font-size:11px;color:var(--text-secondary);text-align:center;margin-top:-4px;"><span style="color:#1890FF;">\u2014 历史实绩</span>\u3000<span style="color:#00C39A;">--- 未来'+days+'天预测</span></div>';
+}
+function dvSalesRender(id,mode,v){
+  var sd=(typeof loadSales==='function')?loadSales(id):null;
+  if(!(sd&&sd.rows&&sd.rows.length))return '';
+  _fcRegion=(v&&v.region)||'';
+  var days=parseInt(((v&&(v.forecastDays||v.cycle||v.period||v.days))||'7天'),10)||7;
+  var fc=computeForecast(sd,days),top=fc.slice(0,8);
+  var info='基于上传的 <b>'+sd.rows.length+'</b> 行销量（'+sd.skus.length+'个SKU，'+(sd.minDate||'')+'~'+(sd.maxDate||'')+'）';
+  if(mode==='order'){
+    var maxRep=Math.max.apply(null,fc.map(function(x){return x.rep||1}))||1;
+    var bars=top.map(function(o){return {label:o.sku+' \u00b7 日均'+o.avg+' '+trendBadge(o.trendPct)+' \u00b7 库存'+o.stock,value:'下单'+o.rep,pct:Math.max(6,Math.round(o.rep/maxRep*100)),color:(o.cover<days?'#FAAD14':'#00C39A')};});
+    var rows=top.map(function(o){return [o.sku,String(o.avg),String(o.need),String(o.stock),(o.cover>=999?'充足':o.cover.toFixed(1)+'天'),'<b>'+o.rep+'</b>'];});
+    var tot=top.reduce(function(a,o){return a+o.rep;},0);
+    return '<div style="margin-bottom:6px;">'+info+'，按 '+days+' 天周期生成 <b>智能订单建议</b>：</div>'+rBars(bars)+rTable(['SKU','预测日均','周期需求','现有库存','可撑','建议下单'],rows)+'<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">合计建议下单 <b>'+tot+'</b> 件；优先下单"可撑天数 < 周期"的SKU以防断货。</div>';
+  }
+  if(mode==='turnover'){
+    var rows2=top.map(function(o){var st=(o.cover>=999)?'\u2014':(o.cover<7?'<span style="color:#F5222D;font-weight:600;">偏快·缺货风险</span>':(o.cover>30?'<span style="color:#FAAD14;font-weight:600;">偏慢·占用资金</span>':'<span style="color:#52C41A;">健康</span>'));return [o.sku,String(o.avg),String(o.stock),(o.cover>=999?'充足':o.cover.toFixed(1)+'天'),st];});
+    var slow=top.filter(function(o){return o.cover>30&&o.cover<999;}).length,fast=top.filter(function(o){return o.cover<7;}).length;
+    var maxCov=Math.max.apply(null,top.map(function(o){return (o.cover>=999?0:o.cover)||0}))||1;
+    var bars2=top.map(function(o){var cov=o.cover>=999?0:o.cover;return {label:o.sku+' \u00b7 周转'+(o.cover>=999?'充足':o.cover.toFixed(1)+'天'),value:'库存'+o.stock,pct:Math.max(6,Math.round(cov/maxCov*100)),color:(o.cover<7?'#F5222D':(o.cover>30?'#FAAD14':'#52C41A'))};});
+    return '<div style="margin-bottom:6px;">'+info+'，按当前动销测算 <b>库存周转</b>：</div>'+rBars(bars2)+rTable(['SKU','日均动销','库存','周转天数','状态'],rows2)+'<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">周转偏慢 '+slow+' 个（建议促销/调拨清库），偏快 '+fast+' 个（建议提前补货）。健康区间约 7\u201330 天。</div>';
+  }
+  var maxNeed=Math.max.apply(null,fc.map(function(x){return x.need||1}))||1;
+  var t0=fc[0],chart='';
+  if(t0&&t0.hist&&t0.hist.length){var hv=t0.hist.slice(-28).map(function(x){return x.sales;});var fv=(t0.daily||[]).map(function(x){return x.val;});chart='<div style="font-size:12px;font-weight:600;margin:6px 0 0;">'+t0.sku+' 需求走势（趋势 '+trendBadge(t0.trendPct)+'）</div>'+rForecastChart(hv,fv,days);}
+  var eventExpl=t0?eventExplainHtml(skuCat(t0.sku),(t0.daily&&t0.daily[0]?t0.daily[0].date:_fcToday()),days,_fcRegion):'';
+  var bars3=top.map(function(o){return {label:o.sku+' \u00b7 预测日均'+o.avg+' '+trendBadge(o.trendPct),value:days+'天需求'+o.need,pct:Math.max(6,Math.round(o.need/maxNeed*100)),color:'#1890FF'};});
+  var rows3=top.map(function(o){return [o.sku,String(o.avg),String(o.need),(o.trendPct>5?'\u2197':(o.trendPct<-5?'\u2198':'\u2192'))+Math.abs(o.trendPct)+'%'];});
+  return '<div style="margin-bottom:6px;">'+info+'，<b>趋势+周季节性+事件加权</b> 预测未来 <b>'+days+'</b> 天需求（供产销协同）：</div>'+eventExpl+chart+rBars(bars3)+rTable(['SKU','预测日均',days+'天需求','趋势'],rows3);
 }
 function downloadSalesTemplate(){
   var csv='SKU,日期,当日销量,当前库存\n气泡茶330ml,2026-05-01,120,800\n气泡茶330ml,2026-05-02,135,665\n气泡茶330ml,2026-05-03,128,537\n矿泉水550ml,2026-05-01,210,1500\n矿泉水550ml,2026-05-02,198,1290\n矿泉水550ml,2026-05-03,225,1065\n';
