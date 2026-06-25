@@ -2953,7 +2953,7 @@ function renderResultBody(item, values){
           return {label:o.sku+' \u00b7 日均'+o.avg+' '+trendBadge(o.trendPct)+' \u00b7 库存'+o.stock,value:'建议补'+o.rep,pct:Math.max(6,Math.round(o.rep/maxRep*100)),color:(o.cover<days?'#FAAD14':'#00C39A')};
         });
         var risk=top.some(function(o){return o.cover<days;});
-        var rows=top.map(function(o){return [o.sku,String(o.avg),String(o.need),String(o.stock),(o.cover>=999?'充足':o.cover.toFixed(1)+'天'),'<b>'+o.rep+'</b>'];});
+        var rows=top.map(function(o){return [o.sku,String(o.avg),String(o.need),String(o.stock)+(o.stockDate?' <span style="color:#999;font-size:11px;">截至'+_fmtRange(o.stockDate)+'</span>':''),(o.cover>=999?'充足':o.cover.toFixed(1)+'天'),'<b>'+o.rep+'</b>'];});
         return '<div style="margin-bottom:6px;">基于你上传的 <b>'+sd.rows.length+'</b> 行历史销量（'+sd.skus.length+' 个SKU，'+(sd.minDate||'')+'~'+(sd.maxDate||'')+'），用 <b>趋势+周季节性+事件加权</b> 预测未来 <b>'+days+'</b> 天：</div>'+
           eventExpl+
           chart+
@@ -3958,9 +3958,9 @@ function forecastSeries(pts,days,sku){
 function computeForecast(p,days){
   var by={};
   p.rows.forEach(function(r){
-    if(!by[r.sku])by[r.sku]={pts:[],stock:NaN,last:''};
+    if(!by[r.sku])by[r.sku]={pts:[],stock:NaN,last:'',lastT:-Infinity};
     by[r.sku].pts.push({date:r.date,sales:r.sales});
-    if(!isNaN(r.stock)&&(r.date>=by[r.sku].last)){by[r.sku].stock=r.stock;by[r.sku].last=r.date;}
+    if(!isNaN(r.stock)){var _st=Date.parse(r.date);if(isNaN(_st))_st=-Infinity;if(_st>=by[r.sku].lastT){by[r.sku].stock=r.stock;by[r.sku].lastT=_st;by[r.sku].last=r.date;}}
   });
   var out=[];
   Object.keys(by).forEach(function(s){
@@ -3969,7 +3969,7 @@ function computeForecast(p,days){
     var fs=forecastSeries(o.pts,days,s);
     var stock=isNaN(o.stock)?0:o.stock,avgDaily=fs.avgDaily,need=fs.need;
     var safety=Math.round(avgDaily*3),rep=Math.max(0,need+safety-stock),cover=avgDaily>0?stock/avgDaily:999;
-    out.push({sku:s,avg:Math.round(avgDaily),avgHist:Math.round(fs.histAvg),need:need,stock:stock,rep:rep,cover:cover,trendPct:fs.trendPct,daily:fs.daily,cat:skuCat(s),hist:o.pts});
+    out.push({sku:s,avg:Math.round(avgDaily),avgHist:Math.round(fs.histAvg),need:need,stock:stock,stockDate:o.last,rep:rep,cover:cover,trendPct:fs.trendPct,daily:fs.daily,cat:skuCat(s),hist:o.pts});
   });
   out.sort(function(a,b){return b.rep-a.rep;});
   return out;
