@@ -318,6 +318,10 @@
         <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         <span data-i18n="outputCenter">输出中心</span>
       </div>
+      <div class="nav-item" onclick="openDataHubPicker(this)">
+        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg>
+        <span data-i18n="dataHub">数据/知识库</span>
+      </div>
     </nav>
     <!-- Agent List Panel -->
     <div class="sidebar-content hidden" id="agentListPanel">
@@ -2398,6 +2402,7 @@ function buildParamForm(item, msgId, type) {
   html += '<div><strong>数据来源(内部):</strong> ' + (item.dataSources && item.dataSources.internal || '-') + '</div>';
   if (item.dataSources && item.dataSources.external) html += '<div><strong>数据来源(外部):</strong> ' + item.dataSources.external + '</div>';
   html += '<div><strong>预计耗时:</strong> 约 ' + (item.status === 'core' ? '3-5' : '2-4') + ' 秒</div>';
+  html += '<div style="margin-top:10px;"><button type="button" onclick="openDataHub(\''+item.id+'\')" style="background:#fff;border:1px solid #1890FF;color:#1890FF;padding:7px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;">\ud83d\udcc2 '+t('manageData')+'</button></div>';
   html += '</div>';
 
   html += '<div class="param-actions" style="position:sticky;bottom:0;background:var(--bg-card);padding:10px 0 4px;z-index:5;">';
@@ -4108,6 +4113,80 @@ function simulateExecution(id, name, type) {
   }, 2000);
 }
 
+/* ===== 数据集/知识库 DataHub ===== */
+try{Object.assign(I18N.zh,{dataHub:'数据/知识库',manageData:'管理数据集 / 知识库',dataSources:'数据源',dataFiles:'数据文件',knowledgeBase:'知识库',addItem:'添加',uploadFile:'上传文件',addDoc:'添加文档',srcInternal:'内部',srcExternal:'外部',noFiles:'暂无文件，点「上传文件」添加',dhEmpty:'暂无，点上方添加',rows:'行',pickItem:'选择一个 Agent / Skill，管理其数据源、数据文件与知识库',addSourcePrompt:'输入数据源名称（如 ERP(库存数据)）',editName:'修改名称',editNote:'修改说明',docTitlePrompt:'输入文档名称（如 陈列标准.pdf）',backAll:'‹ 全部'});
+Object.assign(I18N.en,{dataHub:'Data & Knowledge',manageData:'Manage Data & Knowledge',dataSources:'Data Sources',dataFiles:'Data Files',knowledgeBase:'Knowledge Base',addItem:'Add',uploadFile:'Upload',addDoc:'Add Doc',srcInternal:'Internal',srcExternal:'External',noFiles:'No files yet — tap Upload',dhEmpty:'None yet — add above',rows:'rows',pickItem:'Pick an Agent / Skill to manage its data sources, files & knowledge base',addSourcePrompt:'Enter data source name (e.g. ERP(inventory))',editName:'Edit name',editNote:'Edit note',docTitlePrompt:'Enter document name (e.g. Display-Standard.pdf)',backAll:'‹ All'});}catch(e){}
+
+function dhAll(){var a=(typeof agents!=='undefined'?agents:[]);var b=(typeof skills!=='undefined'?skills:[]);return a.concat(b);}
+function dhFind(id){var r=dhAll().filter(function(x){return x.id===id;});return r[0];}
+function dhRid(p){return p+Math.random().toString(36).slice(2,7);}
+function dhSplitTop(str){if(!str)return [];var out=[],buf='',d=0;for(var i=0;i<str.length;i++){var c=str[i];if(c==='(')d++;else if(c===')')d--;if(c==='/'&&d<=0){if(buf.trim())out.push(buf.trim());buf='';}else buf+=c;}if(buf.trim())out.push(buf.trim());return out;}
+function dhKey(id){return 'ebest_dh_'+id;}
+function dhSeed(id){var it=dhFind(id)||{};var ds=it.dataSources||{};var srcs=[];dhSplitTop(ds.internal||'').forEach(function(x){srcs.push({id:dhRid('s'),name:x,kind:'internal'});});if(ds.external&&ds.external!=='无')dhSplitTop(ds.external).forEach(function(x){srcs.push({id:dhRid('s'),name:x,kind:'external'});});return {sources:srcs,files:[],kb:[{id:dhRid('k'),title:(it.name||id)+' - SOP.pdf',note:'标准作业流程'},{id:dhRid('k'),title:'业务规则与口径.md',note:'阈值/字段口径定义'}]};}
+function dhLoad(id){try{var raw=localStorage.getItem(dhKey(id));if(raw)return JSON.parse(raw);}catch(e){}var sd=dhSeed(id);dhSave(id,sd);return sd;}
+function dhSave(id,d){try{localStorage.setItem(dhKey(id),JSON.stringify(d));}catch(e){}}
+var dhCurrent=null;
+function openDataHub(id){dhCurrent=id;var m=document.getElementById('dhModal');if(!m)return;m.style.display='flex';dhRender();}
+function closeDataHub(){var m=document.getElementById('dhModal');if(m)m.style.display='none';dhCurrent=null;}
+function dhEsc(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function dhRender(){var id=dhCurrent;if(!id)return;var it=dhFind(id)||{};var data=dhLoad(id);var nm=(currentLang==='en'?localizeEN(it.name||''):(it.name||''));document.getElementById('dhTitle').textContent=id+' '+nm;var h='';
+h+='<button class="dh-back" onclick="openDataHubPicker()">'+t('backAll')+'</button>';
+h+='<div class="dh-sec"><div class="dh-sec-h"><span>'+t('dataSources')+'</span><button class="dh-add" onclick="dhAddSource()">+ '+t('addItem')+'</button></div>';
+if(!data.sources.length)h+='<div class="dh-empty">'+t('dhEmpty')+'</div>';
+data.sources.forEach(function(x){var ext=x.kind==='external';h+='<div class="dh-row"><span class="dh-badge" style="background:'+(ext?'#FA8C16':'#1890FF')+'">'+(ext?t('srcExternal'):t('srcInternal'))+'</span><span class="dh-name">'+dhEsc(x.name)+'</span><button class="dh-ic" onclick="dhEditSource(\''+x.id+'\')">\u270e</button><button class="dh-ic" onclick="dhDelSource(\''+x.id+'\')">\ud83d\uddd1</button></div>';});
+h+='</div>';
+h+='<div class="dh-sec"><div class="dh-sec-h"><span>'+t('dataFiles')+'</span><button class="dh-add" onclick="dhPickFile()">+ '+t('uploadFile')+'</button></div>';
+if(!data.files.length)h+='<div class="dh-empty">'+t('noFiles')+'</div>';
+data.files.forEach(function(f){h+='<div class="dh-row"><span class="dh-badge" style="background:#52C41A">FILE</span><span class="dh-name">'+dhEsc(f.name)+'<span class="dh-sub"> \u00b7 '+f.size+(f.rows?(' \u00b7 '+f.rows+' '+t('rows')):'')+'</span></span><button class="dh-ic" onclick="dhDelFile(\''+f.id+'\')">\ud83d\uddd1</button></div>';});
+h+='</div>';
+h+='<div class="dh-sec"><div class="dh-sec-h"><span>'+t('knowledgeBase')+'</span><button class="dh-add" onclick="dhAddDoc()">+ '+t('addDoc')+'</button></div>';
+if(!data.kb.length)h+='<div class="dh-empty">'+t('dhEmpty')+'</div>';
+data.kb.forEach(function(k){h+='<div class="dh-row"><span class="dh-badge" style="background:#722ED1">DOC</span><span class="dh-name">'+dhEsc(k.title)+(k.note?'<span class="dh-sub"> \u00b7 '+dhEsc(k.note)+'</span>':'')+'</span><button class="dh-ic" onclick="dhEditDoc(\''+k.id+'\')">\u270e</button><button class="dh-ic" onclick="dhDelDoc(\''+k.id+'\')">\ud83d\uddd1</button></div>';});
+h+='</div>';
+var b=document.getElementById('dhBody');b.innerHTML=h;if(currentLang==='en'){try{localizeEl(b);}catch(e){}}}
+function dhAddSource(){var n=prompt(t('addSourcePrompt'));if(!n)return;var d=dhLoad(dhCurrent);d.sources.push({id:dhRid('s'),name:n,kind:'internal'});dhSave(dhCurrent,d);dhRender();}
+function dhEditSource(sid){var d=dhLoad(dhCurrent);var x=d.sources.filter(function(y){return y.id===sid;})[0];if(!x)return;var n=prompt(t('editName'),x.name);if(n===null)return;x.name=n;dhSave(dhCurrent,d);dhRender();}
+function dhDelSource(sid){var d=dhLoad(dhCurrent);d.sources=d.sources.filter(function(y){return y.id!==sid;});dhSave(dhCurrent,d);dhRender();}
+function dhAddDoc(){var n=prompt(t('docTitlePrompt'));if(!n)return;var d=dhLoad(dhCurrent);d.kb.push({id:dhRid('k'),title:n,note:''});dhSave(dhCurrent,d);dhRender();}
+function dhEditDoc(kid){var d=dhLoad(dhCurrent);var k=d.kb.filter(function(y){return y.id===kid;})[0];if(!k)return;var n=prompt(t('editName'),k.title);if(n===null)return;k.title=n;var note=prompt(t('editNote'),k.note||'');if(note!==null)k.note=note;dhSave(dhCurrent,d);dhRender();}
+function dhDelDoc(kid){var d=dhLoad(dhCurrent);d.kb=d.kb.filter(function(y){return y.id!==kid;});dhSave(dhCurrent,d);dhRender();}
+function dhDelFile(fid){var d=dhLoad(dhCurrent);d.files=d.files.filter(function(y){return y.id!==fid;});dhSave(dhCurrent,d);dhRender();}
+function dhPickFile(){var inp=document.getElementById('dhFileInput');if(inp){inp.value='';inp.click();}}
+function dhFileChosen(ev){var f=ev.target.files&&ev.target.files[0];if(!f||!dhCurrent)return;var kb=f.size/1024;var sz=kb<1024?(kb.toFixed(1)+' KB'):((kb/1024).toFixed(1)+' MB');var d=dhLoad(dhCurrent);var rec={id:dhRid('f'),name:f.name,size:sz,rows:0};if(/\.(csv|txt|tsv)$/i.test(f.name)){var r=new FileReader();r.onload=function(){try{rec.rows=String(r.result).split(/\r?\n/).filter(function(l){return l.trim();}).length;}catch(e){}d.files.push(rec);dhSave(dhCurrent,d);dhRender();};r.onerror=function(){d.files.push(rec);dhSave(dhCurrent,d);dhRender();};r.readAsText(f.slice(0,200000));}else{d.files.push(rec);dhSave(dhCurrent,d);dhRender();}}
+function openDataHubPicker(el){dhCurrent=null;var m=document.getElementById('dhModal');if(!m)return;m.style.display='flex';document.getElementById('dhTitle').textContent=t('dataHub');var b=document.getElementById('dhBody');b.innerHTML='<div class="dh-pick-hint">'+t('pickItem')+'</div><input id="dhPickSearch" class="dh-search" placeholder="\ud83d\udd0d" oninput="dhFilterPick(this.value)"><div id="dhPickList">'+dhPickListHtml('')+'</div>';if(currentLang==='en'){try{localizeEl(b);}catch(e){}}}
+function dhPickListHtml(q){var h='';q=(q||'').toLowerCase();dhAll().forEach(function(it){var nm=(currentLang==='en'?localizeEN(it.name):it.name)||'';if(q&&it.id.toLowerCase().indexOf(q)<0&&nm.toLowerCase().indexOf(q)<0&&(it.name||'').toLowerCase().indexOf(q)<0)return;h+='<div class="dh-pick-row" onclick="openDataHub(\''+it.id+'\')"><span class="dh-pick-id">'+it.id+'</span><span class="dh-pick-name">'+dhEsc(nm)+'</span><span class="dh-pick-arrow">\u203a</span></div>';});return h||'<div class="dh-empty">\u2014</div>';}
+function dhFilterPick(q){var l=document.getElementById('dhPickList');if(l){l.innerHTML=dhPickListHtml(q);if(currentLang==='en'){try{localizeEl(l);}catch(e){}}}}
 </script>
+<style id="dh-style">
+.dh-modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:none;align-items:center;justify-content:center;padding:16px;}
+.dh-panel{background:#fff;border-radius:16px;width:100%;max-width:560px;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.2);}
+.dh-head{display:flex;align-items:center;justify-content:space-between;padding:15px 18px;border-bottom:1px solid #eee;}
+.dh-title{font-size:15px;font-weight:700;color:#1E2761;}
+.dh-close{border:none;background:#f2f3f5;width:30px;height:30px;border-radius:8px;font-size:15px;cursor:pointer;color:#666;}
+.dh-body{padding:14px 18px 20px;overflow-y:auto;}
+.dh-back{border:none;background:none;color:#1890FF;font-size:13px;cursor:pointer;padding:0 0 10px;font-weight:600;}
+.dh-sec{margin-bottom:18px;}
+.dh-sec-h{display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:700;color:#1E2761;margin-bottom:8px;}
+.dh-add{border:1px solid #1890FF;background:#fff;color:#1890FF;font-size:12px;padding:4px 10px;border-radius:14px;cursor:pointer;font-weight:600;}
+.dh-row{display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid #eee;border-radius:10px;margin-bottom:7px;background:#fafbfc;}
+.dh-badge{color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;flex:none;}
+.dh-name{flex:1;font-size:13px;color:#333;word-break:break-all;}
+.dh-sub{color:#999;font-size:11px;}
+.dh-ic{border:none;background:none;cursor:pointer;font-size:13px;padding:2px 4px;opacity:.6;}
+.dh-empty{font-size:12px;color:#aaa;padding:8px 2px;}
+.dh-pick-hint{font-size:12px;color:#888;margin-bottom:10px;}
+.dh-search{width:100%;box-sizing:border-box;border:1px solid #eee;border-radius:10px;padding:8px 12px;font-size:13px;margin-bottom:10px;}
+.dh-pick-row{display:flex;align-items:center;gap:10px;padding:11px 10px;border-bottom:1px solid #f2f2f2;cursor:pointer;}
+.dh-pick-id{font-size:11px;font-weight:700;color:#1890FF;min-width:34px;}
+.dh-pick-name{flex:1;font-size:13px;color:#333;}
+.dh-pick-arrow{color:#ccc;}
+</style>
+<div id="dhModal" class="dh-modal">
+  <div class="dh-panel">
+    <div class="dh-head"><span id="dhTitle" class="dh-title">数据集 / 知识库</span><button class="dh-close" onclick="closeDataHub()">✕</button></div>
+    <div id="dhBody" class="dh-body"></div>
+  </div>
+  <input type="file" id="dhFileInput" accept=".csv,.xlsx,.xls,.txt,.tsv" style="display:none" onchange="dhFileChosen(event)">
+</div>
 </body>
 </html>
