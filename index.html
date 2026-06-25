@@ -2398,6 +2398,20 @@ function buildParamForm(item, msgId, type) {
     });
   }
 
+  if (typeof DATADRIVEN!=='undefined' && DATADRIVEN[item.id]) {
+    var _sd0 = (typeof loadSales==='function') ? loadSales(item.id) : null;
+    var _has0 = _sd0 && _sd0.rows && _sd0.rows.length;
+    var _st0 = _has0 ? ('\u2705 已加载 '+_sd0.skus.length+' 个SKU \u00b7 '+_sd0.rows.length+' 行') : '尚未上传，将用示例数据演示';
+    html += '<div class="param-field" style="border:1px dashed #1890FF;border-radius:8px;padding:10px;background:#F5FAFF;">';
+    html += '<label class="param-label">\ud83d\udcca 销量数据</label>';
+    html += '<div class="param-hint">上传后将按你的真实数据计算预测；不传则用示例数据。模板列：SKU,日期,当日销量,当前库存</div>';
+    html += '<div id="a2DataStatus" style="font-size:12px;margin:4px 0 8px;color:'+(_has0?'#52C41A':'#666')+';">'+_st0+'</div>';
+    html += '<div style="display:flex;gap:8px;flex-wrap:wrap;">';
+    html += '<button type="button" onclick="downloadSalesTemplate()" style="background:#fff;border:1px solid #1890FF;color:#1890FF;padding:7px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;">\ud83d\udcc4 下载模板</button>';
+    html += '<button type="button" onclick="document.getElementById(\'a2DataFile\').click()" style="background:#1890FF;border:none;color:#fff;padding:7px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;">\ud83d\udcce 上传销量CSV</button>';
+    html += '<input type="file" id="a2DataFile" accept=".csv,.txt,.tsv" style="display:none" onchange="a2DataUpload(event)">';
+    html += '</div></div>';
+  }
   html += '<div class="param-meta">';
   html += '<div><strong>数据来源(内部):</strong> ' + (item.dataSources && item.dataSources.internal || '-') + '</div>';
   if (item.dataSources && item.dataSources.external) html += '<div><strong>数据来源(外部):</strong> ' + item.dataSources.external + '</div>';
@@ -2922,11 +2936,26 @@ function renderResultBody(item, values){
         rTable(['排名','门店','潜力分','推荐理由'],rows);
     }
     case 'A2': {
-      var cat=v.skuCategory||'气泡茶', days=v.forecastDays||'7天';
+      var days=parseInt((v.forecastDays||'7天'),10)||7;
+      var sd=loadSales('A2');
+      if(sd&&sd.rows&&sd.rows.length){
+        var fc=computeForecast(sd,days),top=fc.slice(0,6);
+        var maxRep=Math.max.apply(null,fc.map(function(x){return x.rep||1}))||1;
+        var bars=top.map(function(o){
+          return {label:o.sku+' \u00b7 日均'+o.avg+' \u00b7 库存'+o.stock,value:'建议补'+o.rep,pct:Math.max(6,Math.round(o.rep/maxRep*100)),color:(o.cover<days?'#FAAD14':'#00C39A')};
+        });
+        var risk=top.some(function(o){return o.cover<days;});
+        var rows=top.map(function(o){return [o.sku,String(o.avg),String(o.need),String(o.stock),(o.cover>=999?'充足':o.cover.toFixed(1)+'天'),'<b>'+o.rep+'</b>'];});
+        return '<div style="margin-bottom:6px;">基于你上传的 <b>'+sd.rows.length+'</b> 行销量数据（'+sd.skus.length+' 个SKU，'+(sd.minDate||'')+'~'+(sd.maxDate||'')+'），未来 <b>'+days+'</b> 天预测与建议补货：</div>'+
+          rBars(bars)+
+          rTable(['SKU','日均',days+'天需求','当前库存','可撑','建议补货'],rows)+
+          '<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">库存风险：'+(risk?'<span style="color:#FAAD14;font-weight:600;">\ud83d\udfe1 部分SKU可撑天数 < 预测周期，需尽快补货</span>':'<span style="color:#52C41A;font-weight:600;">\ud83d\udfe2 绿色（安全）</span>')+'</div>';
+      }
+      var cat=v.skuCategory||'气泡茶', days2=v.forecastDays||'7天';
       var data=(cat==='全部'||cat==='全部品类')
-        ? [{label:'气泡茶330ml · 日均1,250箱',value:'补3,500箱',pct:70,color:'#00C39A'},{label:'矿泉水550ml · 日均2,100箱',value:'补5,800箱',pct:92},{label:'果汁250ml · 日均680箱',value:'补1,900箱',pct:45}]
-        : [{label:cat+' 主SKU · 日均1,250箱',value:'补3,500箱',pct:70,color:'#00C39A'},{label:cat+' 次SKU · 日均640箱',value:'补1,800箱',pct:42}];
-      return '<div style="margin-bottom:6px;">未来 '+days+' <b>'+cat+'</b> SKU 级销量预测与建议补货量：</div>'+rBars(data)+
+        ? [{label:'气泡茶330ml \u00b7 日均1,250箱',value:'补3,500箱',pct:70,color:'#00C39A'},{label:'矿泉水550ml \u00b7 日均2,100箱',value:'补5,800箱',pct:92},{label:'果汁250ml \u00b7 日均680箱',value:'补1,900箱',pct:45}]
+        : [{label:cat+' 主SKU \u00b7 日均1,250箱',value:'补3,500箱',pct:70,color:'#00C39A'},{label:cat+' 次SKU \u00b7 日均640箱',value:'补1,800箱',pct:42}];
+      return '<div style="margin-bottom:6px;">未来 '+days2+' <b>'+cat+'</b> SKU 级销量预测与建议补货量（示例数据，上传CSV后按真实数据计算）：</div>'+rBars(data)+
         '<div style="font-size:12px;color:var(--text-secondary);">库存风险：<span style="color:#52C41A;font-weight:600;">绿色（安全）</span></div>';
     }
     case 'A3': case 'S1': {
@@ -3326,7 +3355,7 @@ function generateMockLLM(item, values) {
   // 参数感知解读：仅覆盖会被参数筛选/改变、否则会与结果矛盾的场景
   if(currentLang!=='en') switch(item.id){
     case 'A1': { var r1=v.range||'华东大区', t1=v.topN||20; return '已在'+r1+'按所选维度排序输出 Top '+t1+'。建议优先攻坚榜单前列的 CVS 便利连锁，转化潜力更高；可衔接 A3 路径规划串点拜访。'; }
-    case 'A2': { var c2=v.skuCategory||'气泡茶', d2=v.forecastDays||'7天'; return '未来'+d2+'，'+c2+'受高温推动需求上行，建议提前增加安全库存；其余品类按常规补货，避免资金占用。'; }
+    case 'A2': { var sd2=loadSales('A2'); if(sd2&&sd2.rows&&sd2.rows.length){ var _d=parseInt((v.forecastDays||'7天'),10)||7; var fc2=computeForecast(sd2,_d); var topo=fc2[0]; var urg=fc2.filter(function(x){return x.cover<_d;}); return '已按你上传的 '+sd2.rows.length+' 行真实销量计算。最需补货的是 '+(topo?topo.sku:'-')+'（建议补 '+(topo?topo.rep:0)+'）。'+(urg.length?('有 '+urg.length+' 个SKU库存可撑天数低于预测周期，建议优先补货以防断货。'):'整体库存可支撑预测周期，按建议量补货即可。'); } var c2=v.skuCategory||'气泡茶', d2=v.forecastDays||'7天'; return '未来'+d2+'，'+c2+'受高温推动需求上行，建议提前增加安全库存；其余品类按常规补货，避免资金占用。'; }
     case 'A4': { var ct=v.checkType||'两者都执行'; if(ct==='ROI费效计算') return 'ROI 1.35 表现良好，增量销量 +12.5%（vs 对照组）。建议把预算向高 ROI 活动集中，低效活动及时止损。'; if(ct==='照片合规审核') return '陈列合规通过率 85%，10% 驳回多因排面不足。建议对驳回门店限期整改并复查照片真实性。'; return '费效与合规一并核验：ROI 1.35 良好，仍有 10% 陈列驳回需跟进，建议对存疑门店复查。'; }
     case 'A5': { var sc=v.scenario||'买二送一'; return '在所选「'+sc+'」等方案中，买二送一达成概率最高(78%)、性价比最优，建议采用；注意备货以防旺季缺货。'; }
     case 'A14': { var c14=v.category||'全部品类'; if(c14==='全部品类') return '促销日历已平衡各品类冲突；果汁新品推广 ROI 最高(2.1)，建议配合中秋节点加大投入。'; return '已按「'+c14+'」筛选排期，该品类活动 ROI 稳健；建议聚焦其旺季节点，避免与竞品同期撞档。'; }
@@ -3824,6 +3853,67 @@ function renderOrchestration(res){
 }
 
 // 下载数据分析模板(供用户填好后上传)
+/* ===== A2 销量数据驱动 (真实可用样板) ===== */
+var DATADRIVEN={A2:{kind:'sales'}};
+function salesKey(id){return 'ebest_sales_'+id;}
+function saveSales(id,p){try{localStorage.setItem(salesKey(id),JSON.stringify(p));}catch(e){}}
+function loadSales(id){try{var r=localStorage.getItem(salesKey(id));if(r)return JSON.parse(r);}catch(e){}return null;}
+function clearSales(id){try{localStorage.removeItem(salesKey(id));}catch(e){}}
+function parseSalesCSV(text){
+  var lines=String(text).split(/\r?\n/).filter(function(l){return l.trim();});
+  if(!lines.length)return {rows:[],skus:[],minDate:'',maxDate:''};
+  var start=0;
+  if(/SKU|sku|日期|销量|库存|date|sales|stock/i.test(lines[0]))start=1;
+  var rows=[],sk={},minD='',maxD='';
+  for(var i=start;i<lines.length;i++){
+    var c=lines[i].split(/[,\t]/);
+    if(c.length<3)continue;
+    var sku=(c[0]||'').trim();
+    var date=(c[1]||'').trim();
+    var sales=parseFloat((c[2]||'').replace(/[^0-9.\-]/g,''));
+    var stock=c.length>3?parseFloat((c[3]||'').replace(/[^0-9.\-]/g,'')):NaN;
+    if(!sku||isNaN(sales))continue;
+    rows.push({sku:sku,date:date,sales:sales,stock:stock});
+    sk[sku]=1;
+    if(date){if(!minD||date<minD)minD=date;if(!maxD||date>maxD)maxD=date;}
+  }
+  return {rows:rows,skus:Object.keys(sk),minDate:minD,maxDate:maxD};
+}
+function computeForecast(p,days){
+  var by={};
+  p.rows.forEach(function(r){
+    if(!by[r.sku])by[r.sku]={sum:0,n:0,stock:NaN,last:''};
+    by[r.sku].sum+=r.sales;by[r.sku].n++;
+    if(!isNaN(r.stock)&&(r.date>=by[r.sku].last)){by[r.sku].stock=r.stock;by[r.sku].last=r.date;}
+  });
+  var out=[];
+  Object.keys(by).forEach(function(s){
+    var o=by[s],avg=o.n?o.sum/o.n:0,need=Math.round(avg*days),stock=isNaN(o.stock)?0:o.stock;
+    var safety=Math.round(avg*3),rep=Math.max(0,need+safety-stock),cover=avg>0?stock/avg:999;
+    out.push({sku:s,avg:Math.round(avg),need:need,stock:stock,rep:rep,cover:cover});
+  });
+  out.sort(function(a,b){return b.rep-a.rep;});
+  return out;
+}
+function downloadSalesTemplate(){
+  var csv='SKU,日期,当日销量,当前库存\n气泡茶330ml,2026-05-01,120,800\n气泡茶330ml,2026-05-02,135,665\n气泡茶330ml,2026-05-03,128,537\n矿泉水550ml,2026-05-01,210,1500\n矿泉水550ml,2026-05-02,198,1290\n矿泉水550ml,2026-05-03,225,1065\n';
+  var blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='补货预测-销量模板.csv';a.click();
+}
+function a2SetStatus(txt,ok){var el=document.getElementById('a2DataStatus');if(el){el.innerHTML=txt;el.style.color=ok?'#52C41A':'#666';}}
+function a2DataUpload(ev){
+  var f=ev.target.files&&ev.target.files[0];if(!f)return;
+  var r=new FileReader();
+  r.onload=function(){
+    var p=parseSalesCSV(String(r.result));
+    if(!p.rows.length){a2SetStatus('\u26a0\ufe0f 没读到有效数据，请检查列是否为 SKU,日期,当日销量,当前库存',false);return;}
+    saveSales('A2',p);
+    a2SetStatus('\u2705 已加载 '+p.skus.length+' 个SKU \u00b7 '+p.rows.length+' 行 \u00b7 '+(p.minDate||'?')+' ~ '+(p.maxDate||'?')+'（点"确认执行"看结果）',true);
+  };
+  r.onerror=function(){a2SetStatus('\u26a0\ufe0f 文件读取失败',false);};
+  r.readAsText(f);
+}
+
 function downloadTemplate() {
   var csv = '门店名称,渠道类型,品类,本周销量(箱),期末库存(箱),陈列是否达标\n' +
     '全家-南京西路店,CVS便利,气泡茶,120,30,是\n' +
