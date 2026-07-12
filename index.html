@@ -1316,8 +1316,7 @@ function setupEventListeners() {
     renderMentionList();
   });
 
-  // 8. Quick action buttons
-  bindQuickActions();
+  // 8. Quick action buttons already bound above (avoid double-binding)
 
   // 9. Param form controls (event delegation for dynamic content)
   document.addEventListener('change', function(e) {
