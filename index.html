@@ -2339,10 +2339,57 @@ function buildParamForm(item, msgId, type) {
   let html = '<div class="param-card" id="paramCard_' + msgId + '">';
   html += '<div class="param-card-header">';
   html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="' + (item.status==='core'?'#1890FF':'#52C41A') + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>';
-  html += '<span class="param-card-title">' + item.id + ' ' + item.name + ' - 参数配置</span>';
+  html += '<span class="param-card-title">' + item.id + ' ' + item.name + '</span>';
   html += '</div>';
 
-  if (!item.params || item.params.length === 0) {
+  // 特殊处理 A2：改为数据绑定模式而不是参数填空
+  if (item.id === 'A2') {
+    html += '<div style="font-size:13px;color:#666;margin-bottom:12px;padding:8px;background:#f0f7ff;border-radius:8px;border-left:3px solid #1890FF;">';
+    html += '✨ <strong>数据驱动的补货预测</strong>：上传你的销量数据，系统将基于真实数据生成精准的补货建议。';
+    html += '</div>';
+    
+    // DMS 数据源清单
+    html += '<div class="param-field" style="border:1px solid #E8E8E8;border-radius:8px;padding:12px;margin-bottom:12px;background:#FAFBFC;">';
+    html += '<div style="font-weight:700;font-size:13px;color:#1E2761;margin-bottom:8px;">📊 DMS - 门店历史订单</div>';
+    html += '<div style="font-size:12px;color:#666;margin-bottom:8px;">';
+    html += '<strong>必填字段：</strong><br>';
+    html += '• <code style="background:#fff;padding:2px 4px;border-radius:4px;">SKU</code> - 商品编码或名称<br>';
+    html += '• <code style="background:#fff;padding:2px 4px;border-radius:4px;">日期</code> - 交易日期（YYYY-MM-DD 格式）<br>';
+    html += '• <code style="background:#fff;padding:2px 4px;border-radius:4px;">当日销量</code> - 该日销售数量<br>';
+    html += '• <code style="background:#fff;padding:2px 4px;border-radius:4px;">当前库存</code> - 该日期末库存数<br>';
+    html += '</div>';
+    html += '<div style="font-size:12px;color:#999;margin-bottom:8px;">';
+    html += '<strong>推荐：</strong>提供至少 30 天的历史数据（样本越多预测越准）。';
+    html += '</div>';
+    html += '<div style="font-size:12px;color:#999;">';
+    html += '<strong>示例：</strong> 气泡茶330ml, 2026-05-01, 120, 800';
+    html += '</div>';
+    html += '</div>';
+    
+    // 数据上传部分
+    var _sd0 = (typeof loadSales==='function') ? loadSales(item.id) : null;
+    var _has0 = _sd0 && _sd0.rows && _sd0.rows.length;
+    var _st0 = _has0 ? ('\u2705 已加载 '+_sd0.rows.length+' 行 / '+_sd0.skus.length+' 个SKU / '+_sd0.minDate+'~'+_sd0.maxDate) : '⚠️ 尚未上传（将用示例数据演示）';
+    html += '<div class="param-field" style="border:1px solid #1890FF;border-radius:8px;padding:12px;background:#F5FAFF;">';
+    html += '<div style="font-weight:700;font-size:13px;color:#1E2761;margin-bottom:8px;">📤 上传你的销量数据</div>';
+    html += '<div id="a2DataStatus" style="font-size:12px;margin-bottom:10px;padding:8px;border-radius:6px;background:#fff;border-left:3px solid '+(_has0?'#52C41A':'#FAAD14')+';">'+_st0+'</div>';
+    html += '<div style="display:flex;gap:8px;flex-wrap:wrap;">';
+    html += '<button type="button" onclick="downloadSalesTemplate()" style="background:#fff;border:1px solid #1890FF;color:#1890FF;padding:7px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;">\ud83d\udcc4 下载CSV模板</button>';
+    html += '<button type="button" onclick="document.getElementById(\'a2DataFile\').click()" style="background:#1890FF;border:none;color:#fff;padding:7px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;">\ud83d\udcce 上传销量数据</button>';
+    html += '<input type="file" id="a2DataFile" accept=".csv,.txt,.tsv" style="display:none" onchange="a2DataUpload(event)">';
+    html += '</div>';
+    html += '</div>';
+    
+    // 预测参数（简化）
+    html += '<div class="param-field">';
+    html += '<label class="param-label">预测周期（可选）</label>';
+    html += '<select class="param-select param-input-forecastDays" data-param="forecastDays">';
+    html += '<option value="7天" selected>7 天</option>';
+    html += '<option value="14天">14 天</option>';
+    html += '<option value="30天">30 天</option>';
+    html += '</select>';
+    html += '</div>';
+  } else if (!item.params || item.params.length === 0) {
     html += '<div style="font-size:13px;color:var(--text-secondary);padding:12px 0;">此功能无需配置参数</div>';
   } else {
     item.params.forEach(p => {
@@ -2396,21 +2443,6 @@ function buildParamForm(item, msgId, type) {
       }
       html += '</div>';
     });
-  }
-
-  if (typeof DATADRIVEN!=='undefined' && DATADRIVEN[item.id]) {
-    var _sd0 = (typeof loadSales==='function') ? loadSales(item.id) : null;
-    var _has0 = _sd0 && _sd0.rows && _sd0.rows.length;
-    var _st0 = _has0 ? ('\u2705 已加载 '+_sd0.skus.length+' 个SKU \u00b7 '+_sd0.rows.length+' 行') : '尚未上传，将用示例数据演示';
-    html += '<div class="param-field" style="border:1px dashed #1890FF;border-radius:8px;padding:10px;background:#F5FAFF;">';
-    html += '<label class="param-label">\ud83d\udcca 销量数据</label>';
-    html += '<div class="param-hint">上传后将按你的真实数据计算预测；不传则用示例数据。模板列：SKU,日期,当日销量,当前库存</div>';
-    html += '<div id="a2DataStatus" style="font-size:12px;margin:4px 0 8px;color:'+(_has0?'#52C41A':'#666')+';">'+_st0+'</div>';
-    html += '<div style="display:flex;gap:8px;flex-wrap:wrap;">';
-    html += '<button type="button" onclick="downloadSalesTemplate()" style="background:#fff;border:1px solid #1890FF;color:#1890FF;padding:7px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;">\ud83d\udcc4 下载模板</button>';
-    html += '<button type="button" onclick="document.getElementById(\'a2DataFile\').click()" style="background:#1890FF;border:none;color:#fff;padding:7px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;">\ud83d\udcce 上传销量CSV</button>';
-    html += '<input type="file" id="a2DataFile" accept=".csv,.txt,.tsv" style="display:none" onchange="a2DataUpload(event)">';
-    html += '</div></div>';
   }
   html += '<div class="param-meta">';
   html += '<div><strong>数据来源(内部):</strong> ' + (item.dataSources && item.dataSources.internal || '-') + '</div>';
@@ -4029,17 +4061,17 @@ function downloadSalesTemplate(){
   var blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='补货预测-销量模板.csv';a.click();
 }
-function a2SetStatus(txt,ok){var el=document.getElementById('a2DataStatus');if(el){el.innerHTML=txt;el.style.color=ok?'#52C41A':'#666';}}
+function a2SetStatus(txt,ok){var el=document.getElementById('a2DataStatus');if(el){el.innerHTML='<strong>'+txt+'</strong>';el.style.borderLeftColor=ok?'#52C41A':'#FAAD14';el.style.color=ok?'#1E2761':'#1E2761';}}
 function a2DataUpload(ev){
   var f=ev.target.files&&ev.target.files[0];if(!f)return;
   var r=new FileReader();
   r.onload=function(){
     var p=parseSalesCSV(String(r.result));
-    if(!p.rows.length){a2SetStatus('\u26a0\ufe0f 没读到有效数据，请检查列是否为 SKU,日期,当日销量,当前库存',false);return;}
+    if(!p.rows.length){a2SetStatus('⚠️ 文件中没有有效数据 | 请检查列名是否为：SKU, 日期, 当日销量, 当前库存',false);return;}
     saveSales('A2',p);
-    a2SetStatus('\u2705 已加载 '+p.skus.length+' 个SKU \u00b7 '+p.rows.length+' 行 \u00b7 '+(p.minDate||'?')+' ~ '+(p.maxDate||'?')+'（点"确认执行"看结果）',true);
+    a2SetStatus('✅ 已加载 '+p.rows.length+' 行数据 / '+p.skus.length+' 个SKU / '+p.minDate+'～'+p.maxDate,true);
   };
-  r.onerror=function(){a2SetStatus('\u26a0\ufe0f 文件读取失败',false);};
+  r.onerror=function(){a2SetStatus('❌ 文件读取失败，请重试',false);};
   r.readAsText(f);
 }
 
