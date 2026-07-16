@@ -1499,7 +1499,7 @@ const agents = [
       {name:'photoUpload', label:'上传照片/视频', type:'file', accept:'image/*,video/*', multiple:true, hint:'在不同点位各拍1张(入口/主货架/陈列/竞品/收银…),即可在点位间VR漫游;也可录一段环店视频'},
       {name:'analyzeFocus', label:'重点分析', type:'multi-select', options:['陈列还原','SKU识别占比','缺货位检测','竞品分布','端架堆头合规'], default:['陈列还原','SKU识别占比','缺货位检测']}
     ],
-    dataSources:{internal:'SFA(现场采集照片/视频)/DMS(门店主数据)/品类管理部(陈列标准)', external:'如视Realsee三维重建API/CV货架识别模型'},
+    dataSources:{internal:'SFA(现场采集照片/视频)/DMS(门店主数据)/品类管理部(陈列标准)', external:'CV货架识别模型'},
     output:'门店三维数字孪生(可旋转漫游) + 货架陈列还原 + SKU识别与货架占比 + 缺货位清单 + 陈列合规评分 + 整改建议'
   }
 ];
@@ -2362,14 +2362,15 @@ function buildParamForm(item, msgId, type) {
     html += '<strong>推荐：</strong>提供至少 30 天的历史数据（样本越多预测越准）。';
     html += '</div>';
     html += '<div style="font-size:12px;color:#999;">';
-    html += '<strong>示例：</strong> 气泡茶330ml, 2026-05-01, 120, 800';
+    html += '<strong>示例：</strong> 白桃气泡茶330ml, '+(function(){var d=new Date(Date.now()-86400000);var p=function(n){return ('0'+n).slice(-2);};return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());})()+', 49, 219';
     html += '</div>';
     html += '</div>';
     
     // 数据上传部分
     var _sd0 = (typeof loadSales==='function') ? loadSales(item.id) : null;
     var _has0 = _sd0 && _sd0.rows && _sd0.rows.length;
-    var _st0 = _has0 ? ('\u2705 已加载 '+_sd0.rows.length+' 行 / '+_sd0.skus.length+' 个SKU / '+_sd0.minDate+'~'+_sd0.maxDate) : '⚠️ 尚未上传（将用示例数据演示）';
+    var _udf=(typeof localStorage!=='undefined'&&localStorage.getItem('ebest_sales_src')==='default');
+    var _st0 = _has0 ? (_udf ? ('\ud83d\udce6 平台默认演示数据：'+(_sd0.store||'演示门店')+' · '+_sd0.rows.length+' 行 / '+_sd0.skus.length+' 个SKU / '+_sd0.minDate+'~'+_sd0.maxDate+' · 每日自动更新，上传你自己的数据即可替换') : ('\u2705 已加载你上传的 '+_sd0.rows.length+' 行 / '+_sd0.skus.length+' 个SKU / '+_sd0.minDate+'~'+_sd0.maxDate)) : '⚠️ 尚未上传（将用平台默认演示数据演示）';
     html += '<div class="param-field" style="border:1px solid #1890FF;border-radius:8px;padding:12px;background:#F5FAFF;">';
     html += '<div style="font-weight:700;font-size:13px;color:#1E2761;margin-bottom:8px;">📤 上传你的销量数据</div>';
     html += '<div id="a2DataStatus" style="font-size:12px;margin-bottom:10px;padding:8px;border-radius:6px;background:#fff;border-left:3px solid '+(_has0?'#52C41A':'#FAAD14')+';">'+_st0+'</div>';
@@ -2986,7 +2987,7 @@ function renderResultBody(item, values){
         });
         var risk=top.some(function(o){return o.cover<days;});
         var rows=top.map(function(o){return [o.sku,String(o.avg),String(o.need),String(o.stock)+(o.stockDate?' <span style="color:#999;font-size:11px;">截至'+_fmtRange(o.stockDate)+'</span>':''),(o.cover>=999?'充足':o.cover.toFixed(1)+'天'),'<b>'+o.rep+'</b>'];});
-        return '<div style="margin-bottom:6px;">基于你上传的 <b>'+sd.rows.length+'</b> 行历史销量（'+sd.skus.length+' 个SKU，'+(sd.minDate||'')+'~'+(sd.maxDate||'')+'），用 <b>趋势+周季节性+事件加权</b> 预测未来 <b>'+days+'</b> 天：</div>'+
+        return '<div style="margin-bottom:6px;">'+((typeof localStorage!=='undefined'&&localStorage.getItem('ebest_sales_src')==='default')?'基于平台默认演示数据（'+(sd.store||'演示门店')+'）':'基于你上传的')+' <b>'+sd.rows.length+'</b> 行历史销量（'+sd.skus.length+' 个SKU，'+(sd.minDate||'')+'~'+(sd.maxDate||'')+'），用 <b>趋势+周季节性+事件加权</b> 预测未来 <b>'+days+'</b> 天：</div>'+
           eventExpl+
           chart+
           rBars(bars)+
@@ -3397,7 +3398,10 @@ function generateMockLLM(item, values) {
   // 参数感知解读：仅覆盖会被参数筛选/改变、否则会与结果矛盾的场景
   if(currentLang!=='en') switch(item.id){
     case 'A1': { var r1=v.range||'华东大区', t1=v.topN||20; return '已在'+r1+'按所选维度排序输出 Top '+t1+'。建议优先攻坚榜单前列的 CVS 便利连锁，转化潜力更高；可衔接 A3 路径规划串点拜访。'; }
-    case 'A2': { _fcRegion=v.region||''; var sd2=loadSales('A2'); if(sd2&&sd2.rows&&sd2.rows.length){ var _d=parseInt((v.forecastDays||'7天'),10)||7; var fc2=computeForecast(sd2,_d); var topo=fc2[0]; var urg=fc2.filter(function(x){return x.cover<_d;}); var trd=topo?(topo.trendPct>5?('呈上升趋势(+'+topo.trendPct+'%)'):(topo.trendPct<-5?('呈下降趋势('+topo.trendPct+'%)'):'走势平稳')):''; var _cat=topo?skuCat(topo.sku):'饮料'; var _evs=activeEvents(_cat,_fcToday(),_d); var _evTxt=''; if(_evs.length){ var _s2=0; for(var _k=0;_k<_d;_k++){var _dd=_fcAddDays(_fcToday(),_k);_s2+=externalDayFactor(topo?topo.sku:'',_dd);} var _net=Math.round((_s2/_d-1)*100); _evTxt='当前（'+_fmtRange(_fcToday())+'）命中 '+_evs.map(function(e){return e.name;}).join('、')+' 等事件，综合净效应 '+(_net>=0?'+':'')+_net+'%，已计入预测。'; } return '已按你上传的 '+sd2.rows.length+' 行历史销量，用趋势+周季节性+事件加权预测。最需补货的是 '+(topo?topo.sku:'-')+'（'+trd+'，建议补 '+(topo?topo.rep:0)+'）。'+_evTxt+(urg.length?('有 '+urg.length+' 个SKU库存可撑天数低于预测周期，建议优先补货以防断货。'):'整体库存可支撑预测周期，按建议量补货即可。'); } var c2=v.skuCategory||'气泡茶', d2=v.forecastDays||'7天'; return '未来'+d2+'，'+c2+'受高温推动需求上行，建议提前增加安全库存；其余品类按常规补货，避免资金占用。'; }
+    case 'A2': { _fcRegion=v.region||''; var sd2=loadSales('A2'); if(sd2&&sd2.rows&&sd2.rows.length){ var _d=parseInt((v.forecastDays||'7天'),10)||7; var fc2=computeForecast(sd2,_d); var topo=fc2[0]; var urg=fc2.filter(function(x){return x.cover<_d;}); var trd=topo?(topo.trendPct>5?('呈上升趋势(+'+topo.trendPct+'%)'):(topo.trendPct<-5?('呈下降趋势('+topo.trendPct+'%)'):'走势平稳')):''; var _cat=topo?skuCat(topo.sku):'饮料'; var _evs=activeEvents(_cat,_fcToday(),_d); var _evTxt=''; if(_evs.length){ var _s2=0; for(var _k=0;_k<_d;_k++){var _dd=_fcAddDays(_fcToday(),_k);_s2+=externalDayFactor(topo?topo.sku:'',_dd);} var _net=Math.round((_s2/_d-1)*100); _evTxt='当前（'+_fmtRange(_fcToday())+'）命中 '+_evs.map(function(e){return e.name;}).join('、')+' 等事件，综合净效应 '+(_net>=0?'+':'')+_net+'%，已计入预测。'; } var _ud2=(typeof localStorage!=='undefined'&&localStorage.getItem('ebest_sales_src')==='user');
+      var _gapD2=sd2.maxDate?Math.round((Date.parse(_fcToday())-Date.parse(sd2.maxDate))/86400000):0;
+      var _gapHint=(_ud2&&_gapD2>14)?(' ⚠️ 你传的是 '+sd2.maxDate.slice(0,7)+' 的数据，到今天隔了 '+_gapD2+' 天——建议先更新数据再按量下单，本次结果只作保守参考。'):'';
+      return '已按'+(_ud2?'你上传的 ':'平台默认演示数据 ')+sd2.rows.length+' 行历史销量（'+sd2.minDate+'~'+sd2.maxDate+'），用趋势+周季节性+事件加权预测。最需补货的是 '+(topo?topo.sku:'-')+'（'+trd+'，建议补 '+(topo?topo.rep:0)+'）。'+_evTxt+(urg.length?('有 '+urg.length+' 个SKU库存可撑天数低于预测周期，建议优先补货以防断货。'):'整体库存可支撑预测周期，按建议量补货即可。')+_gapHint; } var c2=v.skuCategory||'气泡茶', d2=v.forecastDays||'7天'; return '未来'+d2+'，'+c2+'受高温推动需求上行，建议提前增加安全库存；其余品类按常规补货，避免资金占用。'; }
     case 'A4': { var ct=v.checkType||'两者都执行'; if(ct==='ROI费效计算') return 'ROI 1.35 表现良好，增量销量 +12.5%（vs 对照组）。建议把预算向高 ROI 活动集中，低效活动及时止损。'; if(ct==='照片合规审核') return '陈列合规通过率 85%，10% 驳回多因排面不足。建议对驳回门店限期整改并复查照片真实性。'; return '费效与合规一并核验：ROI 1.35 良好，仍有 10% 陈列驳回需跟进，建议对存疑门店复查。'; }
     case 'A5': { var sc=v.scenario||'买二送一'; return '在所选「'+sc+'」等方案中，买二送一达成概率最高(78%)、性价比最优，建议采用；注意备货以防旺季缺货。'; }
     case 'A14': { var c14=v.category||'全部品类'; if(c14==='全部品类') return '促销日历已平衡各品类冲突；果汁新品推广 ROI 最高(2.1)，建议配合中秋节点加大投入。'; return '已按「'+c14+'」筛选排期，该品类活动 ROI 稳健；建议聚焦其旺季节点，避免与竞品同期撞档。'; }
@@ -3630,6 +3634,504 @@ var EN_FIX13={"在不同点位各拍1张(入口/主货架/陈列/竞品/收银�
 var EN_FIX14={"引导环拍360°（站着原地转一圈·自动拍）":"Guided 360° capture (stand & rotate in place)"};for(var _f14 in EN_FIX14){EN_DICT[_f14]=EN_FIX14[_f14];}EN_KEYS=Object.keys(EN_DICT).sort(function(a,b){return b.length-a.length;});
 var EN_FIX15={"AI 货架识别（本品 vs 竞品 · 缺货位）":"AI Shelf Reading (ours vs competitors · OOS)","的三维重建与货架智能分析":"3D reconstruction & shelf intelligence","门店数字孪生 · 8 个点位":"Store digital twin · 8 spots","进入3D漫游":"Enter 3D Walkthrough","点击看大图":"Tap to enlarge","本品货架占比":"Our share of shelf","缺货/问题点":"OOS / issues","陈列合规分":"Compliance score","3 处":"3"};for(var _f15 in EN_FIX15){EN_DICT[_f15]=EN_FIX15[_f15];}EN_KEYS=Object.keys(EN_DICT).sort(function(a,b){return b.length-a.length;});
 var EN_FIX16={"门店实拍（点击放大）":"Store photos (tap to enlarge)"};for(var _f16 in EN_FIX16){EN_DICT[_f16]=EN_FIX16[_f16];}EN_KEYS=Object.keys(EN_DICT).sort(function(a,b){return b.length-a.length;});
+var EN_FIX17={"平台默认数据集":"Platform default datasets","平台默认知识库":"Platform default knowledge base","查看":"View","查看/编辑":"View / Edit","编辑":"Edit","保存":"Save","未接入":"Not connected","维度表":"Dimension","事实表":"Fact","政策规则":"Policy","外部表":"External","CV货架识别模型":"CV shelf recognition model","每日自动更新，上传你自己的数据即可替换":"auto-refreshed daily; upload your own data to replace","平台默认演示数据":"Platform default demo data"};for(var _f17 in EN_FIX17){EN_DICT[_f17]=EN_FIX17[_f17];}EN_KEYS=Object.keys(EN_DICT).sort(function(a,b){return b.length-a.length;});
+// ==================== 平台默认数据集（RTM）· 锚定今天动态生成 ====================
+/* 交接文档第4/5节落地：维度表(D01-D05)+事实表(F01/F02/F04b/F06/F09)+政策规则+外部表。
+   F01 是地基（32个技能共用）。数据为合成演示数据，每日锚定 new Date() 自动更新，保证数据新鲜度。 */
+var RTM = (function(){
+  function mulberry32(a){return function(){a|=0;a=(a+0x6D2B79F5)|0;var t=Math.imul(a^(a>>>15),a|1);t=(t+Math.imul(t^(t>>>7),t|61))^t;return ((t^(t>>>14))>>>0)/4294967296;};}
+  function hstr(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+  function pad2(n){return ('0'+n).slice(-2);}
+  function todayStr(){var d=new Date();return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());}
+  function addDays(ds,k){var d=new Date(Date.parse(ds)+k*86400000);return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());}
+  var TODAY=todayStr(), YEST=addDays(TODAY,-1), HIST_FROM=addDays(TODAY,-89);
+  var YY=TODAY.slice(0,4);
+
+  /* ---------- D01 产品主数据（饮料+休闲食品；单位阶梯见KB《单位与箱规换算》） ---------- */
+  /* sku,品类,规格,最小单位,箱规,出厂价(元/最小单位),成本率,日销基数,保质期(天),主推,卖点 */
+  var P_ROWS=[
+    ['可乐330ml','碳酸饮料','330ml','听',24,2.0,0.62,18600,540,1,'经典口味，流通硬通货，餐饮/GT动销王'],
+    ['可乐500ml','碳酸饮料','500ml','瓶',24,2.8,0.62,16200,540,0,'大容量高客单，KA家庭装主力'],
+    ['柠檬汽水330ml','碳酸饮料','330ml','听',24,1.8,0.60,10800,540,0,'高性价比走量款，GT价格敏感客群'],
+    ['白桃气泡茶330ml','气泡茶','330ml','听',24,3.5,0.58,6240,360,1,'0糖0脂+真实白桃果汁，年轻客群复购率第一'],
+    ['青梅气泡茶330ml','气泡茶','330ml','听',24,3.5,0.58,5040,360,0,'解腻佐餐场景，餐饮渠道搭配利器'],
+    ['气泡茶480ml','气泡茶','480ml','瓶',24,4.0,0.58,4080,360,0,'大瓶分享装，CVS冰柜陈列主推'],
+    ['矿泉水550ml','矿泉水','550ml','瓶',24,1.2,0.55,9800,720,0,'基础走量品，高温季节弹性最大'],
+    ['矿泉水350ml','矿泉水','350ml','瓶',24,1.0,0.55,6200,720,0,'小瓶即饮，会议/餐饮配套'],
+    ['橙汁300ml','果汁','300ml','瓶',12,3.0,0.60,2600,270,0,'30%果汁含量，早餐场景'],
+    ['苹果汁300ml','果汁','300ml','瓶',12,3.0,0.60,2000,270,0,'儿童家庭客群，KA礼盒搭赠'],
+    ['能量饮料250ml','功能性饮料','250ml','罐',24,4.5,0.60,3000,540,0,'驾驶/加班场景，夜间动销占比高'],
+    ['电解质水500ml','功能性饮料','500ml','瓶',15,3.8,0.58,2400,360,1,'运动补水新赛道，夏季增速最快的SKU'],
+    ['薯片原味70g','膨化食品','70g','袋',24,4.5,0.65,2200,270,1,'经典原味，货架渗透率最高的零食SKU'],
+    ['薯片番茄味70g','膨化食品','70g','袋',24,4.5,0.65,1800,270,0,'番茄味青少年偏好，校园店主推'],
+    ['玉米片40g','膨化食品','40g','袋',36,3.0,0.63,1400,270,0,'小袋低客单，GT/校园渠道走量'],
+    ['夹心饼干97g','饼干糕点','97g','盒',24,4.0,0.62,1600,360,0,'下午茶场景，CVS收银台陈列'],
+    ['苏打饼干100g','饼干糕点','100g','袋',30,3.5,0.62,1200,360,0,'中老年客群，GT复购稳定'],
+    ['每日坚果25g','坚果炒货','25g','袋',60,5.5,0.66,1400,300,1,'每日一袋健康概念，礼盒/年节爆发力强'],
+    ['瓜子110g','坚果炒货','110g','袋',40,4.0,0.64,1300,300,0,'看电视/聚会场景，GT传统强项'],
+    ['卤香豆干80g','休闲卤味','80g','袋',50,3.0,0.62,1000,240,0,'高蛋白咸口零食，加班/夜宵场景']
+  ];
+  var PRODUCTS=P_ROWS.map(function(r,i){
+    return {sku:r[0],cat:r[1],spec:r[2],minUnit:r[3],pack:r[4],price:r[5],costRate:r[6],base:r[7],shelf:r[8],focus:r[9],point:r[10],
+      cost:+(r[5]*r[6]).toFixed(2),moq:1,step:1,code:'SKU'+('100'+(i+1)).slice(-3)};
+  });
+  function prod(sku){for(var i=0;i<PRODUCTS.length;i++)if(PRODUCTS[i].sku===sku)return PRODUCTS[i];return null;}
+
+  var REGIONS=['华东','华南','华北','华西'];
+  var CHANNELS=['KA','CVS','GT','餐饮'];
+  var CHF={KA:1.55,CVS:1.0,GT:0.75,'餐饮':0.5};
+  var RGF={'华东':1.35,'华南':1.05,'华北':1.0,'华西':0.85};
+  var R_CITIES={'华东':['上海','南京','杭州','苏州','宁波'],'华南':['广州','深圳','佛山','东莞','厦门'],'华北':['北京','天津','青岛','济南','石家庄'],'华西':['成都','重庆','西安','昆明','贵阳']};
+
+  function dowF(ch,ds){var wd=new Date(Date.parse(ds)).getDay();if(wd===0||wd===6){return {KA:1.08,CVS:1.12,GT:1.06,'餐饮':1.18}[ch];}return 1.0;}
+  function monthSeason(cat,m){
+    var T={'矿泉水':{6:1.10,7:1.22,8:1.20,9:1.05},'气泡茶':{6:1.06,7:1.15,8:1.12},'碳酸饮料':{6:1.08,7:1.18,8:1.15},
+      '果汁':{6:1.05,7:1.12,8:1.10},'功能性饮料':{6:1.06,7:1.12,8:1.10},'膨化食品':{1:1.15,2:1.10},
+      '坚果炒货':{1:1.35,2:1.20,12:1.10},'饼干糕点':{1:1.12,2:1.08},'休闲卤味':{}};
+    return (T[cat]&&T[cat][m])||1.0;
+  }
+  /* 事件因子（与 A2 引擎 EVENT_RULES 口径一致）；华东 6 月大促/高温拉动打折——渠道执行弱 */
+  function eventF(cat,rg,ds){
+    var md=ds.slice(5),f=1.0;
+    function inY(a,b){return ds>=a&&ds<=b;}      // 固定年
+    function inM(a,b){return a<=b?(md>=a&&md<=b):(md>=a||md<=b);} // 每年循环
+    var hd=(rg==='华东')?0.25:1.0;
+    if(inM('06-15','08-31')){var h={'矿泉水':1.15,'气泡茶':1.12,'果汁':1.08,'功能性饮料':1.10,'碳酸饮料':1.10}[cat]||1.06;f*=(1+(h-1)*hd);}
+    if(rg==='华东'&&inM('06-10','07-15')){f*={'气泡茶':0.90,'矿泉水':0.92,'果汁':0.90,'碳酸饮料':0.88}[cat]||0.92;}
+    if(inM('12-01','02-10')){f*={'矿泉水':0.92,'气泡茶':0.90,'碳酸饮料':0.90}[cat]||0.94;}
+    if(inM('06-01','06-18')){f*=(1+0.10*hd);}
+    if(inM('11-01','11-11')){f*=1.25;}
+    if(inM('12-01','12-12')){f*=1.12;}
+    if(inM('10-01','10-07')){f*=(cat==='碳酸饮料'||cat==='气泡茶'||cat==='果汁'||cat==='矿泉水'||cat==='功能性饮料')?1.20:1.18;}
+    if(inY(YY+'-02-04',YY+'-02-18')){f*=(cat==='坚果炒货'||cat==='饼干糕点')?1.30:1.28;}
+    if(inY('2026-06-11','2026-07-13')){var wc={'气泡茶':1.22,'碳酸饮料':1.20,'果汁':1.10,'矿泉水':1.10}[cat]||1.12;f*=(1+(wc-1)*hd);}
+    return f;
+  }
+  /* 趋势：华东 KA 6 月起整体走弱（碳酸最深），华东 CVS 气泡茶走强——归因故事线 */
+  function trendF(cat,rg,ch,ds){
+    var f=1.0,d061=YY+'-06-01';
+    var prog=ds>=d061?Math.min(Math.round((Date.parse(ds)-Date.parse(d061))/86400000)/29,1):0;
+    if(rg==='华东'&&ch==='KA'&&prog>0){
+      if(cat==='碳酸饮料')f*=(1-0.53*prog);
+      else if(cat==='气泡茶')f*=(1-0.48*prog);
+      else f*=(1-0.24*prog);
+    }
+    if(rg==='华东'&&ch==='GT'&&prog>0&&(cat==='碳酸饮料'||cat==='果汁'))f*=(1-0.10*prog);
+    if(rg==='华东'&&ch==='CVS'&&cat==='气泡茶'){
+      var d051=YY+'-05-01';
+      if(ds>=d051)f*=1+0.22*Math.min(Math.round((Date.parse(ds)-Date.parse(d051))/86400000)/60,1);
+    }
+    if(rg==='华东'&&ch==='CVS'&&cat==='功能性饮料'&&ds>=YY+'-05-15')f*=1.10;
+    return f;
+  }
+  /* 单日单 SKU 单区域单渠道 销售额/数量（确定性：同日同人同结果） */
+  function cellDaily(p,rg,ch,ds){
+    var rng=mulberry32(hstr(p.sku+rg+ch+ds));
+    var noise=0.94+0.12*rng();
+    var m=parseInt(ds.slice(5,7),10);
+    var qty=p.base*CHF[ch]*RGF[rg]*dowF(ch,ds)*monthSeason(p.cat,m)*trendF(p.cat,rg,ch,ds)*eventF(p.cat,rg,ds)*noise;
+    return qty;
+  }
+
+  /* ---------- F01 销售/订单明细（日×SKU×区域×渠道 聚合，近90天） ---------- */
+  var F01=null,F01M=null;
+  function buildF01(){
+    if(F01)return;
+    F01=[];var agg={};
+    for(var k=90;k>=1;k--){
+      var ds=addDays(TODAY,-k),m=ds.slice(0,7);
+      for(var i=0;i<PRODUCTS.length;i++){var p=PRODUCTS[i];
+        for(var r=0;r<REGIONS.length;r++){var rg=REGIONS[r];
+          for(var c=0;c<CHANNELS.length;c++){var ch=CHANNELS[c];
+            var qty=Math.round(cellDaily(p,rg,ch,ds));
+            var amt=+(qty*p.price).toFixed(0),cst=+(qty*p.cost).toFixed(0);
+            var promo=(ds.slice(5)>='06-01'&&ds.slice(5)<='06-18'&&(ch==='KA'||ch==='CVS'))?1:0;
+            F01.push({d:ds,m:m,rg:rg,ch:ch,sku:p.sku,cat:p.cat,qty:qty,box:+(qty/p.pack).toFixed(1),amt:amt,cost:cst,promo:promo});
+            var key=m+'|'+rg+'|'+ch+'|'+p.cat;
+            var a=agg[key]||(agg[key]={m:m,rg:rg,ch:ch,cat:p.cat,qty:0,box:0,amt:0,cost:0});
+            a.qty+=qty;a.box+=qty/p.pack;a.amt+=amt;a.cost+=cst;
+          }}}}
+    F01M=Object.keys(agg).sort().map(function(k){var a=agg[k];a.box=+a.box.toFixed(0);return a;});
+  }
+
+  /* ---------- D02 门店（160家样板） ---------- */
+  var STORE_NAMES={KA:['大润发','永辉超市','沃尔玛','盒马鲜生','华润万家'],CVS:['全家','罗森','7-Eleven','便利蜂','美宜佳'],GT:['鑫源烟酒店','惠民便利店','街坊食杂店','阳光社区超市','老李副食店'],'餐饮':['川香楼','蜀味观','江南小厨','粤港茶餐厅','西北面馆']};
+  var STORES=[];
+  (function(){
+    var n=0;
+    REGIONS.forEach(function(rg,ri){
+      CHANNELS.forEach(function(ch,ci){
+        for(var i=0;i<10;i++){
+          n++;
+          var brand=STORE_NAMES[ch][i%5],city=R_CITIES[rg][Math.floor(i/5)+(i%2)*2]||R_CITIES[rg][0];
+          var cust=(ch==='KA')?'总部直供':'C'+(100+ri*3+(i%3));
+          STORES.push({id:'S'+(1000+n),name:brand+'-'+city+(i%5+1)+'号店',ch:ch,rg:rg,city:city,cust:cust,level:(i<3?'A':(i<7?'B':'C')),openDate:(YY-3)+'-0'+((i%9)+1)+'-15'});
+        }
+      });
+    });
+  })();
+
+  /* ---------- D03 经销商 / D04 人员 / D05 组织区域 ---------- */
+  var CUST_N={'华东':['鑫源商贸','联合分销','恒丰商贸'],'华南':['粤丰商贸','南粤分销','珠江商贸'],'华北':['燕赵商贸','津门分销','齐鲁商贸'],'华西':['蜀香商贸','山城分销','秦川商贸']};
+  var CUSTOMERS=[];
+  REGIONS.forEach(function(rg,ri){CUST_N[rg].forEach(function(nm,ci){
+    CUSTOMERS.push({id:'C'+(100+ri*3+ci),name:rg+nm,rg:rg,level:'一级经销商',sign:(YY-2)+'-0'+(ci+2)+'-01',credit:300+ci*100,terms:30+ci*15});
+  });});
+  var REP_N=[['张伟','王芳','李强','陈静'],['刘洋','赵敏','孙磊','周婷'],['吴勇','郑爽','冯杰','韩雪'],['黄磊','林霞','徐斌','郭晶']];
+  var REPS=[];
+  REGIONS.forEach(function(rg,ri){REP_N[ri].forEach(function(nm,ci){
+    REPS.push({id:'R'+(200+ri*4+ci),name:nm,role:(ci===0?'区域主管':'业代'),rg:rg,ch:CHANNELS[ci%4],hire:(YY-4)+'-0'+((ci*2)%9+1)+'-10'});
+  });});
+  var ORG=REGIONS.map(function(rg,ri){return {rg:rg,provs:{'华东':'沪/苏/浙/皖','华南':'粤/闽/桂','华北':'京/津/冀/鲁','华西':'川/渝/滇/黔/陕'}[rg],cities:R_CITIES[rg].join('/'),head:REP_N[ri][0]};});
+
+  /* ---------- F02 库存快照（今日·SKU×区域，单位：箱） ---------- */
+  function buildF02(){
+    buildF01();
+    var rows=[];
+    for(var i=0;i<PRODUCTS.length;i++){var p=PRODUCTS[i];
+      REGIONS.forEach(function(rg){
+        var s14=0;
+        for(var k=14;k>=1;k--){var ds=addDays(TODAY,-k);CHANNELS.forEach(function(ch){s14+=cellDaily(p,rg,ch,ds);});}
+        var avgBox=s14/14/p.pack;
+        var cover=5+Math.floor(mulberry32(hstr('cov'+p.sku+rg))()*21);
+        var box=Math.round(avgBox*cover);
+        rows.push({rg:rg,sku:p.sku,cat:p.cat,box:box,qty:box*p.pack,cover:cover,status:(cover<7?'偏低':(cover>25?'偏高':'健康'))});
+      });
+    }
+    return rows;
+  }
+
+  /* ---------- F04b 客户行为月度汇总（eB2B） ---------- */
+  function buildF04b(){
+    var rows=[];
+    CUSTOMERS.forEach(function(c){
+      for(var mo=5;mo<=7;mo++){
+        var mstr=YY+'-'+pad2(mo);
+        var rng=mulberry32(hstr('eb'+c.id+mstr));
+        var weak=(c.rg==='华东'&&mo>=6)?1:0;   // 华东6月起走弱，行为数据同步体现
+        var active=Math.round(12+rng()*10-weak*3);
+        var visits=Math.round(active*(2+rng()*2));
+        var orders=+(1.5+rng()*2.5-weak*0.6).toFixed(1);
+        var abandon=Math.round(2+rng()*6+weak*4);   // 加购未下单：机会信号
+        rows.push({cust:c.id,name:c.name,rg:c.rg,m:mstr,active:active,visits:visits,orders:orders,abandon:abandon,
+          hours:+(2+rng()*20).toFixed(1),pref:['满减','买赠','第二件半价','直降'][Math.floor(rng()*4)],aov:Math.round(1800+rng()*4000-weak*500)});
+      }
+    });
+    return rows;
+  }
+
+  /* ---------- F06 促销活动 / F09 目标达成 / P01 促销政策 / P02 返利政策 ---------- */
+  function promoStatus(from,to){if(TODAY<from)return '计划中';if(TODAY>to)return '已结束';return '进行中';}
+  function buildF06(){
+    var L=[
+      ['PM001','618夏季大促','KA/CVS','全国',YY+'-05-25',YY+'-06-18','满99减20','280万'],
+      ['PM002','梅雨稳供保销','GT','华东',YY+'-06-10',YY+'-07-10','进货10箱赠1箱','45万'],
+      ['PM003','高温补水档','CVS','华东',YY+'-07-01',YY+'-07-31','电解质水/矿泉水第二件半价','60万'],
+      ['PM004','冰爽汽水节','餐饮','华南',YY+'-07-10',YY+'-08-10','可乐听装买5赠1+冰柜投放','38万'],
+      ['PM005','暑期观影套餐','KA','华北',YY+'-07-15',YY+'-08-15','薯片+可乐组合装8折','52万'],
+      ['PM006','电解质水新品推广','CVS','全国',YY+'-07-01',YY+'-08-31','新客立减2元+陈列奖励','75万'],
+      ['PM007','坚果暑期档','KA','全国',YY+'-07-20',YY+'-08-20','每日坚果买3袋赠果干','30万'],
+      ['PM008','开学季备货','GT','全国',YY+'-08-15',YY+'-09-05','整箱进货阶梯返利','90万']
+    ];
+    return L.map(function(r){return {id:r[0],name:r[1],ch:r[2],rg:r[3],from:r[4],to:r[5],mech:r[6],budget:r[7],status:promoStatus(r[4],r[5])};});
+  }
+  function buildF09(){
+    buildF01();
+    var rows=[];
+    REGIONS.forEach(function(rg){
+      var m5=0,m6=0;
+      F01M.forEach(function(a){if(a.rg!==rg)return;if(a.m===YY+'-05')m5+=a.amt;if(a.m===YY+'-06')m6+=a.amt;});
+      var t5=Math.round(m5*1.05),t6=Math.round(m5*1.06);
+      rows.push({rg:rg,m:YY+'-05',target:t5,actual:Math.round(m5),rate:(m5/t5*100).toFixed(1)+'%'});
+      rows.push({rg:rg,m:YY+'-06',target:t6,actual:Math.round(m6),rate:(m6/t6*100).toFixed(1)+'%'});
+    });
+    return rows;
+  }
+  var POLICY_PROMO=[
+    {id:'PP01',name:'CVS冰柜陈列奖励',ch:'CVS',mech:'指定SKU冰柜第一层陈列，奖励0.5元/听/月',valid:YY+'-06-01~'+YY+'-08-31',status:'生效中'},
+    {id:'PP02',name:'KA堆头费政策',ch:'KA',mech:'端架/堆头按店按月付费，需附陈列照片核销',valid:YY+'-01-01~'+YY+'-12-31',status:'生效中'},
+    {id:'PP03',name:'GT整箱进货奖励',ch:'GT',mech:'单月进货满50箱返2%，满100箱返3.5%',valid:YY+'-01-01~'+YY+'-12-31',status:'生效中'},
+    {id:'PP04',name:'餐饮开瓶费',ch:'餐饮',mech:'碳酸/气泡茶按实际开瓶数补贴0.3元/听',valid:YY+'-03-01~'+YY+'-10-31',status:'生效中'}
+  ];
+  var POLICY_REBATE=[
+    {level:'一级经销商',cond:'季度回款完成率≥100%',rate:'2.0%',pay:'次季度首月以货补兑付'},
+    {level:'一级经销商',cond:'年度销量同比增长≥15%',rate:'追加1.0%',pay:'年度核算后兑付'},
+    {level:'门店(KA/CVS)',cond:'月度进货达标且陈列合规',rate:'1.5%',pay:'月度随单兑付'}
+  ];
+  var EXT_EVENTS=[
+    {name:'持续高温',period:'06-15~08-31',rg:'全国',effect:'矿泉水+15%/气泡茶+12%/碳酸+10%'},
+    {name:'梅雨季',period:'06-10~07-15',rg:'华东',effect:'饮料类-8%~-12%'},
+    {name:'618大促',period:'06-01~06-18',rg:'全国',effect:'全品+10%(华东渠道执行弱，仅+2%)'},
+    {name:'暑期/世界杯',period:'2026-06-11~07-13',rg:'全国',effect:'气泡茶+22%/碳酸+20%'},
+    {name:'国庆黄金周',period:'10-01~10-07',rg:'全国',effect:'饮料+20%'},
+    {name:'双11',period:'11-01~11-11',rg:'全国',effect:'全品+25%'},
+    {name:'寒潮',period:'12-01~02-10',rg:'全国',effect:'饮料-6%~-10%'},
+    {name:'春节',period:YY+'-02-04~02-18',rg:'全国',effect:'礼盒/坚果+30%，饮料+28%'}
+  ];
+
+  buildF01();
+  var T={
+    D01:{name:'D01 产品主数据',type:'维度表',cols:['编码','SKU','品类','规格','最小单位','订货单位','箱规','出厂价(元)','成本(元)','保质期(天)','主推'],rows:PRODUCTS.map(function(p){return [p.code,p.sku,p.cat,p.spec,p.minUnit,'箱',p.pack,p.price,p.cost,p.shelf,p.focus?'是':'否'];})},
+    D02:{name:'D02 门店主数据',type:'维度表',cols:['门店ID','门店名称','渠道','区域','城市','客户ID','门店等级','开业日期'],rows:STORES.map(function(s){return [s.id,s.name,s.ch,s.rg,s.city,s.cust,s.level,s.openDate];})},
+    D03:{name:'D03 客户/经销商',type:'维度表',cols:['客户ID','名称','区域','层级','签约日期','信用额度(万)','账期(天)'],rows:CUSTOMERS.map(function(c){return [c.id,c.name,c.rg,c.level,c.sign,c.credit,c.terms];})},
+    D04:{name:'D04 人员档案',type:'维度表',cols:['工号','姓名','角色','区域','负责渠道','入职日期'],rows:REPS.map(function(r){return [r.id,r.name,r.role,r.rg,r.ch,r.hire];})},
+    D05:{name:'D05 组织区域',type:'维度表',cols:['区域','覆盖省份','核心城市','大区负责人'],rows:ORG.map(function(o){return [o.rg,o.provs,o.cities,o.head];})},
+    F01:{name:'F01 销售/订单明细(近90天)',type:'事实表',cols:['日期','月份','区域','渠道','SKU','品类','数量(最小单位)','数量(箱)','销售额(元)','成本额(元)','促销标识'],rows:F01.map(function(r){return [r.d,r.m,r.rg,r.ch,r.sku,r.cat,r.qty,r.box,r.amt,r.cost,r.promo?'促销':'-'];})},
+    F01M:{name:'F01M 销售月度汇总(品类级)',type:'事实表',cols:['月份','区域','渠道','品类','数量(最小单位)','数量(箱)','销售额(元)','成本额(元)'],rows:F01M.map(function(a){return [a.m,a.rg,a.ch,a.cat,a.qty,a.box,a.amt,a.cost];})},
+    F02:{name:'F02 库存快照(今日)',type:'事实表',cols:['区域','SKU','品类','库存(箱)','约合(最小单位)','可售天数','状态'],rows:buildF02().map(function(r){return [r.rg,r.sku,r.cat,r.box,r.qty,r.cover,r.status];})},
+    F04b:{name:'F04b eB2B客户行为(月度)',type:'事实表',cols:['客户ID','客户名称','区域','月份','活跃天数','访问次数','订货频次(次/月)','加购未下单','访问→下单时长(h)','偏好促销','客单价(元)'],rows:buildF04b().map(function(r){return [r.cust,r.name,r.rg,r.m,r.active,r.visits,r.orders,r.abandon,r.hours,r.pref,r.aov];})},
+    F06:{name:'F06 促销活动',type:'事实表',cols:['活动ID','名称','渠道','区域','开始','结束','机制','预算','状态'],rows:buildF06().map(function(r){return [r.id,r.name,r.ch,r.rg,r.from,r.to,r.mech,r.budget,r.status];})},
+    F09:{name:'F09 目标与达成',type:'事实表',cols:['区域','月份','目标额(元)','达成额(元)','达成率'],rows:buildF09().map(function(r){return [r.rg,r.m,r.target,r.actual,r.rate];})},
+    P01:{name:'P01 促销政策',type:'政策规则',cols:['政策ID','名称','渠道','机制','有效期','状态'],rows:POLICY_PROMO.map(function(r){return [r.id,r.name,r.ch,r.mech,r.valid,r.status];})},
+    P02:{name:'P02 返利政策',type:'政策规则',cols:['适用层级','达成条件','返利率','兑付方式'],rows:POLICY_REBATE.map(function(r){return [r.level,r.cond,r.rate,r.pay];})},
+    E01:{name:'E01 天气与节假日事件',type:'外部表',cols:['事件','时间','区域','对销量影响'],rows:EXT_EVENTS.map(function(r){return [r.name,r.period,r.rg,r.effect];})},
+    E02:{name:'E02 竞品动态',type:'外部表',na:1,note:'待接入：竞品终端价将由巡店拍照识别(A30)产出；竞品促销由业代上报'},
+    E03:{name:'E03 市场份额',type:'外部表',na:1,note:'待接入：尼尔森/凯度数据需采购'}
+  };
+  var ORDER=['D01','D02','D03','D04','D05','F01','F01M','F02','F04b','F06','F09','P01','P02','E01','E02','E03'];
+  return {
+    TODAY:TODAY,YEST:YEST,PRODUCTS:PRODUCTS,STORES:STORES,CUSTOMERS:CUSTOMERS,REPS:REPS,
+    tables:T,order:ORDER,prod:prod,cellDaily:cellDaily,
+    /* A2 演示门店默认销量（华东 CVS 样板店·近35天·10个SKU） */
+    buildA2Default:function(){
+      var SK=[['矿泉水550ml',180],['可乐330ml',95],['可乐500ml',72],['矿泉水350ml',60],['白桃气泡茶330ml',45],['能量饮料250ml',36],['青梅气泡茶330ml',33],['橙汁300ml',30],['电解质水500ml',28],['气泡茶480ml',24]];
+      var rows=[],skus=[];
+      SK.forEach(function(pair){
+        var sku=pair[0],base=pair[1],p=prod(sku),cat=p?p.cat:'饮料';
+        var stock=Math.round(base*8),minD='',maxD='';
+        for(var k=35;k>=1;k--){
+          var ds=addDays(TODAY,-k);
+          var rng=mulberry32(hstr('st'+sku+ds));
+          var wd=new Date(Date.parse(ds)).getDay();
+          var wk=(wd===0||wd===6)?1.12:1.0;
+          var q=base*wk*monthSeason(cat,parseInt(ds.slice(5,7),10))*trendF(cat,'华东','CVS',ds)*eventF(cat,'华东',ds)*(0.90+0.20*rng());
+          var sale=Math.max(1,Math.round(q));
+          stock-=sale;
+          if(new Date(Date.parse(ds)).getDay()===1)stock+=Math.round(base*7);   // 周一补货
+          if(stock<0)stock=Math.round(base*2);
+          rows.push({sku:sku,date:ds,sales:sale,stock:stock});
+          if(!minD)minD=ds;maxD=ds;
+        }
+        skus.push(sku);
+      });
+      return {rows:rows,skus:skus,minDate:rows.length?rows[0].date:'',maxDate:rows.length?rows[rows.length-1].date:'',src:'default',store:'演示门店 · 全家-上海南京西路店(华东·CVS)'};
+    }
+  };
+})();
+
+// ==================== 平台默认知识库（快消 RTM · 口径/阈值/SOP/卖点） ====================
+/* 交接文档3.8：阈值/口径/政策进KB（表单可改），算法不进KB。文档注入 ebest_kb，RAG 可检索，可查看可编辑。 */
+var RTM_KB_VERSION='2026-07-16.v1';
+var RTM_KB_DOCS=[
+{id:'kbdef_rules',name:'业务规则与口径.md',text:
+'# 业务规则与口径\n（平台默认 · 阈值类规则可按业务调整；本页只规定「什么算好数据、怎么下结论」，不涉及计算逻辑）\n\n'+
+'## 一、数据新鲜度\n- 数据截止日距今天 ≤3 天：健康，可用于预测与分析\n- 4~14 天：提醒「数据不是最近的」，结果仅供参考\n- 超过 14 天：不做趋势推断，只给保守参考量\n- 超过 60 天：不给补货数字，请先更新数据\n- 对业务的话术口径：不说「数据滞后」，说「你传的是 X 月的数据，到今天隔了 N 天」\n\n'+
+'## 二、历史长度要求\n- 预测几天，历史至少要有 3 倍天数（预测 7 天 → 至少 21 天历史）\n- 要看「周末和平时的差别」：至少 14 天（2 个完整周），28 天以上才可靠\n- 历史不足 7 天：不看涨跌趋势，只按日均给保守量\n\n'+
+'## 三、安全库存与订货\n- 安全库存 = 3 天预测日均销量\n- 建议补货量 = 预测需求 + 安全库存 − 当前库存（小于 0 按 0 计）\n- 下单按箱取整，并校验最小起订量与订货步长（见 D01 产品主数据）\n- 慢动销小店（日销<2 听/袋）慎推整箱：24 听一箱要压 12 天以上，建议引导小箱规\n\n'+
+'## 四、事件系数（可按大区调整）\n- 持续高温（6/15–8/31）：矿泉水 +15%、气泡茶 +12%、碳酸 +10%、果汁 +8%\n- 梅雨季（华东 6/10–7/15）：饮料类 −8%~−12%\n- 618 / 双11 / 双12：全品 +10% / +25% / +12%\n- 国庆黄金周：饮料 +20%；春节：饮料 +28%、坚果礼盒 +30%\n\n'+
+'## 五、字段口径\n- 当日销量：按最小销售单位计（饮料=听/瓶，食品=袋/盒）\n- 当前库存：期末库存，同样按最小销售单位计\n- 销售额：含税出货额（元）；成本额按 D01 成本价核算\n- 硬约束：跨品类汇总只能加销售额，不能加件数/箱数（听和袋加不起来）\n\n'+
+'## 六、归因口径\n- 贡献度(pp) = 该组合涨跌额 ÷ 上期总额 × 100%\n- 平台能定位「跌在哪」（区域×渠道×品类），不直接断言「为什么跌」\n- 「为什么跌」需要外部数据（竞品价、客流），未接入前不做结论，只列出待接入清单\n'},
+{id:'kbdef_uom',name:'单位与箱规换算.md',text:
+'# 单位与箱规换算\n\n## 一、单位阶梯（按品类不同，层级数不同）\n- 饮料：听/瓶/罐 → 箱 → 托（3 级）\n- 休闲食品：袋/包/盒 → 条/排 → 箱 → 托（4 级）\n- 条/排只影响陈列和盘点，不是交易单位；托只有仓储配送(A26)使用\n\n## 二、交易口径（门店进货一律下箱）\n- 订货：所有品类、所有门店，一律按「箱」下单\n- 售卖：门店按最小单位卖（听/袋）\n- 日常引擎只认一个换算因子：箱规（1 箱 = N 个最小单位），见 D01 产品主数据\n\n## 三、箱规版本化（重要）\n- 促销装「买 24 送 2」：该批次按 26 听/箱计\n- 改版缩量（如 24 听/箱 → 20 听/箱）：属于变相提价，历史同比必须按各自版本换算\n- 不版本化的后果：去年 6 月 1000 箱×24 = 24,000 听，今年 6 月 1000 箱×20 = 20,000 听——报表显示箱数持平，实际跌 17%\n\n## 四、预测值 ≠ 可下单量\n- 引擎预测的是最小单位需求，下单前要：÷箱规 → 向上取整 → 校验最小起订量/订货步长\n- 示例：预测需补 8089 听 ÷ 24 = 337.04 箱 → 建议补 338 箱（≈8112 听，约够 8.9 天）\n\n## 五、跨品类硬约束\n- 1 听可乐 + 1 袋薯片加不起来，没有共同物理单位\n- 跨品类聚合只能用销售额；只有单品类内部才能用件数/箱数\n'},
+{id:'kbdef_sop_replenish',name:'补货SOP.md',text:
+'# 补货作业 SOP\n\n## 适用场景\n门店/仓库补货建议的生成与执行（A2 补货预测、A18 进销存优化、S39 库存优化）\n\n## 步骤\n1. 确认数据：销量数据截止到哪天？超过 3 天没更新，先催数据再谈补货\n2. 看预测：按「趋势 + 周末/平日差别 + 事件系数」测算未来 N 天需求\n3. 算补货：需求 + 3 天安全库存 − 当前库存，按箱取整\n4. 校验：库存可撑天数 < 预测周期的 SKU 优先补；周转 > 30 天的先清库不补货\n5. 下单：校验最小起订量与订货步长，慢动销小店评估小箱规\n\n## 红线\n- 数据超过 60 天没更新：系统不给补货数字，不允许拍脑袋下单\n- 不看库存只补货 = 压货；压货 3 个月后的临期品会反过来吞掉利润\n'},
+{id:'kbdef_sop_visit',name:'巡店SOP.md',text:
+'# 巡店作业 SOP\n\n## 适用场景\n业代/督导门店拜访（S1 拜访任务包、A20 巡店评分、A30 货架智能）\n\n## 拍照点位（进到店出店固定 5 个点）\n1. 入口：端架/堆头\n2. 主货架：本品排面（与竞品同框）\n3. 陈列：堆头/侧架/冰柜\n4. 竞品：竞品排面与价签（务必拍清价签——竞品终端价由此识别，比爬虫可靠）\n5. 收银台：收银台陈列与促销物料\n\n## 现场核对\n- 货架份额：本品排面占比 vs 上次拜访\n- 缺货：空位/挂缺货卡的 SKU 逐个记录\n- 价签：本品实际成交价 vs 指导价；竞品实际成交价\n- 陈列合规：按陈列标准打分（A30 自动识别评分）\n\n## 离店前\n- 与店主确认订单与库存，同步促销政策\n- 异常（竞品大促/堆头被抢）当日上报\n'},
+{id:'kbdef_sop_promo',name:'促销执行SOP.md',text:
+'# 促销执行 SOP\n\n## 流程（Brief → 执行 → 核销）\n1. Brief：明确目的（拉新/清库/抢份额）、机制、预算、目标门店清单（S2 促销 Brief）\n2. 排期：避开竞品大促正面冲突，或针对性对标（参考促销日历与 E02 竞品动态）\n3. 执行：门店陈列+价签+物料三到位，巡店拍照留证\n4. 监测：活动期间每日看动销与库存，断货=白投费用\n5. 核销：凭照片/小票/出货数据核销量、算费效（A4 核销费效）\n\n## 费效口径\n- 促销 ROI = 增量毛利 ÷ 促销费用；ROI<1 的活动下期停掉或改机制\n- 增量 = 活动期间动销 − 基线动销（前 4 周均值）\n'},
+{id:'kbdef_sku_points',name:'主推SKU卖点手册.md',text:
+'# 主推 SKU 卖点手册\n\n## 白桃气泡茶 330ml（听）\n- 0 糖 0 脂 + 真实白桃果汁，年轻客群复购率第一\n- 话术：「元气森林同赛道，我们价格低 15%，毛利反而高 3 个点」\n\n## 电解质水 500ml（瓶）\n- 运动补水新赛道，夏季增速最快的 SKU\n- 话术：「健身房/球场周边店必配，7–8 月动销能翻一倍」\n\n## 每日坚果 25g（袋）\n- 每日一袋健康概念，礼盒/年节爆发力强（春节 +30%）\n- 话术：「客单价最高的零食 SKU，收银台小袋装连带率最高」\n\n## 薯片原味 70g（袋）\n- 经典原味，货架渗透率最高的零食 SKU\n- 话术：「膨化区流量款，没它货架就是缺的」\n\n## 可乐 330ml（听）\n- 流通硬通货，餐饮/GT 动销王\n- 话术：「餐饮开瓶费补贴 0.3 元/听，按实际开瓶数结算」\n'},
+{id:'kbdef_policy',name:'促销与返利政策.md',text:
+'# 促销与返利政策（现行）\n\n## 促销政策（详见数据集 P01）\n- CVS 冰柜陈列奖励：指定 SKU 冰柜第一层陈列，0.5 元/听/月\n- KA 堆头费：端架/堆头按店按月付费，需陈列照片核销\n- GT 整箱进货奖励：单月满 50 箱返 2%，满 100 箱返 3.5%\n- 餐饮开瓶费：碳酸/气泡茶按实际开瓶 0.3 元/听\n\n## 返利政策（详见数据集 P02）\n- 一级经销商季度回款完成率 ≥100%：返 2.0%，次季度首月货补兑付\n- 年度销量同比增长 ≥15%：追加 1.0%，年度核算兑付\n- 门店月度进货达标且陈列合规：返 1.5%，月度随单兑付\n\n## 红线\n- 所有费用核销必须留证（照片/小票/出货数据），无证不核销\n- 返利与促销费用不重复计提同一笔销量\n'}];
+
+// ==================== 默认数据集/知识库 · UI 集成 ====================
+function rtmEnsureDefaultSales(){
+  try{
+    var srcFlag=localStorage.getItem('ebest_sales_src');
+    var stamp=localStorage.getItem('ebest_sales_defdate');
+    if(srcFlag==='user')return;                              // 用户数据优先，不覆盖
+    if(srcFlag==='default'&&stamp===RTM.TODAY&&loadSales('A2'))return;  // 今日已生成
+    var p=RTM.buildA2Default();
+    var s=JSON.stringify(p);
+    localStorage.setItem('ebest_sales_A2',s);
+    localStorage.setItem('ebest_sales__shared',s);
+    localStorage.setItem('ebest_sales_src','default');
+    localStorage.setItem('ebest_sales_defdate',RTM.TODAY);
+  }catch(e){}
+}
+function rtmSeedKB(){
+  try{
+    if(localStorage.getItem('ebest_kb_defv')===RTM_KB_VERSION)return;
+    var arr=_kbRead('ebest_kb').filter(function(f){return String(f.id).indexOf('kbdef_')!==0;});
+    RTM_KB_DOCS.forEach(function(d){
+      arr.push({id:d.id,name:d.name,type:'text/markdown',size:d.text.length,text:d.text,chunks:_chunk(d.text),at:Date.now(),def:1});
+    });
+    _kbWrite('ebest_kb',arr);
+    localStorage.setItem('ebest_kb_defv',RTM_KB_VERSION);
+  }catch(e){}
+}
+function rtmSeedDS(){
+  try{
+    var stamp='dsv_'+RTM.TODAY;
+    if(localStorage.getItem('ebest_ds_defv')===stamp)return;
+    var arr=_kbRead('ebest_ds').filter(function(f){return String(f.id).indexOf('dsdef_')!==0;});
+    function csvOf(tid){var t=RTM.tables[tid];var lines=[t.cols.join(',')];t.rows.forEach(function(r){lines.push(r.join(','));});return lines.join('\n');}
+    [['dsdef_d01','D01产品主数据.csv','D01'],['dsdef_d02','D02门店主数据.csv','D02'],['dsdef_f01m','F01销售月度汇总.csv','F01M'],['dsdef_f04b','F04b客户行为月度汇总.csv','F04b']].forEach(function(x){
+      var text=csvOf(x[2]);
+      arr.push({id:x[0],name:x[1],type:'text/csv',size:text.length,text:text,chunks:_chunk(text),at:Date.now(),def:1});
+    });
+    _kbWrite('ebest_ds',arr);
+    localStorage.setItem('ebest_ds_defv',stamp);
+  }catch(e){}
+}
+
+/* ---------- 面板默认区块 ---------- */
+function rtmBadge(txt,color){return '<span style="font-size:10px;font-weight:700;color:#fff;background:'+color+';border-radius:6px;padding:2px 7px;flex:none;">'+txt+'</span>';}
+function rtmRenderDSDefault(){
+  var box=document.getElementById('rtmDsDefault');if(!box)return;
+  var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
+  var h='<div style="font-size:13px;font-weight:700;color:var(--text);margin:12px 0 2px;">'+(EN?'Platform default datasets':'平台默认数据集')+'</div>'+
+    '<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">'+(EN?'Synthetic demo data · auto-refreshed daily (anchored to today)':'合成演示数据 · 每日自动更新（锚定今天），上传你自己的数据即可叠加使用')+'</div>';
+  var groups={'维度表':[],'事实表':[],'政策规则':[],'外部表':[]};
+  RTM.order.forEach(function(id){var t=RTM.tables[id];(groups[t.type]||(groups[t.type]=[])).push(id);});
+  Object.keys(groups).forEach(function(g){
+    if(!groups[g].length)return;
+    h+='<div style="font-size:11px;font-weight:700;color:var(--text-muted);margin:8px 0 4px;">'+g+'</div>';
+    groups[g].forEach(function(id){
+      var t=RTM.tables[id];
+      h+='<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;background:#fafbfc;">'+
+        (t.na?rtmBadge((EN?'N/A':'未接入'),'#FA8C16'):rtmBadge('默认','#1890FF'))+
+        '<div style="flex:1;min-width:0;"><div style="font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+t.name+'</div>'+
+        '<div style="font-size:10.5px;color:var(--text-muted);">'+(t.na?t.note:(t.rows.length+(EN?' rows':' 行')+' · '+RTM.TODAY+(EN?' updated':' 更新')))+'</div></div>'+
+        (t.na?'':'<button onclick="rtmViewTable(\''+id+'\')" style="border:1px solid #1890FF;background:#fff;color:#1890FF;font-size:11px;border-radius:12px;padding:3px 10px;cursor:pointer;font-weight:600;flex:none;">'+(EN?'View':'查看')+'</button>')+
+        '</div>';
+    });
+  });
+  box.innerHTML=h;
+}
+function rtmRenderKBDefault(){
+  var box=document.getElementById('rtmKbDefault');if(!box)return;
+  var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
+  var h='<div style="font-size:13px;font-weight:700;color:var(--text);margin:12px 0 2px;">'+(EN?'Platform default knowledge base':'平台默认知识库')+'</div>'+
+    '<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">'+(EN?'Rules & SOPs · searchable by AI · viewable & editable':'口径/阈值/SOP · AI 已接入可检索 · 可查看可编辑')+'</div>';
+  RTM_KB_DOCS.forEach(function(d){
+    h+='<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;background:#fafbfc;">'+
+      rtmBadge('默认','#722ED1')+
+      '<div style="flex:1;min-width:0;"><div style="font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+d.name+'</div></div>'+
+      '<button onclick="rtmViewDoc(\''+d.id+'\')" style="border:1px solid #722ED1;background:#fff;color:#722ED1;font-size:11px;border-radius:12px;padding:3px 10px;cursor:pointer;font-weight:600;flex:none;">'+(EN?'View / Edit':'查看/编辑')+'</button>'+
+      '</div>';
+  });
+  box.innerHTML=h;
+}
+
+/* ---------- 通用查看/编辑弹窗 ---------- */
+function rtmOpenModal(title,bodyHtml,footerHtml){
+  var m=document.getElementById('rtmViewer');if(!m)return;
+  document.getElementById('rtmViewerTitle').textContent=title;
+  document.getElementById('rtmViewerBody').innerHTML=bodyHtml;
+  document.getElementById('rtmViewerFoot').innerHTML=footerHtml||'';
+  m.style.display='flex';
+}
+function rtmCloseModal(){var m=document.getElementById('rtmViewer');if(m)m.style.display='none';}
+function rtmViewTable(tid){
+  var t=RTM.tables[tid];if(!t||t.na)return;
+  var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
+  var MAX=50;
+  var h='<div style="font-size:11.5px;color:var(--text-muted);margin-bottom:8px;">'+(EN?'Total ':'共 ')+t.rows.length+(EN?' rows · preview first '+MAX:' 行 · 预览前 '+MAX+' 行')+' · '+RTM.TODAY+(EN?' refreshed':' 更新')+'</div>';
+  h+='<div style="overflow:auto;max-height:56vh;border:1px solid var(--border);border-radius:8px;"><table style="border-collapse:collapse;font-size:11.5px;white-space:nowrap;width:100%;">';
+  h+='<thead><tr>'+t.cols.map(function(c){return '<th style="position:sticky;top:0;background:#1E2761;color:#fff;padding:6px 10px;text-align:left;font-weight:600;">'+c+'</th>';}).join('')+'</tr></thead><tbody>';
+  t.rows.slice(0,MAX).forEach(function(r,i){
+    h+='<tr style="background:'+(i%2?'#fafbfc':'#fff')+';">'+r.map(function(v){return '<td style="padding:5px 10px;border-top:1px solid #f0f0f0;">'+v+'</td>';}).join('')+'</tr>';
+  });
+  h+='</tbody></table></div>';
+  rtmOpenModal(t.name,h,'<div style="font-size:11px;color:var(--text-muted);">'+(EN?'Demo dataset · full table available to AI engines in-session':'演示数据集 · 全量数据已在会话内供 AI 引擎调用')+'</div>');
+}
+function rtmViewDoc(docId){
+  var arr=kbGet();var d=null;
+  for(var i=0;i<arr.length;i++)if(arr[i].id===docId)d=arr[i];
+  if(!d)return;
+  var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
+  var h='<div id="rtmDocView" style="font-size:13px;line-height:1.8;white-space:pre-wrap;max-height:56vh;overflow:auto;padding:2px;">'+escapeHtml(d.text||'')+'</div>'+
+    '<textarea id="rtmDocEdit" style="display:none;width:100%;box-sizing:border-box;height:56vh;border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12.5px;line-height:1.7;font-family:inherit;">'+escapeHtml(d.text||'')+'</textarea>';
+  var f='<button onclick="rtmDocToggleEdit(\''+docId+'\')" id="rtmDocEditBtn" style="border:1px solid #722ED1;background:#fff;color:#722ED1;font-size:12px;border-radius:14px;padding:5px 14px;cursor:pointer;font-weight:600;">'+(EN?'Edit':'编辑')+'</button>'+
+    '<button onclick="rtmDocSave(\''+docId+'\')" id="rtmDocSaveBtn" style="display:none;border:none;background:#722ED1;color:#fff;font-size:12px;border-radius:14px;padding:5px 14px;cursor:pointer;font-weight:600;">'+(EN?'Save':'保存')+'</button>';
+  rtmOpenModal(d.name,h,f);
+}
+function rtmDocToggleEdit(docId){
+  var v=document.getElementById('rtmDocView'),e=document.getElementById('rtmDocEdit');
+  var eb=document.getElementById('rtmDocEditBtn'),sb=document.getElementById('rtmDocSaveBtn');
+  if(!v||!e)return;
+  var editing=(e.style.display!=='none');
+  v.style.display=editing?'':'none';e.style.display=editing?'none':'';
+  if(eb)eb.style.display=editing?'':'none';if(sb)sb.style.display=editing?'none':'';
+}
+function rtmDocSave(docId){
+  var e=document.getElementById('rtmDocEdit');if(!e)return;
+  var arr=_kbRead('ebest_kb');
+  for(var i=0;i<arr.length;i++)if(arr[i].id===docId){arr[i].text=e.value;arr[i].chunks=_chunk(e.value);arr[i].size=e.value.length;arr[i].at=Date.now();}
+  _kbWrite('ebest_kb',arr);
+  rtmViewDoc(docId);
+  if(typeof renderKBList==='function')renderKBList();
+}
+
+/* ---------- DataHub 文档内容（可查看可编辑） ---------- */
+function rtmDhDocContent(title,agentName){
+  if(title.indexOf('业务规则与口径')>=0){
+    var d=RTM_KB_DOCS.filter(function(x){return x.id==='kbdef_rules';})[0];
+    return d?d.text:'';
+  }
+  return '# '+(agentName||'')+' 标准作业流程(SOP)\n\n1. 数据准备：确认引用的数据集已更新（见「数据源」页签），数据截止日距今天不超过 3 天\n2. 执行：按参数卡配置执行，结果中的数字均来自数据集真实计算\n3. 复核：异常结果先检查数据新鲜度与历史长度（见《业务规则与口径》）\n4. 输出：产出物可一键推送到飞书群，形成「AI 生成 → 团队执行」闭环\n\n通用规范详见平台知识库：补货SOP / 巡店SOP / 促销执行SOP。';
+}
+function rtmDhBackfill(id,data){
+  var it=(typeof dhFind==='function')?(dhFind(id)||{}):{};
+  var changed=false;
+  (data.kb||[]).forEach(function(k){
+    if(k.content===undefined){k.content=rtmDhDocContent(k.title,it.name||id);changed=true;}
+  });
+  if(changed)dhSave(id,data);
+  return data;
+}
+function dhViewDoc(kid){
+  var d=rtmDhBackfill(dhCurrent,dhLoad(dhCurrent));
+  var k=d.kb.filter(function(y){return y.id===kid;})[0];if(!k)return;
+  var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
+  var h='<div id="rtmDocView" style="font-size:13px;line-height:1.8;white-space:pre-wrap;max-height:52vh;overflow:auto;padding:2px;">'+escapeHtml(k.content||'(暂无内容)')+'</div>'+
+    '<textarea id="rtmDocEdit" style="display:none;width:100%;box-sizing:border-box;height:52vh;border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12.5px;line-height:1.7;font-family:inherit;">'+escapeHtml(k.content||'')+'</textarea>';
+  var f='<button onclick="rtmDocToggleEdit(\''+kid+'\')" id="rtmDocEditBtn" style="border:1px solid #722ED1;background:#fff;color:#722ED1;font-size:12px;border-radius:14px;padding:5px 14px;cursor:pointer;font-weight:600;">'+(EN?'Edit':'编辑')+'</button>'+
+    '<button onclick="dhDocSave(\''+kid+'\')" id="rtmDocSaveBtn" style="display:none;border:none;background:#722ED1;color:#fff;font-size:12px;border-radius:14px;padding:5px 14px;cursor:pointer;font-weight:600;">'+(EN?'Save':'保存')+'</button>';
+  rtmOpenModal(k.title,h,f);
+}
+function dhDocSave(kid){
+  var e=document.getElementById('rtmDocEdit');if(!e)return;
+  var d=dhLoad(dhCurrent);
+  var k=d.kb.filter(function(y){return y.id===kid;})[0];
+  if(k){k.content=e.value;dhSave(dhCurrent,d);}
+  dhViewDoc(kid);
+}
+
+/* ---------- 初始化 ---------- */
+function rtmInit(){
+  try{rtmEnsureDefaultSales();}catch(e){}
+  try{rtmSeedKB();}catch(e){}
+  try{rtmSeedDS();}catch(e){}
+  try{
+    var dp=document.getElementById('datasetPanel');
+    if(dp&&!document.getElementById('rtmDsDefault')){
+      var inner=dp.firstElementChild;
+      var sec=document.createElement('div');sec.id='rtmDsDefault';
+      inner.insertBefore(sec,inner.children[2]||null);
+    }
+    var kp=document.getElementById('knowledgePanel');
+    if(kp&&!document.getElementById('rtmKbDefault')){
+      var inner2=kp.firstElementChild;
+      var sec2=document.createElement('div');sec2.id='rtmKbDefault';
+      inner2.insertBefore(sec2,inner2.children[2]||null);
+    }
+    rtmRenderDSDefault();rtmRenderKBDefault();
+  }catch(e){}
+}
+document.addEventListener('DOMContentLoaded',rtmInit);
+
 // ==================== 知识库 / 数据集（localStorage + 关键词检索注入） ====================
 function _kbRead(key){ try{ return JSON.parse(localStorage.getItem(key)||'[]'); }catch(e){ return []; } }
 function _kbWrite(key,arr){ try{ localStorage.setItem(key, JSON.stringify(arr)); }catch(e){ alert('存储空间不足，请删除部分文件'); } }
@@ -3660,11 +4162,13 @@ function kbDelete(id){ _kbWrite('ebest_kb', kbGet().filter(function(f){return f.
 function dsDelete(id){ _kbWrite('ebest_ds', dsGet().filter(function(f){return f.id!==id;})); renderDSList(); }
 function _renderList(items, listId, statusId, delFn, kind){
   var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
+  var userItems=items.filter(function(f){return !f.def;});
   var totalChunks=items.reduce(function(a,f){return a+((f.chunks&&f.chunks.length)||0);},0);
   var st=document.getElementById(statusId);
   if(st){ st.innerHTML = items.length ? ('<span style="color:#00A37A;font-weight:600;">● </span>'+(EN?'AI connected · ':'AI 已接入 · ')+items.length+(EN?' file(s) / ':' 个文件 / ')+totalChunks+(EN?' chunks':' 段')) : (EN?'No files yet. Uploads are stored in this browser.':'暂无文件。上传内容仅保存在本浏览器。'); }
   var box=document.getElementById(listId); if(!box)return;
-  box.innerHTML = items.map(function(f){
+  if(!userItems.length){box.innerHTML='<div style="font-size:11px;color:#bbb;margin-top:6px;">'+(EN?'Files you upload will appear here. Platform defaults are listed above.':'你上传的文件会显示在这里；平台默认文件见上方')+'</div>';return;}
+  box.innerHTML = userItems.map(function(f){
     return '<div style="display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--border);border-radius:8px;margin-top:6px;">'+
       '<span style="font-size:16px;">📄</span>'+
       '<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escapeHtml(f.name)+'</div>'+
@@ -3898,7 +4402,7 @@ function renderOrchestration(res){
 /* ===== A2 销量数据驱动 (真实可用样板) ===== */
 var DATADRIVEN={A2:{kind:'sales'},A18:{kind:'sales'},S39:{kind:'sales'},S21:{kind:'sales'}};
 function salesKey(id){return 'ebest_sales_'+id;}
-function saveSales(id,p){try{var s=JSON.stringify(p);localStorage.setItem(salesKey(id),s);localStorage.setItem('ebest_sales__shared',s);}catch(e){}}
+function saveSales(id,p){try{var s=JSON.stringify(p);localStorage.setItem(salesKey(id),s);localStorage.setItem('ebest_sales__shared',s);localStorage.setItem('ebest_sales_src','user');}catch(e){}}
 function loadSales(id){try{var r=localStorage.getItem(salesKey(id));if(!r)r=localStorage.getItem('ebest_sales__shared');if(r)return JSON.parse(r);}catch(e){}return null;}
 function clearSales(id){try{localStorage.removeItem(salesKey(id));}catch(e){}}
 function parseSalesCSV(text){
@@ -3943,7 +4447,7 @@ var EVENT_RULES=[
 var _fcRegion='';
 function _fcToday(){var d=new Date();var m=('0'+(d.getMonth()+1)).slice(-2),day=('0'+d.getDate()).slice(-2);return d.getFullYear()+'-'+m+'-'+day;}
 function _normRegion(r){if(!r)return '';return String(r).replace(/区|大区|地区/g,'');}
-function skuCat(name){name=String(name||'');if(/气泡茶|苏打|气泡/.test(name))return '气泡茶';if(/矿泉水|纯净水|饮用水|矿泉/.test(name))return '矿泉水';if(/果汁|果味/.test(name))return '果汁';return '饮料';}
+function skuCat(name){name=String(name||'');if(/饼干|糕点|苏打饼/.test(name))return '饼干糕点';if(/气泡茶|苏打水|气泡/.test(name))return '气泡茶';if(/矿泉水|纯净水|饮用水|矿泉/.test(name))return '矿泉水';if(/可乐|汽水|碳酸/.test(name))return '碳酸饮料';if(/果汁|果味|橙汁|苹果汁/.test(name))return '果汁';if(/能量|电解质|功能/.test(name))return '功能性饮料';if(/薯片|玉米片|膨化/.test(name))return '膨化食品';if(/坚果|瓜子|炒货/.test(name))return '坚果炒货';if(/豆干|卤/.test(name))return '休闲卤味';return '饮料';}
 function _ruleHit(rule,dateStr){var md=dateStr.slice(5);if(rule.from.length===10){return dateStr>=rule.from&&dateStr<=rule.to;}if(rule.from<=rule.to){return md>=rule.from&&md<=rule.to;}return md>=rule.from||md<=rule.to;}
 function _ruleCoef(rule,cat){if(rule.cat[cat]!==undefined)return rule.cat[cat];if(rule.cat['*']!==undefined)return rule.cat['*'];return 0;}
 function externalDayFactor(sku,dateStr){var cat=skuCat(sku),f=1;for(var i=0;i<EVENT_RULES.length;i++){var r=EVENT_RULES[i];if(r.region!=='*'&&_normRegion(r.region)!==_normRegion(_fcRegion))continue;if(!_ruleHit(r,dateStr))continue;f*=(1+_ruleCoef(r,cat));}return f;}
@@ -4057,7 +4561,9 @@ function dvSalesRender(id,mode,v){
   return '<div style="margin-bottom:6px;">'+info+'，<b>趋势+周季节性+事件加权</b> 预测未来 <b>'+days+'</b> 天需求（供产销协同）：</div>'+eventExpl+chart+rBars(bars3)+rTable(['SKU','预测日均',days+'天需求','趋势'],rows3);
 }
 function downloadSalesTemplate(){
-  var csv='SKU,日期,当日销量,当前库存\n气泡茶330ml,2026-05-01,120,800\n气泡茶330ml,2026-05-02,135,665\n气泡茶330ml,2026-05-03,128,537\n矿泉水550ml,2026-05-01,210,1500\n矿泉水550ml,2026-05-02,198,1290\n矿泉水550ml,2026-05-03,225,1065\n';
+  function _pd(n){return ('0'+n).slice(-2);}
+  function _dt(k){var d=new Date(Date.now()-k*86400000);return d.getFullYear()+'-'+_pd(d.getMonth()+1)+'-'+_pd(d.getDate());}
+  var csv='SKU,日期,当日销量,当前库存\n白桃气泡茶330ml,'+_dt(2)+',46,320\n白桃气泡茶330ml,'+_dt(1)+',52,268\n白桃气泡茶330ml,'+_dt(0)+',49,219\n矿泉水550ml,'+_dt(2)+',178,1500\n矿泉水550ml,'+_dt(1)+',191,1322\n矿泉水550ml,'+_dt(0)+',185,1137\n';
   var blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='补货预测-销量模板.csv';a.click();
 }
@@ -4373,7 +4879,7 @@ function dhFind(id){var r=dhAll().filter(function(x){return x.id===id;});return 
 function dhRid(p){return p+Math.random().toString(36).slice(2,7);}
 function dhSplitTop(str){if(!str)return [];var out=[],buf='',d=0;for(var i=0;i<str.length;i++){var c=str[i];if(c==='(')d++;else if(c===')')d--;if(c==='/'&&d<=0){if(buf.trim())out.push(buf.trim());buf='';}else buf+=c;}if(buf.trim())out.push(buf.trim());return out;}
 function dhKey(id){return 'ebest_dh_'+id;}
-function dhSeed(id){var it=dhFind(id)||{};var ds=it.dataSources||{};var srcs=[];dhSplitTop(ds.internal||'').forEach(function(x){srcs.push({id:dhRid('s'),name:x,kind:'internal'});});if(ds.external&&ds.external!=='无')dhSplitTop(ds.external).forEach(function(x){srcs.push({id:dhRid('s'),name:x,kind:'external'});});return {sources:srcs,files:[],kb:[{id:dhRid('k'),title:(it.name||id)+' - SOP.pdf',note:'标准作业流程'},{id:dhRid('k'),title:'业务规则与口径.md',note:'阈值/字段口径定义'}]};}
+function dhSeed(id){var it=dhFind(id)||{};var ds=it.dataSources||{};var srcs=[];dhSplitTop(ds.internal||'').forEach(function(x){srcs.push({id:dhRid('s'),name:x,kind:'internal'});});if(ds.external&&ds.external!=='无')dhSplitTop(ds.external).forEach(function(x){srcs.push({id:dhRid('s'),name:x,kind:'external'});});return {sources:srcs,files:[],kb:[{id:dhRid('k'),title:(it.name||id)+' - SOP.pdf',note:'标准作业流程',content:(typeof rtmDhDocContent==='function'?rtmDhDocContent('SOP',it.name||id):'')},{id:dhRid('k'),title:'业务规则与口径.md',note:'阈值/字段口径定义',content:(typeof rtmDhDocContent==='function'?rtmDhDocContent('业务规则与口径',it.name||id):'')}]};}
 function dhLoad(id){try{var raw=localStorage.getItem(dhKey(id));if(raw)return JSON.parse(raw);}catch(e){}var sd=dhSeed(id);dhSave(id,sd);return sd;}
 function dhSave(id,d){try{localStorage.setItem(dhKey(id),JSON.stringify(d));}catch(e){}}
 var dhCurrent=null;
@@ -4392,7 +4898,7 @@ data.files.forEach(function(f){h+='<div class="dh-row"><span class="dh-badge" st
 h+='</div>';
 h+='<div class="dh-sec"><div class="dh-sec-h"><span>'+t('knowledgeBase')+'</span><button class="dh-add" onclick="dhAddDoc()">+ '+t('addDoc')+'</button></div>';
 if(!data.kb.length)h+='<div class="dh-empty">'+t('dhEmpty')+'</div>';
-data.kb.forEach(function(k){h+='<div class="dh-row"><span class="dh-badge" style="background:#722ED1">DOC</span><span class="dh-name">'+dhEsc(k.title)+(k.note?'<span class="dh-sub"> \u00b7 '+dhEsc(k.note)+'</span>':'')+'</span><button class="dh-ic" onclick="dhEditDoc(\''+k.id+'\')">\u270e</button><button class="dh-ic" onclick="dhDelDoc(\''+k.id+'\')">\ud83d\uddd1</button></div>';});
+data.kb.forEach(function(k){h+='<div class="dh-row"><span class="dh-badge" style="background:#722ED1">DOC</span><span class="dh-name" style="cursor:pointer;" onclick="dhViewDoc(\''+k.id+'\')">'+dhEsc(k.title)+(k.note?'<span class="dh-sub"> \u00b7 '+dhEsc(k.note)+'</span>':'')+'</span><button class="dh-ic" onclick="dhViewDoc(\''+k.id+'\')">\u270e</button><button class="dh-ic" onclick="dhDelDoc(\''+k.id+'\')">\ud83d\uddd1</button></div>';});
 h+='</div>';
 var b=document.getElementById('dhBody');b.innerHTML=h;if(currentLang==='en'){try{localizeEl(b);}catch(e){}}}
 function dhAddSource(){var n=prompt(t('addSourcePrompt'));if(!n)return;var d=dhLoad(dhCurrent);d.sources.push({id:dhRid('s'),name:n,kind:'internal'});dhSave(dhCurrent,d);dhRender();}
@@ -4438,6 +4944,13 @@ function dhFilterPick(q){var l=document.getElementById('dhPickList');if(l){l.inn
     <div id="dhBody" class="dh-body"></div>
   </div>
   <input type="file" id="dhFileInput" accept=".csv,.xlsx,.xls,.txt,.tsv" style="display:none" onchange="dhFileChosen(event)">
+</div>
+<div id="rtmViewer" class="dh-modal">
+  <div class="dh-panel" style="max-width:720px;">
+    <div class="dh-head"><span id="rtmViewerTitle" class="dh-title">查看</span><button class="dh-close" onclick="rtmCloseModal()">✕</button></div>
+    <div id="rtmViewerBody" class="dh-body"></div>
+    <div id="rtmViewerFoot" style="padding:10px 18px;border-top:1px solid #eee;display:flex;gap:10px;align-items:center;"></div>
+  </div>
 </div>
 </body>
 </html>
