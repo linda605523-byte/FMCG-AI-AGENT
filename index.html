@@ -3548,6 +3548,55 @@ function autoResize(el) {
 // ===== 真大模型接入（可选）=====
 // 部署好 Cloudflare Worker 后，把 Worker 网址粘到下面引号里（留空 = 演示模式，不调用大模型）
 const LLM_ENDPOINT = 'https://agent.linda605523.workers.dev';
+/* LLM 请求护栏：45秒超时 + 自动重试1次（应对Worker冷启动/DeepSeek偶发无响应），全局fetch统一拦截，所有调用点自动受益 */
+var _llmRawFetch = window.fetch.bind(window);
+function llmGuardFetch(url,opt,tries){
+  tries=(tries==null?1:tries);
+  var ctrl=new AbortController();
+  var o=Object.assign({},opt,{signal:ctrl.signal});
+  var timer=setTimeout(function(){ctrl.abort();},45000);
+  return _llmRawFetch(url,o).then(function(r){clearTimeout(timer);return r;},function(err){
+    clearTimeout(timer);
+    if(tries>0){return new Promise(function(res){setTimeout(res,1500);}).then(function(){return llmGuardFetch(url,opt,tries-1);});}
+    if(err&&err.name==='AbortError'){var e2=new Error('AI 这次响应超时了');e2.timedOut=true;throw e2;}
+    throw err;
+  });
+}
+window.fetch=function(url,opt){
+  if(typeof url==='string'&&url.indexOf('linda605523.workers.dev')>=0){return llmGuardFetch(url,opt,1);}
+  return _llmRawFetch.apply(window,arguments);
+};
+function llmFailHtml(q){
+  var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
+  if(EN){
+    return '<div style="font-size:14px;">😥 The AI didn\'t respond this time (service may be waking up or busy). Your question is saved:</div>'+
+      '<div style="font-size:13px;color:#666;margin:6px 0 10px;">「'+escapeHtml(q)+'」</div>'+
+      '<button onclick="llmRetry(this)" data-q="'+encodeURIComponent(q)+'" style="border:1px solid #1890FF;background:#fff;color:#1890FF;border-radius:16px;padding:6px 16px;font-size:13px;font-weight:600;cursor:pointer;">🔄 Retry</button>'+
+      '<div style="font-size:11px;color:#aaa;margin-top:8px;">If it keeps failing, the AI service is temporarily down — please try again later.</div>';
+  }
+  return '<div style="font-size:14px;">😥 AI 这会没响应（服务可能在唤醒或正忙）。你的问题我记下了：</div>'+
+    '<div style="font-size:13px;color:#666;margin:6px 0 10px;">「'+escapeHtml(q)+'」</div>'+
+    '<button onclick="llmRetry(this)" data-q="'+encodeURIComponent(q)+'" style="border:1px solid #1890FF;background:#fff;color:#1890FF;border-radius:16px;padding:6px 16px;font-size:13px;font-weight:600;cursor:pointer;">🔄 重新提问</button>'+
+    '<div style="font-size:11px;color:#aaa;margin-top:8px;">如果多次失败，是 AI 服务临时故障，稍后再试即可</div>';
+}
+function llmRetry(btn){
+  var q=decodeURIComponent(btn.getAttribute('data-q')||'');
+  if(!q)return;
+  var bub=btn.closest('.msg-bubble');
+  if(!bub)return;
+  bub.innerHTML='<div style="font-size:14px;color:var(--text-muted);">'+t('thinking')+'</div>';
+  var _st=setTimeout(function(){if(bub.innerHTML.indexOf('🤔')>=0)bub.innerHTML='<div style="font-size:14px;color:var(--text-muted);">🤔 AI 响应有点慢，正在努力（最长约 45 秒）…</div>';},12000);
+  chatWithOrchestration(q).then(function(res){
+    clearTimeout(_st);
+    if(res&&res.orchestrate&&res.agents&&res.agents.length){bub.innerHTML=renderOrchestration(res);}
+    else{bub.innerHTML=renderAnswerWithChips((res&&res.answer)||'',(res&&res.tools)||[]);}
+    scrollToBottom();
+  }).catch(function(e){
+    clearTimeout(_st);
+    bub.innerHTML=llmFailHtml(q);
+    scrollToBottom();
+  });
+}
 async function callLLM(userText) {
   var roleName = (currentRole && currentRole.name) ? currentRole.name : '快消销售';
   var sys = '你是 eBest 快消行业 AI 工作台助手，服务品牌商/经销商/一线销售。当前使用者角色：' + roleName + '。请用中文回答，专业、简洁、给出可执行建议；涉及具体数据时说明这是示例数据。' + llmLangClause();
@@ -4746,7 +4795,9 @@ function sendMessage() {
   if (LLM_ENDPOINT) {
     var mid = 'llm_' + Date.now();
     addAIMessage('<div style="font-size:14px;color:var(--text-muted);">'+t('thinking')+'</div>', mid);
+    var _slowT=setTimeout(function(){var _e=document.getElementById(mid);if(_e){var _b=_e.querySelector('.msg-bubble');if(_b&&_b.innerHTML.indexOf('🤔')>=0)_b.innerHTML='<div style="font-size:14px;color:var(--text-muted);">🤔 AI 响应有点慢，正在努力（最长约 45 秒）…</div>';}},12000);
     chatWithOrchestration(text).then(function(res){
+      clearTimeout(_slowT);
       var el = document.getElementById(mid); if(!el) return;
       var bub = el.querySelector('.msg-bubble');
       if (res && res.orchestrate && res.agents && res.agents.length) {
@@ -4756,13 +4807,14 @@ function sendMessage() {
       }
       scrollToBottom();
     }).catch(function(e){
+      clearTimeout(_slowT);
       var el = document.getElementById(mid); if(!el) return;
       var _cl = detectCluster(text);
       if (_cl) {
         el.querySelector('.msg-bubble').innerHTML = clusterCardHtml(_cl, (text.match(/华东|华北|华南|华中|西南|西北|东北/)||['华东'])[0]);
         if (currentLang==='en') { try{ localizeEl(el.querySelector('.msg-bubble')); }catch(_e){} }
       } else {
-        el.querySelector('.msg-bubble').innerHTML = '<div style="font-size:14px;color:#C00;">' + (currentLang==='en'?'LLM connection failed: ':'连接大模型失败：') + escapeHtml(e.message) + '</div>';
+        el.querySelector('.msg-bubble').innerHTML = llmFailHtml(text);
       }
       scrollToBottom();
     });
