@@ -3550,7 +3550,7 @@ function autoResize(el) {
 // 部署好 Cloudflare Worker 后，把 Worker 网址粘到下面引号里（留空 = 演示模式，不调用大模型）
 const LLM_ENDPOINT = 'https://agent.linda605523.workers.dev';
 /* 多端点故障转移：新增可用域名（自定义域名/国内代理）加在最前面即可，自动优先并缓存可用端点 */
-var LLM_ENDPOINTS=[LLM_ENDPOINT];
+var LLM_ENDPOINTS=['https://qwen-proxy-ebest-llm-eqdrgapkhp.cn-hangzhou.fcapp.run',LLM_ENDPOINT];
 function llmEpGood(){try{return localStorage.getItem('ebest_llm_ep')||'';}catch(e){return '';}}
 function llmEpSet(ep){try{localStorage.setItem('ebest_llm_ep',ep);}catch(e){}}
 /* LLM 请求护栏：45秒超时 + 自动重试1次（应对Worker冷启动/DeepSeek偶发无响应），全局fetch统一拦截，所有调用点自动受益 */
@@ -3647,6 +3647,12 @@ function llmPing(){
     .catch(function(e){llmSetState('offline');return false;});
 }
 document.addEventListener('DOMContentLoaded',function(){setTimeout(llmPing,1500);});
+function llmEngineName(){
+  var ep=llmEpGood();
+  if(ep.indexOf('fcapp.run')>=0||ep.indexOf('aliyuncs')>=0)return '千问';
+  if(ep.indexOf('workers.dev')>=0)return 'DeepSeek';
+  return 'AI';
+}
 /* 知识库兜底：AI 挂了就先从本地知识库找答案 */
 function llmDiagBtn(){
   var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
@@ -4515,7 +4521,7 @@ function renderOrchestration(res){
   var L=function(zh,en){return EN?en:zh;};
   var list=(res.agents||[]).filter(function(a){return a&&a.id&&/^[A-Za-z]\d+$/.test(String(a.id).toUpperCase());});
   var h='<div class="result-card">';
-  h+='<div class="result-header"><span style="font-size:18px;">🧩</span><span class="result-title">'+L('多Agent智能编排','Multi-Agent Orchestration')+'</span><span class="result-status status-success">DeepSeek</span></div>';
+  h+='<div class="result-header"><span style="font-size:18px;">🧩</span><span class="result-title">'+L('多Agent智能编排','Multi-Agent Orchestration')+'</span><span class="result-status status-success">'+llmEngineName()+'</span></div>';
   h+='<div class="result-body">';
   if(res.intent){ h+='<div class="result-section"><div class="result-section-title">'+L('意图识别','Intent')+'</div><div style="font-size:13px;color:var(--text-secondary);background:var(--bg);padding:10px;border-radius:6px;">'+escapeHtml(res.intent)+'</div></div>'; }
   if(list.length){
