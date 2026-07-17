@@ -253,6 +253,7 @@
     </div>
   </div>
   <div class="topbar-right">
+    <span id="llmDot" onclick="llmPing()" title="AI 服务状态" style="display:inline-flex;align-items:center;gap:3px;margin-right:4px;cursor:pointer;"><span style="font-size:12px;">⚪</span><span style="font-size:11px;">AI 检测中</span></span>
     <div class="lang-dropdown" id="langDropdown" style="position:relative;">
       <button class="topbar-btn" id="langBtn" onclick="toggleLangMenu()" style="width:auto;padding:0 10px;display:flex;align-items:center;gap:5px;font-size:14px;">
         <span style="font-size:16px;">🌐</span><span id="langBtnLabel">中文</span>
@@ -1292,7 +1293,7 @@ const agents = [
       {name:'categories', label:'预警类别', type:'multi-select', options:['销量异常','库存预警','费效恶化','竞品动态','人员流失','数据延迟'], default:['销量异常','库存预警','费效恶化']},
       {name:'autoNotify', label:'自动通知', type:'select', options:['开启(实时推送)','关闭(手动查看)'], default:'开启(实时推送)'}
     ],
-    dataSources:{internal:'所有内部系统数据汇总(DMS/SFA/TPM/ERP/WMS)', external:'无'},
+    dataSources:{internal:'DMS(门店销量/库存)/SFA(拜访记录)/TPM(促销费用)/ERP(订单/应收)/WMS(在途库存)', external:'无'},
     output:'分级预警列表(红/黄/蓝) + 预警内容 + 关联Agent + 建议行动 + LLM高管通知摘要'
   },
   {id:'A8', name:'绩效教练', desc:'ML行为分析,个性化辅导', status:'new', roleTags:['regional'],
@@ -3550,14 +3551,15 @@ function autoResize(el) {
 const LLM_ENDPOINT = 'https://agent.linda605523.workers.dev';
 /* LLM 请求护栏：45秒超时 + 自动重试1次（应对Worker冷启动/DeepSeek偶发无响应），全局fetch统一拦截，所有调用点自动受益 */
 var _llmRawFetch = window.fetch.bind(window);
-function llmGuardFetch(url,opt,tries){
+function llmGuardFetch(url,opt,tries,timeoutMs){
   tries=(tries==null?1:tries);
+  timeoutMs=timeoutMs||45000;
   var ctrl=new AbortController();
   var o=Object.assign({},opt,{signal:ctrl.signal});
-  var timer=setTimeout(function(){ctrl.abort();},45000);
+  var timer=setTimeout(function(){ctrl.abort();},timeoutMs);
   return _llmRawFetch(url,o).then(function(r){clearTimeout(timer);return r;},function(err){
     clearTimeout(timer);
-    if(tries>0){return new Promise(function(res){setTimeout(res,1500);}).then(function(){return llmGuardFetch(url,opt,tries-1);});}
+    if(tries>0){return new Promise(function(res){setTimeout(res,1500);}).then(function(){return llmGuardFetch(url,opt,tries-1,timeoutMs);});}
     if(err&&err.name==='AbortError'){var e2=new Error('AI 这次响应超时了');e2.timedOut=true;throw e2;}
     throw err;
   });
@@ -3572,11 +3574,13 @@ function llmFailHtml(q){
     return '<div style="font-size:14px;">😥 The AI didn\'t respond this time (service may be waking up or busy). Your question is saved:</div>'+
       '<div style="font-size:13px;color:#666;margin:6px 0 10px;">「'+escapeHtml(q)+'」</div>'+
       '<button onclick="llmRetry(this)" data-q="'+encodeURIComponent(q)+'" style="border:1px solid #1890FF;background:#fff;color:#1890FF;border-radius:16px;padding:6px 16px;font-size:13px;font-weight:600;cursor:pointer;">🔄 Retry</button>'+
+    llmKbBtn(q)+
       '<div style="font-size:11px;color:#aaa;margin-top:8px;">If it keeps failing, the AI service is temporarily down — please try again later.</div>';
   }
   return '<div style="font-size:14px;">😥 AI 这会没响应（服务可能在唤醒或正忙）。你的问题我记下了：</div>'+
     '<div style="font-size:13px;color:#666;margin:6px 0 10px;">「'+escapeHtml(q)+'」</div>'+
     '<button onclick="llmRetry(this)" data-q="'+encodeURIComponent(q)+'" style="border:1px solid #1890FF;background:#fff;color:#1890FF;border-radius:16px;padding:6px 16px;font-size:13px;font-weight:600;cursor:pointer;">🔄 重新提问</button>'+
+    llmKbBtn(q)+
     '<div style="font-size:11px;color:#aaa;margin-top:8px;">如果多次失败，是 AI 服务临时故障，稍后再试即可</div>';
 }
 function llmRetry(btn){
@@ -3585,17 +3589,63 @@ function llmRetry(btn){
   var bub=btn.closest('.msg-bubble');
   if(!bub)return;
   bub.innerHTML='<div style="font-size:14px;color:var(--text-muted);">'+t('thinking')+'</div>';
+  llmSetState('busy');
   var _st=setTimeout(function(){if(bub.innerHTML.indexOf('🤔')>=0)bub.innerHTML='<div style="font-size:14px;color:var(--text-muted);">🤔 AI 响应有点慢，正在努力（最长约 45 秒）…</div>';},12000);
   chatWithOrchestration(q).then(function(res){
-    clearTimeout(_st);
+    clearTimeout(_st);llmSetState('online');
     if(res&&res.orchestrate&&res.agents&&res.agents.length){bub.innerHTML=renderOrchestration(res);}
     else{bub.innerHTML=renderAnswerWithChips((res&&res.answer)||'',(res&&res.tools)||[]);}
     scrollToBottom();
   }).catch(function(e){
-    clearTimeout(_st);
+    clearTimeout(_st);llmSetState('offline');
     bub.innerHTML=llmFailHtml(q);
     scrollToBottom();
   });
+}
+/* AI 服务状态指示（顶栏状态点 + 输入框降级提示） */
+var llmState='unknown';
+function llmSetState(s){
+  llmState=s;
+  var d=document.getElementById('llmDot');if(!d)return;
+  var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
+  var map={unknown:['⚪','AI 检测中','AI checking'],online:['🟢','AI 在线','AI online'],busy:['🟡','AI 响应中','AI busy'],offline:['🔴','AI 暂不可用','AI unavailable']};
+  var m=map[s]||map.unknown;
+  d.innerHTML='<span style="font-size:12px;">'+m[0]+'</span><span style="font-size:11px;">'+(EN?m[2]:m[1])+'</span>';
+  d.title=(EN?'AI service status — tap to re-check':'AI 服务状态（点击重新检测）');
+  var inp=document.getElementById('chatInput');
+  if(inp){
+    if(s==='offline'){if(!inp.getAttribute('data-ph'))inp.setAttribute('data-ph',inp.placeholder);inp.placeholder=(EN?'AI unavailable — @ to call tools still works':'AI 暂不可用 · 可先用 @ 调用具体功能（本地计算）');}
+    else if(inp.getAttribute('data-ph')){inp.placeholder=inp.getAttribute('data-ph');inp.removeAttribute('data-ph');}
+  }
+}
+function llmPing(){
+  llmSetState('unknown');
+  return llmGuardFetch(LLM_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:'ping',messages:[{role:'user',content:'ping'}]})},0,12000)
+    .then(function(resp){llmSetState(resp&&resp.ok?'online':'offline');return resp&&resp.ok;})
+    .catch(function(e){llmSetState('offline');return false;});
+}
+document.addEventListener('DOMContentLoaded',function(){setTimeout(llmPing,1500);});
+/* 知识库兜底：AI 挂了就先从本地知识库找答案 */
+function llmKbBtn(q){
+  try{
+    if(!retrieveContext(q))return '';
+    var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
+    return '<button onclick="llmKbLookup(this)" data-q="'+encodeURIComponent(q)+'" style="border:1px solid #722ED1;background:#fff;color:#722ED1;border-radius:16px;padding:6px 16px;font-size:13px;font-weight:600;cursor:pointer;margin-left:8px;">'+(EN?'📚 Search local KB':'📚 先从知识库找')+'</button>';
+  }catch(e){return '';}
+}
+function llmKbLookup(btn){
+  var q=decodeURIComponent(btn.getAttribute('data-q')||'');
+  var bub=btn.closest('.msg-bubble');if(!bub)return;
+  var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
+  var ctx='';
+  try{ctx=retrieveContext(q)||'';}catch(e){}
+  if(!ctx){bub.innerHTML='<div style="font-size:14px;">'+(EN?'No related content in the local knowledge base.':'知识库里没找到相关的内容。')+'</div>';return;}
+  var segs=ctx.split('\n---\n').slice(0,3);
+  var h='<div style="font-size:13px;color:#666;margin-bottom:8px;">'+(EN?'AI is unavailable — most relevant content from the <b>local knowledge base</b>:':'AI 暂不可用，先从<b>本地知识库</b>给你找了最相关的内容：')+'</div>';
+  segs.forEach(function(s){h+='<div style="font-size:13px;line-height:1.75;background:#F6F8FF;border-radius:8px;padding:10px 12px;margin-bottom:8px;white-space:pre-wrap;">'+escapeHtml(s)+'</div>';});
+  h+='<div style="font-size:11px;color:#aaa;margin-bottom:8px;">'+(EN?'Raw KB excerpts · AI can give a fuller answer once back online':'以上是知识库原文片段 · AI 恢复后可给出更准确的综合解读')+'</div>';
+  h+='<button onclick="llmRetry(this)" data-q="'+encodeURIComponent(q)+'" style="border:1px solid #1890FF;background:#fff;color:#1890FF;border-radius:16px;padding:6px 16px;font-size:13px;font-weight:600;cursor:pointer;">'+(EN?'🔄 Retry AI':'🔄 重试 AI')+'</button>';
+  bub.innerHTML=h;
 }
 async function callLLM(userText) {
   var roleName = (currentRole && currentRole.name) ? currentRole.name : '快消销售';
@@ -4795,9 +4845,10 @@ function sendMessage() {
   if (LLM_ENDPOINT) {
     var mid = 'llm_' + Date.now();
     addAIMessage('<div style="font-size:14px;color:var(--text-muted);">'+t('thinking')+'</div>', mid);
+    llmSetState('busy');
     var _slowT=setTimeout(function(){var _e=document.getElementById(mid);if(_e){var _b=_e.querySelector('.msg-bubble');if(_b&&_b.innerHTML.indexOf('🤔')>=0)_b.innerHTML='<div style="font-size:14px;color:var(--text-muted);">🤔 AI 响应有点慢，正在努力（最长约 45 秒）…</div>';}},12000);
     chatWithOrchestration(text).then(function(res){
-      clearTimeout(_slowT);
+      clearTimeout(_slowT);llmSetState('online');
       var el = document.getElementById(mid); if(!el) return;
       var bub = el.querySelector('.msg-bubble');
       if (res && res.orchestrate && res.agents && res.agents.length) {
@@ -4807,7 +4858,7 @@ function sendMessage() {
       }
       scrollToBottom();
     }).catch(function(e){
-      clearTimeout(_slowT);
+      clearTimeout(_slowT);llmSetState('offline');
       var el = document.getElementById(mid); if(!el) return;
       var _cl = detectCluster(text);
       if (_cl) {
