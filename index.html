@@ -3616,9 +3616,8 @@ function llmRetry(btn){
   var _st=setTimeout(function(){if(bub.innerHTML.indexOf('🤔')>=0)bub.innerHTML='<div style="font-size:14px;color:var(--text-muted);">🤔 AI 响应有点慢，正在努力（最长约 45 秒）…</div>';},12000);
   chatWithOrchestration(q).then(function(res){
     clearTimeout(_st);llmSetState('online');
-    if(res&&res.orchestrate&&res.agents&&res.agents.length){bub.innerHTML=renderOrchestration(res);}
-    else{bub.innerHTML=renderAnswerWithChips((res&&res.answer)||'',(res&&res.tools)||[]);}
-    try{llmNoteTurn(q,_stripHtml(bub.innerHTML));}catch(e){}
+    if(res&&res.orchestrate&&res.agents&&res.agents.length){animateOrchestration(bub,res,q);}
+    else{bub.innerHTML=renderAnswerWithChips((res&&res.answer)||'',(res&&res.tools)||[]);try{llmNoteTurn(q,_stripHtml(bub.innerHTML));}catch(e){}}
     scrollToBottom();
   }).catch(function(e){
     clearTimeout(_st);llmSetState('offline');
@@ -4497,7 +4496,7 @@ async function chatWithOrchestration(userText){
     '@@SYNTH@@\n'+
     '<综合所有产出的归因结论与可执行建议，分点>\n'+
     '@@END@@\n'+
-    '规则：agents 2-5个，必须先输出每个 @@AGENT@@ 块、再写 @@SYNTH@@，不要把各 Agent 的产出直接并进结论里；每个产出聚焦关键、避免冗长(控制在8行内)；工具ID只能来自下面清单；'+
+    '规则：agents 2-5个，必须先输出每个 @@AGENT@@ 块、再写 @@SYNTH@@，不要把各 Agent 的产出直接并进结论里；每个产出聚焦关键、避免冗长(严格控制在8行内，为 @@SYNTH@@ 预留篇幅)；@@SYNTH@@ 是必填项，产出可以精简但结论绝不可省略；工具ID只能来自下面清单；'+
     '产出必须与用户范围一致(说“七月份”就给整月计划而非单天)；'+
     '若涉及促销/活动，所有agent围绕同一活动保持一致，推荐机制要说明落到哪个月。\n'+
     '若不需要协同：直接用自然语言简洁回答；可在最后单独一行写 @@TOOLS@@: ID1,ID2 推荐相关工具。\n\n'+
@@ -4543,45 +4542,90 @@ function renderOrchestration(res){
   var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
   var L=function(zh,en){return EN?en:zh;};
   var list=(res.agents||[]).filter(function(a){return a&&a.id&&/^[A-Za-z]\d+$/.test(String(a.id).toUpperCase());});
-  var h='<div class="result-card">';
-  h+='<div class="result-header"><span style="font-size:18px;">🧩</span><span class="result-title">'+L('多Agent智能编排','Multi-Agent Orchestration')+'</span><span class="result-status status-success">'+llmEngineName()+'</span></div>';
-  h+='<div class="result-body">';
-  if(res.intent){ h+='<div class="result-section"><div class="result-section-title">'+L('意图识别','Intent')+'</div><div style="font-size:13px;color:var(--text-secondary);background:var(--bg);padding:10px;border-radius:6px;">'+escapeHtml(res.intent)+'</div></div>'; }
-  if(list.length){
-  // 编排方案概览
-  h+='<div class="result-section"><div class="result-section-title">'+L('编排方案','Plan')+' · '+list.length+' '+L('个 Agent','agents')+'</div>';
+  var _promoSig=/买\s*[一二三四1-4]\s*送|第二件|满\s*\d+\s*减|\d+\s*折(?!扣率)|买赠|加价购|换购|促销机制|机制[:：]|buy\s*\d+\s*get|gift[\s-]?with[\s-]?purchase|\bBOGO\b|%\s*off|bundle|second\s+item/i;
+  /* 先构建折叠区内容（编排方案 + 各工具产出） */
+  var detail='';
+  var posterBtn='';
+  detail+='<div style="font-size:12px;font-weight:700;color:var(--text-muted);margin:6px 0 4px;">'+L('编排方案','Plan')+' · '+list.length+' '+L('个工具','tools')+'</div>';
   list.forEach(function(a){ var id=String(a.id).toUpperCase(); var it=getItemById(id); var nm=it?aName(it):id;
-    h+='<div style="display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--border);">'+
+    detail+='<div style="display:flex;gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);">'+
        '<span style="flex-shrink:0;font-size:11px;font-weight:700;color:var(--primary);background:var(--primary-light);border-radius:6px;padding:2px 7px;min-width:34px;text-align:center;">'+id+'</span>'+
-       '<div style="flex:1;font-size:13px;"><div style="font-weight:600;">'+escapeHtml(nm)+'</div>'+(a.task?'<div style="color:var(--text-secondary);font-size:12px;">'+escapeHtml(a.task)+'</div>':'')+'</div>'+
+       '<div style="flex:1;font-size:12.5px;color:var(--text-secondary);"><b style="color:var(--text);">'+escapeHtml(nm)+'</b>'+(a.task?' · '+escapeHtml(a.task):'')+'</div>'+
        '<span style="flex-shrink:0;color:#52C41A;font-size:13px;">✓</span></div>';
   });
-  h+='</div>';
-  }
-  // 每个 Agent 的真实产出物（由 DeepSeek 按用户请求实时生成）
-  if(list.length){
-  h+='<div class="result-section"><div class="result-section-title">'+L('各 Agent 产出','Agent deliverables')+'</div>';
+  detail+='<div style="font-size:12px;font-weight:700;color:var(--text-muted);margin:10px 0 4px;">'+L('各工具产出','Tool outputs')+'</div>';
   list.forEach(function(a){ var id=String(a.id).toUpperCase(); var it=getItemById(id); var nm=it?aName(it):id;
-    var outRaw=a.output||a.finding||'';
+    var outRaw=(a.output||a.finding||'').replace(/<[^>]{0,30}产出物[^>]{0,6}>/g,'').trim();
     var inner='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'+
          '<span style="font-size:11px;font-weight:700;color:#fff;background:var(--primary);border-radius:6px;padding:2px 8px;">'+id+'</span>'+
          '<span style="font-weight:700;font-size:14px;color:var(--text);">'+escapeHtml(nm)+'</span>'+
        '</div>'+
        (a.task?'<div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">'+escapeHtml(a.task)+'</div>':'')+
        '<div style="font-size:13px;line-height:1.75;color:var(--text);white-space:pre-line;">'+mdLite(outRaw)+'</div>';
-    var _promoSig=/买\s*[一二三四1-4]\s*送|第二件|满\s*\d+\s*减|\d+\s*折(?!扣率)|买赠|加价购|换购|促销机制|机制[:：]|buy\s*\d+\s*get|gift[\s-]?with[\s-]?purchase|\bBOGO\b|%\s*off|bundle|second\s+item/i;
     if(_promoSig.test(outRaw||'')){
       window._promoBriefs=window._promoBriefs||[]; var pIdx=window._promoBriefs.push(outRaw)-1;
-      inner+='<button onclick="genPromoPoster('+pIdx+')" style="margin-top:10px;border:none;background:linear-gradient(135deg,#00C39A,#1E2761);color:#fff;border-radius:18px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">🎨 '+L('生成促销海报','Generate promo poster')+'</button>';
+      var pb='<button onclick="genPromoPoster('+pIdx+')" style="margin-top:10px;border:none;background:linear-gradient(135deg,#00C39A,#1E2761);color:#fff;border-radius:18px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">🎨 '+L('生成促销海报','Generate promo poster')+'</button>';
+      inner+=pb;
+      if(!posterBtn)posterBtn='<div style="margin-top:10px;">'+pb+'</div>';
     }
-    h+='<div style="margin:10px 0 4px;padding:12px;border:1px solid var(--border);border-radius:10px;background:#fff;">'+inner+'</div>';
+    detail+='<div style="margin:10px 0 4px;padding:12px;border:1px solid var(--border);border-radius:10px;background:#fff;">'+inner+'</div>';
   });
-  h+='</div>';
+  /* 主结构：意图(一行) → 分析与结论(主内容) → 海报按钮 → 折叠的分析过程 */
+  var h='<div class="result-card">';
+  h+='<div class="result-header"><span style="font-size:18px;">🧩</span><span class="result-title">'+L('多Agent智能编排','Multi-Agent Orchestration')+'</span><span class="result-status status-success">'+llmEngineName()+'</span></div>';
+  h+='<div class="result-body">';
+  if(res.intent){ h+='<div style="font-size:12.5px;color:var(--text-muted);margin-bottom:10px;">'+L('理解你的问题：','Understood: ')+escapeHtml(res.intent)+'</div>'; }
+  if(res.synthesis){
+    h+='<div class="result-section"><div class="result-section-title">'+L('🎯 分析与结论','🎯 Analysis & recommendation')+'</div><div style="font-size:13.5px;line-height:1.85;color:var(--text);padding:12px;background:var(--primary-light);border-radius:8px;border-left:3px solid var(--primary);white-space:pre-line;">'+mdLite(res.synthesis)+'</div></div>';
+  }else{
+    h+='<div style="font-size:13px;line-height:1.75;color:var(--text-secondary);padding:10px 12px;background:var(--bg);border-radius:8px;border-left:3px solid var(--border);margin-bottom:10px;">'+L('已完成 '+list.length+' 个工具的分析，产出如下。想让我归纳结论，直接追问「总结一下」即可。','Done with '+list.length+' tools — outputs below. Ask me to summarize anytime.')+'</div>';
   }
-  if(res.synthesis){ h+='<div class="result-section"><div class="result-section-title">'+L('🎯 AI 综合归因结论','🎯 AI root-cause synthesis')+'</div><div style="font-size:13px;line-height:1.85;color:var(--text);padding:12px;background:var(--primary-light);border-radius:8px;border-left:3px solid var(--primary);white-space:pre-line;">'+mdLite(res.synthesis)+'</div></div>'; }
+  h+=posterBtn;
+  var pid='orchp_'+Date.now()+'_'+Math.floor(Math.random()*1000);
+  var openDef=res.synthesis?'none':'';
+  h+='<div style="margin-top:10px;border-top:1px dashed var(--border);padding-top:8px;">'+
+     '<div onclick="orchToggle(\''+pid+'\',this)" style="cursor:pointer;font-size:12.5px;color:var(--text-muted);font-weight:600;">🔧 '+L('分析过程 · 调用了 ','Process · ')+list.length+L(' 个工具',' tools')+' <span>▸</span></div>'+
+     '<div id="'+pid+'" style="display:'+openDef+';margin-top:6px;">'+detail+'</div></div>';
   h+='</div>';
   h+='</div>';
   return h;
+}
+function orchToggle(pid,el){
+  var d=document.getElementById(pid);if(!d)return;
+  var s=el.querySelector('span');
+  if(d.style.display==='none'){d.style.display='';if(s)s.textContent='▾';}
+  else{d.style.display='none';if(s)s.textContent='▸';}
+}
+/* 编排过程动画：逐步展示"正在调用哪个工具"，最后呈现结论卡片 */
+function animateOrchestration(bub,res,q){
+  var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
+  var list=(res.agents||[]).filter(function(a){return a&&a.id&&/^[A-Za-z]\d+$/.test(String(a.id).toUpperCase());});
+  bub.innerHTML='<div style="font-size:13.5px;line-height:2.1;color:var(--text-muted);" id="orchAnim"></div>';
+  var box=bub.querySelector('#orchAnim');
+  var steps=[];
+  if(res.intent)steps.push('🔍 '+res.intent);
+  list.forEach(function(a){var id=String(a.id).toUpperCase();var it=getItemById(id);var nm=it?aName(it):id;steps.push((EN?'🔧 Calling ':'🔧 正在调用 ')+id+' '+nm+'…');});
+  steps.push(EN?'🎯 Synthesizing…':'🎯 正在汇总分析…');
+  var i=0;
+  function next(){
+    if(i>0&&box.lastChild){box.lastChild.innerHTML=escapeHtml(box.lastChild.textContent.replace(/…$/,''))+' <span style="color:#52C41A;">✓</span>';box.lastChild.style.color='var(--text)';}
+    if(i>=steps.length){
+      setTimeout(function(){
+        bub.innerHTML=renderOrchestration(res);
+        try{llmNoteTurn(q,_stripHtml(bub.innerHTML));}catch(e){}
+        scrollToBottom();
+        if(currentLang==='en'){try{localizeEl(bub);}catch(e){}}
+      },450);
+      return;
+    }
+    var line=document.createElement('div');
+    line.textContent=steps[i];
+    box.appendChild(line);
+    scrollToBottom();
+    i++;
+    setTimeout(next,(i===1)?250:600);
+  }
+  next();
 }
 
 // 下载数据分析模板(供用户填好后上传)
@@ -4939,11 +4983,11 @@ function sendMessage() {
       var el = document.getElementById(mid); if(!el) return;
       var bub = el.querySelector('.msg-bubble');
       if (res && res.orchestrate && res.agents && res.agents.length) {
-        bub.innerHTML = renderOrchestration(res);
+        animateOrchestration(bub, res, text);
       } else {
         bub.innerHTML = renderAnswerWithChips((res && res.answer) || '', (res && res.tools) || []);
+        try{llmNoteTurn(text,_stripHtml(bub.innerHTML));}catch(e){}
       }
-      try{llmNoteTurn(text,_stripHtml(bub.innerHTML));}catch(e){}
       scrollToBottom();
     }).catch(function(e){
       clearTimeout(_slowT);llmSetState('offline');
