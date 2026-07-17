@@ -3549,6 +3549,10 @@ function autoResize(el) {
 // ===== 真大模型接入（可选）=====
 // 部署好 Cloudflare Worker 后，把 Worker 网址粘到下面引号里（留空 = 演示模式，不调用大模型）
 const LLM_ENDPOINT = 'https://agent.linda605523.workers.dev';
+/* 多端点故障转移：新增可用域名（自定义域名/国内代理）加在最前面即可，自动优先并缓存可用端点 */
+var LLM_ENDPOINTS=[LLM_ENDPOINT];
+function llmEpGood(){try{return localStorage.getItem('ebest_llm_ep')||'';}catch(e){return '';}}
+function llmEpSet(ep){try{localStorage.setItem('ebest_llm_ep',ep);}catch(e){}}
 /* LLM 请求护栏：45秒超时 + 自动重试1次（应对Worker冷启动/DeepSeek偶发无响应），全局fetch统一拦截，所有调用点自动受益 */
 var _llmRawFetch = window.fetch.bind(window);
 function llmGuardFetch(url,opt,tries,timeoutMs){
@@ -3564,8 +3568,24 @@ function llmGuardFetch(url,opt,tries,timeoutMs){
     throw err;
   });
 }
+function llmEndpointChain(){
+  var good=llmEpGood();
+  var eps=LLM_ENDPOINTS.slice();
+  if(good&&eps.indexOf(good)>=0){eps=eps.sort(function(a,b){return (a===good?-1:0)-(b===good?-1:0);});}
+  return eps;
+}
+function llmFetchAny(opt,timeoutMs,triesPerEp){
+  var eps=llmEndpointChain();var i=0,lastErr=null;
+  triesPerEp=(triesPerEp==null?1:triesPerEp);
+  function next(){
+    if(i>=eps.length)throw lastErr||new Error('AI 服务暂不可用');
+    var ep=eps[i++];
+    return llmGuardFetch(ep,opt,triesPerEp,timeoutMs||45000).then(function(r){llmEpSet(ep);return r;},function(e){lastErr=e;return next();});
+  }
+  return next();
+}
 window.fetch=function(url,opt){
-  if(typeof url==='string'&&url.indexOf('linda605523.workers.dev')>=0){return llmGuardFetch(url,opt,1);}
+  if(typeof url==='string'&&LLM_ENDPOINTS.some(function(ep){return url.indexOf(ep)>=0;})){return llmFetchAny(opt);}
   return _llmRawFetch.apply(window,arguments);
 };
 function llmFailHtml(q){
@@ -3575,12 +3595,14 @@ function llmFailHtml(q){
       '<div style="font-size:13px;color:#666;margin:6px 0 10px;">「'+escapeHtml(q)+'」</div>'+
       '<button onclick="llmRetry(this)" data-q="'+encodeURIComponent(q)+'" style="border:1px solid #1890FF;background:#fff;color:#1890FF;border-radius:16px;padding:6px 16px;font-size:13px;font-weight:600;cursor:pointer;">🔄 Retry</button>'+
     llmKbBtn(q)+
+      llmDiagBtn()+
       '<div style="font-size:11px;color:#aaa;margin-top:8px;">If it keeps failing, the AI service is temporarily down — please try again later.</div>';
   }
   return '<div style="font-size:14px;">😥 AI 这会没响应（服务可能在唤醒或正忙）。你的问题我记下了：</div>'+
     '<div style="font-size:13px;color:#666;margin:6px 0 10px;">「'+escapeHtml(q)+'」</div>'+
     '<button onclick="llmRetry(this)" data-q="'+encodeURIComponent(q)+'" style="border:1px solid #1890FF;background:#fff;color:#1890FF;border-radius:16px;padding:6px 16px;font-size:13px;font-weight:600;cursor:pointer;">🔄 重新提问</button>'+
     llmKbBtn(q)+
+    llmDiagBtn()+
     '<div style="font-size:11px;color:#aaa;margin-top:8px;">如果多次失败，是 AI 服务临时故障，稍后再试即可</div>';
 }
 function llmRetry(btn){
@@ -3620,12 +3642,48 @@ function llmSetState(s){
 }
 function llmPing(){
   llmSetState('unknown');
-  return llmGuardFetch(LLM_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:'ping',messages:[{role:'user',content:'ping'}]})},0,12000)
+  return llmFetchAny({method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:'ping',messages:[{role:'user',content:'ping'}]})},12000,0)
     .then(function(resp){llmSetState(resp&&resp.ok?'online':'offline');return resp&&resp.ok;})
     .catch(function(e){llmSetState('offline');return false;});
 }
 document.addEventListener('DOMContentLoaded',function(){setTimeout(llmPing,1500);});
 /* 知识库兜底：AI 挂了就先从本地知识库找答案 */
+function llmDiagBtn(){
+  var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
+  return '<button onclick="llmDiagnose(this)" style="border:1px solid #FA8C16;background:#fff;color:#FA8C16;border-radius:16px;padding:6px 16px;font-size:13px;font-weight:600;cursor:pointer;margin-left:8px;">'+(EN?'🔍 Network check':'🔍 网络自检')+'</button>';
+}
+function llmProbe(url,ms){
+  return new Promise(function(resolve){
+    var done=false;
+    var t=setTimeout(function(){if(!done){done=true;resolve(false);}},ms||8000);
+    try{
+      _llmRawFetch(url,{method:'GET',mode:'no-cors',cache:'no-store'})
+        .then(function(){if(!done){done=true;clearTimeout(t);resolve(true);}})
+        .catch(function(){if(!done){done=true;clearTimeout(t);resolve(false);}});
+    }catch(e){if(!done){done=true;clearTimeout(t);resolve(false);}}
+  });
+}
+async function llmDiagnose(btn){
+  var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
+  btn.disabled=true;btn.textContent=(EN?'🔍 Checking…':'🔍 检测中…');
+  var w=await llmProbe(LLM_ENDPOINTS[0],12000);
+  var d=await llmProbe('https://api.deepseek.com',8000);
+  var c=await llmProbe('https://www.cloudflare.com',8000);
+  var msg='';
+  if(w){msg=EN?'✅ AI service is reachable now — tap Retry.':'✅ AI 服务现在能连上了，点「重新提问」即可。';}
+  else if(d&&c){msg=EN?'🧭 Your network is blocking the AI service domain (DNS pollution), but DeepSeek itself is reachable. Fix: bind a custom domain to the AI service (about 10 min in Cloudflare). Send this result to your tech contact.':'🧭 你的网络把 AI 服务的域名拦住了（DNS 污染），但 DeepSeek 本身能连通。解决办法：给 AI 服务绑一个自定义域名（约 10 分钟），把这个结果发给技术同学即可。';}
+  else if(!d&&c){msg=EN?'⚠️ DeepSeek (the AI engine) is unreachable from your network too — it may be rate-limited or down. Try again later.':'⚠️ DeepSeek（AI 引擎）在你的网络下也连不通，可能在限流或故障，稍后再试。';}
+  else{msg=EN?'🌐 Your current network looks broken overall (Cloudflare unreachable too). Switch Wi-Fi/5G and retry.':'🌐 你当前网络整体异常（连 Cloudflare 也不通），换个 WiFi/5G 再试。';}
+  var bub=btn.closest('.msg-bubble');
+  if(bub){
+    var div=document.createElement('div');
+    div.style.cssText='font-size:12.5px;line-height:1.7;background:#FFF7E6;border:1px solid #FFE7BA;border-radius:8px;padding:10px 12px;margin-top:10px;';
+    div.textContent=msg;
+    bub.appendChild(div);
+  }
+  btn.textContent=(EN?'🔍 Network check':'🔍 网络自检');
+  btn.disabled=false;
+}
 function llmKbBtn(q){
   try{
     if(!retrieveContext(q))return '';
