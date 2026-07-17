@@ -2884,6 +2884,7 @@ function showExecutionResult(item, values, type) {
   const resultHtml = generateResultHtml(item, values, type);
   var rid = 'res_' + Date.now() + '_' + Math.floor(Math.random()*1000);
   addAIMessage(resultHtml, rid);
+  try{llmNoteTurn('执行了 '+item.id+' '+(item.name||''), item.id+' '+(item.name||'')+' 执行完成，结果：'+_stripHtml(resultHtml));}catch(e){}
   if (currentLang === 'en') { var _el = document.getElementById(rid); if (_el) localizeEl(_el); }
 }
 
@@ -3617,6 +3618,7 @@ function llmRetry(btn){
     clearTimeout(_st);llmSetState('online');
     if(res&&res.orchestrate&&res.agents&&res.agents.length){bub.innerHTML=renderOrchestration(res);}
     else{bub.innerHTML=renderAnswerWithChips((res&&res.answer)||'',(res&&res.tools)||[]);}
+    try{llmNoteTurn(q,_stripHtml(bub.innerHTML));}catch(e){}
     scrollToBottom();
   }).catch(function(e){
     clearTimeout(_st);llmSetState('offline');
@@ -4461,6 +4463,26 @@ function showPosterModal(fields){
 }
 
 // ==================== DeepSeek 驱动的多Agent智能编排 ====================
+/* ===== 对话上下文（追问带上文，最多保留最近4轮） ===== */
+var _ctxTurns=[];
+function _stripHtml(h){var d=document.createElement('div');d.innerHTML=h||'';return (d.textContent||'').replace(/\s+/g,' ').trim();}
+function llmNoteTurn(q,a){
+  try{
+    q=String(q||'').slice(0,300);
+    a=String(a||'').slice(0,900);
+    if(!q&&!a)return;
+    _ctxTurns.push({q:q,a:a});
+    if(_ctxTurns.length>4)_ctxTurns=_ctxTurns.slice(_ctxTurns.length-4);
+  }catch(e){}
+}
+function llmCtxMessages(){
+  var msgs=[];
+  _ctxTurns.forEach(function(t){
+    if(t.q)msgs.push({role:'user',content:t.q});
+    if(t.a)msgs.push({role:'assistant',content:t.a});
+  });
+  return msgs;
+}
 async function chatWithOrchestration(userText){
   var roleName=(currentRole&&currentRole.name)?currentRole.name:'快消销售';
   var sys='你是 eBest 快消行业 AI 工作台的智能编排引擎。当前使用者角色：'+roleName+'。'+
@@ -4479,10 +4501,11 @@ async function chatWithOrchestration(userText){
     '产出必须与用户范围一致(说“七月份”就给整月计划而非单天)；'+
     '若涉及促销/活动，所有agent围绕同一活动保持一致，推荐机制要说明落到哪个月。\n'+
     '若不需要协同：直接用自然语言简洁回答；可在最后单独一行写 @@TOOLS@@: ID1,ID2 推荐相关工具。\n\n'+
-    '工具清单:\n'+buildToolCatalog()+llmLangClause();
+    '工具清单:\n'+buildToolCatalog()+llmLangClause()+'\n【对话规则】这是多轮对话，对话历史里可能包含你刚才为用户执行的工具结果。若用户是在追问上一条结果（如「考虑XX因素没」「为什么是这个数」「那怎么办」「再详细说说」），必须结合上一条结果的具体内容直接回答，不要触发多Agent编排；只有用户提出全新的分析任务时才编排。';
   var __ctx=retrieveContext(userText);
   if(__ctx){ sys='【用户上传的知识库/数据集中与本问题最相关的参考资料，回答时请优先依据这些资料，并在用到时注明来源文件名】\n'+__ctx+'\n\n'+sys; }
-  var resp=await fetch(LLM_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:sys,messages:[{role:'user',content:userText}]})});
+  var msgs=llmCtxMessages();msgs.push({role:'user',content:userText});
+  var resp=await fetch(LLM_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:sys,messages:msgs})});
   if(!resp.ok) throw new Error('HTTP '+resp.status);
   var data=await resp.json();
   var raw=(data.text||'').replace(/```[a-z]*\n?/gi,'').trim();
@@ -4920,6 +4943,7 @@ function sendMessage() {
       } else {
         bub.innerHTML = renderAnswerWithChips((res && res.answer) || '', (res && res.tools) || []);
       }
+      try{llmNoteTurn(text,_stripHtml(bub.innerHTML));}catch(e){}
       scrollToBottom();
     }).catch(function(e){
       clearTimeout(_slowT);llmSetState('offline');
@@ -4927,6 +4951,7 @@ function sendMessage() {
       var _cl = detectCluster(text);
       if (_cl) {
         el.querySelector('.msg-bubble').innerHTML = clusterCardHtml(_cl, (text.match(/华东|华北|华南|华中|西南|西北|东北/)||['华东'])[0]);
+        try{llmNoteTurn(text,_stripHtml(el.querySelector('.msg-bubble').innerHTML));}catch(e){}
         if (currentLang==='en') { try{ localizeEl(el.querySelector('.msg-bubble')); }catch(_e){} }
       } else {
         el.querySelector('.msg-bubble').innerHTML = llmFailHtml(text);
@@ -4992,6 +5017,7 @@ function selectMention(id, type) {
 // ==================== REMAINING FUNCTIONS ====================
 
 function newChat() {
+  _ctxTurns=[];
   document.getElementById('messagesContainer').innerHTML = '';
   document.getElementById('welcomeMsg').style.display = 'block';
   updateWelcome();
