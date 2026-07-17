@@ -299,6 +299,10 @@
         <span data-i18n="allSkills">全部Skill</span>
         <span class="nav-expand" id="navSkillExpand">&#9654;</span>
       </div>
+      <div class="nav-item" id="navStore" onclick="toggleStorePanel()">
+        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span data-i18n="skillStore">技能商店</span>
+      </div>
       <div class="nav-item" id="navKB" onclick="toggleKBPanel()">
         <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
         <span data-i18n="kbNav">知识库</span>
@@ -345,6 +349,10 @@
       </div>
       <div style="padding:8px 12px;font-size:12px;color:var(--text-muted);" id="skillCount">40 个Skill</div>
       <div id="skillListContent"></div>
+    </div>
+    <!-- Skill Store Panel -->
+    <div class="sidebar-content hidden" id="skillStorePanel">
+      <div style="padding:12px;" id="skillStoreBody"></div>
     </div>
     <!-- Knowledge Base Panel -->
     <div class="sidebar-content hidden" id="knowledgePanel">
@@ -2302,7 +2310,8 @@ function renderRightPanel() {
     '<div class="info-card">'+
       '<div class="info-card-title">'+t('quickSkills')+'</div>'+
       '<div class="chip-list">'+roleSkills.slice(0,5).map(function(s){return '<span class="chip" data-sid="'+s.id+'">'+s.id+' '+aName(s)+'</span>';}).join('')+'</div>'+
-    '</div>';
+    '</div>'+
+    (function(){if(typeof msGet!=='function')return '';var ids=msGet().filter(function(id){return getItemById(id);});if(!ids.length)return '';var h='<div class="info-card"><div class="info-card-title">'+t('mySkills')+'</div><div class="chip-list">';ids.slice(0,8).forEach(function(id){var it=getItemById(id);var isA=id.charAt(0)==='A';h+='<span class="chip" data-'+(isA?'aid':'sid')+'="'+id+'">'+id+' '+aName(it)+'</span>';});h+='</div></div>';return h;})();
 }
 
 // ==================== PARAMETER PANEL ====================
@@ -4296,6 +4305,157 @@ function rtmInit(){
 }
 document.addEventListener('DOMContentLoaded',rtmInit);
 
+// ==================== 技能商店（参考扣子：按角色平铺 + 我的技能） ====================
+/* 技能包：把天然成组的 Agent/Skill 打包；用户添加进「我的技能」，点击进会话 */
+var SKILL_PACKS=[
+  {id:'PK_stock', name:'补货与库存包', icon:'📦', desc:'销量预测、智能补货、订单推荐、库存周转一体化', skills:['A2','A18','S39','S21'], query:'帮我做一遍补货与库存健康检查，找出需要优先处理的SKU'},
+  {id:'PK_visit', name:'巡店执行包', icon:'🏪', desc:'拜访任务、巡店评分、货架智能识别、陈列标准', skills:['S1','A20','A30','S14'], query:'帮我规划一次完整的巡店执行与陈列检查'},
+  {id:'PK_promo', name:'促销管理包', icon:'🎯', desc:'促销Brief、核销费效、促销日历、执行监控', skills:['S2','A4','A14','S33'], query:'帮我设计一档促销并评估费效和执行监控要点'},
+  {id:'PK_analysis', name:'经营分析包', icon:'📊', desc:'订单趋势、品类洞察、机会门店、智能预警', skills:['S10','A11','S5','A7'], query:'分析区域经营状况，找出问题点和机会点'},
+  {id:'PK_dist', name:'经销商管理包', icon:'🤝', desc:'信用评估、账款追踪、经销商对账、退货处理', skills:['A25','A27','S19','S26'], query:'帮我梳理经销商的风险项和本周待办'},
+  {id:'PK_content', name:'内容创作包', icon:'✍️', desc:'竞品话术、DSR赋能、导购话术、营销内容', skills:['S7','S16','S18','S4'], query:'帮我生成一套一线团队可以直接使用的内容包'},
+  {id:'PK_eb2b', name:'eB2B运营包', icon:'📱', desc:'客户画像、机会门店、智能选品、店主文案', skills:['A12','S5','A28','S3'], query:'基于eB2B行为数据，找出本周的运营机会'}
+];
+
+/* ---------- 我的技能（localStorage 持久化） ---------- */
+function msGet(){try{return JSON.parse(localStorage.getItem('ebest_myskills')||'[]');}catch(e){return [];}}
+function msAdd(id){var a=msGet();if(a.indexOf(id)<0){a.push(id);try{localStorage.setItem('ebest_myskills',JSON.stringify(a));}catch(e){}}}
+function msRemove(id){var a=msGet().filter(function(x){return x!==id;});try{localStorage.setItem('ebest_myskills',JSON.stringify(a));}catch(e){}}
+function msEffective(){
+  var qa=(typeof getQuickActions==='function'&&currentRole)?getQuickActions(currentRole):[];
+  var ids=msGet().slice();
+  qa.forEach(function(q){if(q.id!=='decline'&&ids.indexOf(q.id)<0)ids.push(q.id);});
+  return ids;
+}
+function storeRoleMatch(item,roleId){var rt=item.roleTags||[];return rt.indexOf('all')>=0||rt.indexOf(roleId)>=0;}
+
+/* ---------- 面板开关 ---------- */
+function toggleStorePanel(forceClose){
+  var p=document.getElementById('skillStorePanel');if(!p)return;
+  if(forceClose){p.classList.add('hidden');return;}
+  var open=p.classList.contains('hidden');
+  if(open){_showPanel('skillStorePanel');renderSkillStore();if(currentLang==='en'){try{localizeEl(p);}catch(e){}}}
+  else{p.classList.add('hidden');}
+}
+/* 其它面板打开时自动收起商店（不侵入原函数） */
+(function(){
+  ['toggleAgentList','toggleSkillList','toggleKBPanel','toggleDSPanel'].forEach(function(fn){
+    if(typeof window[fn]==='function'){var orig=window[fn];window[fn]=function(){var p=document.getElementById('skillStorePanel');if(p)p.classList.add('hidden');orig();};}
+  });
+})();
+
+/* ---------- 使用技能 / 技能包（进入会话） ---------- */
+function msUse(id){
+  toggleStorePanel(true);
+  if(typeof closeSidebar==='function')closeSidebar();
+  if(typeof openToolById==='function')openToolById(id);
+}
+function msUsePack(id){
+  var p=null;SKILL_PACKS.forEach(function(x){if(x.id===id)p=x;});if(!p)return;
+  toggleStorePanel(true);
+  if(typeof closeSidebar==='function')closeSidebar();
+  var inp=document.getElementById('chatInput');
+  if(inp){inp.value=p.query;inp.dispatchEvent(new Event('input'));}
+  sendMessage();
+}
+function storeAction(id,isPack){
+  if(msEffective().indexOf(id)>=0){if(isPack)msUsePack(id);else msUse(id);}
+  else{msAdd(id);renderSkillStore();renderRightPanel();}
+}
+
+/* ---------- 渲染 ---------- */
+var _storeTab='featured',_storeRole='all',_storeQ='';
+function renderSkillStore(){
+  var box=document.getElementById('skillStoreBody');if(!box)return;
+  var h='<div style="font-size:15px;font-weight:700;margin-bottom:10px;">'+t('skillStore')+'</div>';
+  h+='<div style="display:flex;background:var(--bg);border-radius:10px;padding:3px;margin-bottom:10px;">'+
+     '<div onclick="_storeTab=\'featured\';renderSkillStore()" style="flex:1;text-align:center;padding:7px 0;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;'+(_storeTab==='featured'?'background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.08);':'color:var(--text-muted);')+'">'+t('storeFeatured')+'</div>'+
+     '<div onclick="_storeTab=\'my\';renderSkillStore()" style="flex:1;text-align:center;padding:7px 0;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;'+(_storeTab==='my'?'background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.08);':'color:var(--text-muted);')+'">'+t('mySkills')+'</div></div>';
+  if(_storeTab==='featured'){
+    h+='<input oninput="_storeQ=this.value;renderSkillStoreList()" value="'+escapeHtml(_storeQ)+'" placeholder="🔍 '+t('msSearch')+'" style="width:100%;box-sizing:border-box;border:1px solid var(--border);border-radius:10px;padding:8px 12px;font-size:13px;margin-bottom:10px;">';
+    h+='<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:4px;">';
+    h+=storeChip('all',t('msAll'));
+    roles.forEach(function(r){h+=storeChip(r.id,tRole(r));});
+    h+='</div>';
+    h+='<div id="storeListWrap">'+storeListHtml()+'</div>';
+  }else{
+    h+=storeMyHtml();
+  }
+  box.innerHTML=h;
+}
+function storeChip(roleId,label){
+  var on=_storeRole===roleId;
+  return '<span onclick="_storeRole=\''+roleId+'\';renderSkillStore()" style="flex:none;font-size:12px;padding:5px 12px;border-radius:16px;cursor:pointer;font-weight:600;white-space:nowrap;'+(on?'background:#1E2761;color:#fff;':'background:var(--bg);color:var(--text-secondary);border:1px solid var(--border);')+'">'+label+'</span>';
+}
+function storeBtn(id,isPack){
+  var added=msEffective().indexOf(id)>=0;
+  return '<button onclick="event.stopPropagation();storeAction(\''+id+'\','+(isPack?1:0)+')" style="flex:none;font-size:12px;font-weight:600;border-radius:16px;padding:6px 14px;cursor:pointer;border:1.5px solid '+(added?'#00A37A':'#1890FF')+';color:'+(added?'#00A37A':'#1890FF')+';background:#fff;">'+(added?t('msUse'):t('msAdd'))+'</button>';
+}
+function storeListHtml(){
+  var q=_storeQ.trim().toLowerCase(),h='';
+  function qmatch(it){if(!q)return true;return (it.id+' '+(it.name||'')+' '+(it.desc||'')).toLowerCase().indexOf(q)>=0;}
+  var packs=SKILL_PACKS.filter(function(p){return !q||(p.name+p.desc+p.skills.join('')).toLowerCase().indexOf(q)>=0;});
+  if(packs.length&&_storeRole==='all'){
+    h+='<div style="font-size:13px;font-weight:700;color:var(--text);margin:6px 0 8px;">'+t('skillPack')+'</div>';
+    packs.forEach(function(p){
+      h+='<div style="border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px;background:linear-gradient(135deg,#F8FAFF,#fff);">'+
+        '<div style="display:flex;gap:10px;align-items:flex-start;">'+
+        '<div style="font-size:26px;flex:none;">'+p.icon+'</div>'+
+        '<div style="flex:1;min-width:0;cursor:pointer;" onclick="msUsePack(\''+p.id+'\')"><div style="font-size:14px;font-weight:700;">'+p.name+'</div>'+
+        '<div style="font-size:12px;color:var(--text-muted);margin-top:2px;line-height:1.5;">'+p.desc+'</div>'+
+        '<div style="display:inline-block;font-size:10px;font-weight:700;color:#722ED1;background:#F3ECFF;border-radius:6px;padding:2px 7px;margin-top:6px;">'+t('skillPack')+'</div></div>'+
+        storeBtn(p.id,1)+'</div>'+
+        '<div style="font-size:11px;color:var(--text-muted);margin:8px 0 5px;">'+t('includedSkills')+'</div>'+
+        '<div style="display:flex;flex-wrap:wrap;gap:6px;">'+
+        p.skills.map(function(sid){var it=getItemById(sid);if(!it)return '';return '<span onclick="msUse(\''+sid+'\')" style="font-size:11.5px;background:#fff;border:1px solid var(--border);border-radius:14px;padding:4px 10px;cursor:pointer;">'+sid+' '+escapeHtml(aName(it)||it.name||'')+'</span>';}).join('')+
+        '</div></div>';
+    });
+  }
+  var roleList=(_storeRole==='all')?roles:roles.filter(function(r){return r.id===_storeRole;});
+  roleList.forEach(function(r){
+    var items=agents.concat(skills).filter(function(it){return storeRoleMatch(it,r.id)&&qmatch(it);});
+    if(!items.length)return;
+    h+='<div style="display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:700;margin:14px 0 6px;">'+tRole(r)+'<span style="color:#ccc;font-weight:400;">›</span></div>';
+    items.forEach(function(it){
+      var isA=(it.id.charAt(0)==='A');
+      h+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);">'+
+        '<span style="flex:none;font-size:10.5px;font-weight:700;color:#fff;background:'+(isA?'#1890FF':'#52C41A')+';border-radius:6px;padding:3px 7px;min-width:32px;text-align:center;cursor:pointer;" onclick="msUse(\''+it.id+'\')">'+it.id+'</span>'+
+        '<div style="flex:1;min-width:0;cursor:pointer;" onclick="msUse(\''+it.id+'\')"><div style="font-size:13px;font-weight:600;">'+escapeHtml(aName(it)||it.name||'')+'</div>'+
+        '<div style="font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escapeHtml(it.desc||'')+'</div></div>'+
+        storeBtn(it.id,0)+'</div>';
+    });
+  });
+  if(!h)h='<div style="font-size:12px;color:#aaa;padding:16px 0;text-align:center;">—</div>';
+  return h;
+}
+function renderSkillStoreList(){var w=document.getElementById('storeListWrap');if(w)w.innerHTML=storeListHtml();}
+function storeMyHtml(){
+  var userAdded=msGet();
+  var qa=(typeof getQuickActions==='function'&&currentRole)?getQuickActions(currentRole):[];
+  var defaults=qa.map(function(q){return q.id;}).filter(function(id){return id!=='decline'&&getItemById(id);});
+  var packs=userAdded.filter(function(id){return id.indexOf('PK_')===0;});
+  var tools=userAdded.filter(function(id){return id.indexOf('PK_')!==0&&getItemById(id);});
+  if(!userAdded.length&&!defaults.length){return '<div style="font-size:12.5px;color:var(--text-muted);padding:24px 0;text-align:center;">'+t('msEmpty')+'</div>';}
+  var h='';
+  function row(id,isPack,removable){
+    var it=isPack?SKILL_PACKS.filter(function(x){return x.id===id;})[0]:getItemById(id);
+    if(!it)return '';
+    var nm=isPack?it.name:(aName(it)||it.name||'');
+    var sub=isPack?(t('skillPack')+' · '+it.skills.length):(it.desc||'');
+    return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);">'+
+      '<span style="font-size:18px;flex:none;">'+(isPack?it.icon:(id.charAt(0)==='A'?'🤖':'⭐'))+'</span>'+
+      '<div style="flex:1;min-width:0;cursor:pointer;" onclick="'+(isPack?('msUsePack(\''+id+'\')'):('msUse(\''+id+'\')'))+'"><div style="font-size:13px;font-weight:600;">'+escapeHtml(nm)+'</div>'+
+      '<div style="font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escapeHtml(sub)+'</div></div>'+
+      '<button onclick="'+(isPack?('msUsePack(\''+id+'\')'):('msUse(\''+id+'\')'))+'" style="flex:none;font-size:12px;font-weight:600;border-radius:16px;padding:6px 14px;cursor:pointer;border:1.5px solid #00A37A;color:#00A37A;background:#fff;">'+t('msUse')+'</button>'+
+      (removable?('<button onclick="msRemove(\''+id+'\');renderSkillStore();renderRightPanel();" style="flex:none;border:none;background:none;color:#C0392B;font-size:14px;cursor:pointer;padding:4px;" title="'+t('msRemove')+'">✕</button>'):'')+
+      '</div>';
+  }
+  if(packs.length){h+='<div style="font-size:12px;font-weight:700;color:var(--text-muted);margin:8px 0 2px;">'+t('skillPack')+'</div>';packs.forEach(function(id){h+=row(id,1,true);});}
+  if(tools.length){h+='<div style="font-size:12px;font-weight:700;color:var(--text-muted);margin:12px 0 2px;">'+t('msAdded')+'</div>';tools.forEach(function(id){h+=row(id,0,true);});}
+  if(defaults.length){h+='<div style="font-size:12px;font-weight:700;color:var(--text-muted);margin:12px 0 2px;">'+t('msRoleDefault')+'</div>';defaults.forEach(function(id){h+=row(id,0,false);});}
+  return h;
+}
+
 // ==================== 知识库 / 数据集（localStorage + 关键词检索注入） ====================
 function _kbRead(key){ try{ return JSON.parse(localStorage.getItem(key)||'[]'); }catch(e){ return []; } }
 function _kbWrite(key,arr){ try{ localStorage.setItem(key, JSON.stringify(arr)); }catch(e){ alert('存储空间不足，请删除部分文件'); } }
@@ -4344,7 +4504,7 @@ function _renderList(items, listId, statusId, delFn, kind){
 function renderKBList(){ _renderList(kbGet(),'kbList','kbStatus',kbDelete,'kb'); }
 function renderDSList(){ _renderList(dsGet(),'dsList','dsStatus',dsDelete,'ds'); }
 function _showPanel(showId){
-  ['agentListPanel','skillListPanel','knowledgePanel','datasetPanel'].forEach(function(pid){ var p=document.getElementById(pid); if(p) p.classList.toggle('hidden', pid!==showId); });
+  ['agentListPanel','skillListPanel','knowledgePanel','datasetPanel','skillStorePanel'].forEach(function(pid){ var p=document.getElementById(pid); if(p) p.classList.toggle('hidden', pid!==showId); });
   var ae=document.getElementById('navAgentExpand'); if(ae) ae.classList.remove('rotated');
   var se=document.getElementById('navSkillExpand'); if(se) se.classList.remove('rotated');
   if(typeof agentListExpanded!=='undefined') agentListExpanded=false;
@@ -5108,6 +5268,8 @@ function simulateExecution(id, name, type) {
 }
 
 /* ===== 数据集/知识库 DataHub ===== */
+try{Object.assign(I18N.zh,{skillStore:'技能商店',storeFeatured:'精选',mySkills:'我的技能',msAdd:'添加',msUse:'使用',msAdded:'已添加',skillPack:'技能包',includedSkills:'包含以下技能',msEmpty:'还没有添加技能，去「精选」挑几个常用的',msSearch:'搜索技能 / 技能包',msRoleDefault:'角色默认',msRemove:'移除',msAll:'全部'});}catch(e){}
+try{Object.assign(I18N.en,{skillStore:'Skill Store',storeFeatured:'Featured',mySkills:'My Skills',msAdd:'Add',msUse:'Use',msAdded:'Added',skillPack:'Skill Pack',includedSkills:'Includes',msEmpty:'No skills yet. Pick some from Featured',msSearch:'Search skills / packs',msRoleDefault:'Role default',msRemove:'Remove',msAll:'All'});}catch(e){}
 try{Object.assign(I18N.zh,{dataHub:'数据/知识库',manageData:'管理数据集 / 知识库',dataSources:'数据源',dataFiles:'数据文件',knowledgeBase:'知识库',addItem:'添加',uploadFile:'上传文件',addDoc:'添加文档',srcInternal:'内部',srcExternal:'外部',noFiles:'暂无文件，点「上传文件」添加',dhEmpty:'暂无，点上方添加',rows:'行',pickItem:'选择一个 Agent / Skill，管理其数据源、数据文件与知识库',addSourcePrompt:'输入数据源名称（如 ERP(库存数据)）',editName:'修改名称',editNote:'修改说明',docTitlePrompt:'输入文档名称（如 陈列标准.pdf）',backAll:'‹ 全部'});
 Object.assign(I18N.en,{dataHub:'Data & Knowledge',manageData:'Manage Data & Knowledge',dataSources:'Data Sources',dataFiles:'Data Files',knowledgeBase:'Knowledge Base',addItem:'Add',uploadFile:'Upload',addDoc:'Add Doc',srcInternal:'Internal',srcExternal:'External',noFiles:'No files yet — tap Upload',dhEmpty:'None yet — add above',rows:'rows',pickItem:'Pick an Agent / Skill to manage its data sources, files & knowledge base',addSourcePrompt:'Enter data source name (e.g. ERP(inventory))',editName:'Edit name',editNote:'Edit note',docTitlePrompt:'Enter document name (e.g. Display-Standard.pdf)',backAll:'‹ All'});}catch(e){}
 
