@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>eBest AI RTM · 管理后台</title>
+<style>
+:root{
+  --navy:#1E2761; --blue:#1890FF; --green:#00C39A; --bg:#F4F6FA;
+  --card:#FFFFFF; --line:#E8ECF3; --txt:#232946; --sub:#7A8199;
+  --red:#F5222D; --amber:#FAAD14;
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;}
+body{background:var(--bg);color:var(--txt);}
+.layout{display:flex;min-height:100vh;}
+/* ============ 侧边栏 ============ */
+.side{width:220px;background:var(--navy);color:#C6CBE4;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.side .logo{padding:20px 18px;font-size:16px;font-weight:700;color:#fff;border-bottom:1px solid rgba(255,255,255,.1);}
+.side .logo small{display:block;font-weight:400;font-size:11px;color:#8B93C0;margin-top:2px;}
+.nav-group{padding:14px 12px 4px;font-size:11px;color:#7781B3;letter-spacing:1px;}
+.nav-item{padding:10px 14px;margin:2px 8px;border-radius:8px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:9px;transition:.15s;}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff;}
+.nav-item.active{background:var(--blue);color:#fff;}
+.nav-item .badge{margin-left:auto;background:var(--red);color:#fff;font-size:10px;border-radius:8px;padding:1px 6px;}
+/* ============ 主区 ============ */
+.main{flex:1;min-width:0;}
+.topbar{background:#fff;border-bottom:1px solid var(--line);padding:12px 24px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:10;}
+.topbar h1{font-size:16px;}
+.topbar .crumb{font-size:12px;color:var(--sub);}
+.topbar .right{margin-left:auto;display:flex;align-items:center;gap:14px;font-size:12px;color:var(--sub);}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:12px;font-size:11px;}
+.pill.ok{background:#E6FAF4;color:#00996F;}
+.pill.warn{background:#FFF7E6;color:#B26A00;}
+.pill.err{background:#FFF1F0;color:var(--red);}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;}
+.dot.g{background:var(--green);} .dot.y{background:var(--amber);} .dot.r{background:var(--red);}
+.content{padding:20px 24px;max-width:1200px;}
+.page{display:none;} .page.show{display:block;}
+/* ============ 通用卡片 ============ */
+.grid{display:grid;gap:14px;}
+.g4{grid-template-columns:repeat(4,1fr);} .g3{grid-template-columns:repeat(3,1fr);} .g2{grid-template-columns:repeat(2,1fr);}
+@media(max-width:980px){.g4,.g3,.g2{grid-template-columns:1fr 1fr;}}
+@media(max-width:640px){.g4,.g3,.g2{grid-template-columns:1fr;}.side{width:56px;}.side .logo,.nav-group,.nav-item span{display:none;}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;}
+.card h3{font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.card h3 .more{margin-left:auto;font-size:11px;color:var(--blue);cursor:pointer;font-weight:400;}
+.kpi .num{font-size:26px;font-weight:700;margin:4px 0 2px;}
+.kpi .lbl{font-size:12px;color:var(--sub);}
+.kpi .trend{font-size:11px;margin-top:4px;}
+.trend.up{color:#00996F;} .trend.down{color:var(--red);}
+/* ============ 表格 ============ */
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+th{text-align:left;color:var(--sub);font-weight:500;padding:8px 10px;border-bottom:1px solid var(--line);background:#FAFBFE;}
+td{padding:9px 10px;border-bottom:1px solid var(--line);}
+tr:hover td{background:#F8FAFF;}
+/* ============ 表单 ============ */
+.frow{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px dashed var(--line);}
+.frow:last-child{border-bottom:none;}
+.frow .flbl{width:170px;font-size:13px;}
+.frow .flbl small{display:block;color:var(--sub);font-size:11px;margin-top:2px;}
+.frow input[type=number],.frow select,.frow input[type=text]{width:110px;padding:6px 9px;border:1px solid var(--line);border-radius:6px;font-size:13px;}
+.frow .unit{color:var(--sub);font-size:12px;}
+.frow .fhint{margin-left:auto;font-size:11px;color:var(--sub);}
+.btn{border:none;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;transition:.15s;}
+.btn.pri{background:var(--blue);color:#fff;} .btn.pri:hover{background:#0E7DE0;}
+.btn.ghost{background:#fff;border:1px solid var(--line);color:var(--txt);}
+.btn.sm{padding:4px 10px;font-size:12px;}
+.btn.danger{background:#fff;border:1px solid var(--red);color:var(--red);}
+.toggle{position:relative;width:38px;height:20px;background:#D6DBE8;border-radius:10px;cursor:pointer;transition:.2s;flex-shrink:0;}
+.toggle.on{background:var(--green);}
+.toggle::after{content:'';position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:2px;left:2px;transition:.2s;}
+.toggle.on::after{left:20px;}
+/* ============ 货架 ============ */
+.shelf-item{display:flex;align-items:center;gap:12px;padding:11px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:#fff;}
+.shelf-item .ic{width:34px;height:34px;border-radius:8px;background:#EEF3FF;display:flex;align-items:center;justify-content:center;font-size:17px;}
+.shelf-item .nm{font-size:13px;font-weight:600;}
+.shelf-item .ds{font-size:11px;color:var(--sub);margin-top:2px;}
+.tag{display:inline-block;font-size:10px;padding:1px 7px;border-radius:8px;margin-left:6px;}
+.tag.agent{background:#E8F0FF;color:#1B5FD9;} .tag.skill{background:#E6FAF4;color:#00996F;}
+/* ============ 检索测试台 ============ */
+.testbox{display:flex;gap:10px;}
+.testbox input{flex:1;padding:10px 14px;border:1px solid var(--line);border-radius:8px;font-size:13px;}
+.hit{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:10px;background:#fff;}
+.hit .score{float:right;color:var(--blue);font-weight:700;font-size:13px;}
+.hit .src{font-size:11px;color:var(--sub);margin-bottom:5px;}
+.bar{height:6px;background:#EDF0F7;border-radius:3px;overflow:hidden;}
+.bar>i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--blue),var(--green));}
+.mono{font-family:SFMono-Regular,Menlo,monospace;font-size:11.5px;}
+.logline{padding:6px 10px;border-bottom:1px solid var(--line);font-size:12px;display:flex;gap:10px;}
+.logline .t{color:var(--sub);flex-shrink:0;}
+.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 22px;border-radius:10px;font-size:13px;opacity:0;transition:.3s;pointer-events:none;z-index:99;}
+.toast.show{opacity:1;}
+.section-title{font-size:15px;font-weight:700;margin:20px 0 12px;display:flex;align-items:center;gap:8px;}
+.section-title .p-tag{font-size:10px;background:var(--navy);color:#fff;border-radius:8px;padding:2px 8px;font-weight:400;}
+</style>
+</head>
+<body>
+<div class="layout">
+  <!-- 侧边栏 -->
+  <div class="side">
+    <div class="logo">🛠 eBest 管理后台<small>AI RTM Workbench Admin</small></div>
+    <div class="nav-group">总览</div>
+    <div class="nav-item active" data-p="dashboard">📊 <span>运营仪表盘</span></div>
+    <div class="nav-item" data-p="rules">⚙️ <span>规则与阈值</span></div>
+    <div class="nav-group">P1 · 货架与内容</div>
+    <div class="nav-item" data-p="shelf">🧩 <span>技能货架管理</span></div>
+    <div class="nav-item" data-p="kb">📚 <span>知识库与检索</span></div>
+    <div class="nav-item" data-p="data">🗄 <span>数据质量管理</span><span class="badge">3</span></div>
+    <div class="nav-group">P2 · 服务与权限</div>
+    <div class="nav-item" data-p="llm">🤖 <span>LLM 服务端点</span></div>
+    <div class="nav-item" data-p="rbac">👥 <span>角色与权限</span></div>
+    <div class="nav-item" data-p="audit">🧾 <span>审计与血缘</span></div>
+  </div>
+
+  <!-- 主区 -->
+  <div class="main">
+    <div class="topbar">
+      <h1 id="pageTitle">运营仪表盘</h1>
+      <span class="crumb" id="pageCrumb">总览 / 运营仪表盘</span>
+      <div class="right">
+        <span class="pill ok"><i class="dot g"></i>千问端点正常</span>
+        <span>租户：默认企业</span>
+        <span>👤 admin</span>
+      </div>
+    </div>
+    <div class="content">
+
+    <!-- ===== 仪表盘 ===== -->
+    <div class="page show" id="p-dashboard">
+      <div class="grid g4">
+        <div class="card kpi"><div class="lbl">今日对话数</div><div class="num">1,286</div><div class="trend up">▲ 12.4% vs 昨日</div></div>
+        <div class="card kpi"><div class="lbl">技能调用次数</div><div class="num">3,517</div><div class="trend up">▲ 8.1%</div></div>
+        <div class="card kpi"><div class="lbl">LLM 成功率</div><div class="num">99.2%</div><div class="trend down">平均延迟 2.3s</div></div>
+        <div class="card kpi"><div class="lbl">活跃用户</div><div class="num">342</div><div class="trend up">覆盖 6 个角色</div></div>
+      </div>
+      <div class="section-title">技能调用 TOP5 <span class="p-tag">近7天</span></div>
+      <div class="grid g2">
+        <div class="card">
+          <h3>调用量排行</h3>
+          <table>
+            <tr><th>技能</th><th>类型</th><th>调用</th><th>成功率</th><th>趋势</th></tr>
+            <tr><td>A2 补货建议</td><td><span class="tag agent">Agent</span></td><td>842</td><td>98.7%</td><td><div class="bar"><i style="width:100%"></i></div></td></tr>
+            <tr><td>S10 经营周报</td><td><span class="tag skill">Skill</span></td><td>631</td><td>99.4%</td><td><div class="bar"><i style="width:75%"></i></div></td></tr>
+            <tr><td>S1 巡店 checklist</td><td><span class="tag skill">Skill</span></td><td>488</td><td>99.8%</td><td><div class="bar"><i style="width:58%"></i></div></td></tr>
+            <tr><td>A11 销量归因</td><td><span class="tag agent">Agent</span></td><td>402</td><td>97.9%</td><td><div class="bar"><i style="width:48%"></i></div></td></tr>
+            <tr><td>S39 库存健康</td><td><span class="tag skill">Skill</span></td><td>355</td><td>99.1%</td><td><div class="bar"><i style="width:42%"></i></div></td></tr>
+          </table>
+        </div>
+        <div class="card">
+          <h3>告警与待办</h3>
+          <div class="logline"><span class="t">10:24</span><span class="pill warn">数据</span><span>华东大区 DMS 库存表 2 天未更新</span></div>
+          <div class="logline"><span class="t">09:51</span><span class="pill err">规则</span><span>安全库存天数被设为 30（超出建议上限 21）</span></div>
+          <div class="logline"><span class="t">09:12</span><span class="pill warn">数据</span><span>3 个 SKU 主数据缺失箱规字段</span></div>
+          <div class="logline"><span class="t">08:40</span><span class="pill ok">LLM</span><span>千问端点延迟恢复至 2.3s（昨日峰值 6.8s）</span></div>
+          <div class="logline"><span class="t">昨日</span><span class="pill ok">货架</span><span>「促销管理包」新增技能 S33，已上架</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== P0 规则与阈值 ===== -->
+    <div class="page" id="p-rules">
+      <div class="section-title">Rules Center <span class="p-tag">P0</span><span style="font-size:11px;color:var(--sub);font-weight:400">修改实时下发到前台计算引擎 · 所有变更留痕</span></div>
+      <div class="grid g2">
+        <div class="card">
+          <h3>📦 补货与库存规则 <span class="more">变更记录</span></h3>
+          <div class="frow"><div class="flbl">新鲜度预警阈值<small>剩余保质期低于该天数触发预警</small></div><input type="number" value="14" id="r-fresh"><span class="unit">天</span><span class="fhint">建议 7–21</span></div>
+          <div class="frow"><div class="flbl">临期清货阈值<small>低于该天数建议停止补货并清库</small></div><input type="number" value="60"><span class="unit">天</span><span class="fhint">建议 30–90</span></div>
+          <div class="frow"><div class="flbl">安全库存天数<small>补货量 = 日均销量 ×（周期+安全天数）</small></div><input type="number" value="7"><span class="unit">天</span><span class="fhint">建议 3–21</span></div>
+          <div class="frow"><div class="flbl">历史销量窗口<small>计算日均销量的历史倍数</small></div><select><option>3 × 周期</option><option>2 × 周期</option><option>4 × 周期</option></select><span class="fhint">默认 3×</span></div>
+          <div style="margin-top:14px;display:flex;gap:10px;">
+            <button class="btn pri" onclick="toast('✅ 规则已保存并下发，审计日志已记录')">保存并下发</button>
+            <button class="btn ghost" onclick="toast('已恢复出厂默认阈值')">恢复默认</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>🎯 事件系数与边界保护</h3>
+          <div class="frow"><div class="flbl">世界杯/大促系数<small>事件期间销量放大系数</small></div><input type="number" value="1.8" step="0.1"><span class="unit">×</span><span class="fhint">1.0–3.0</span></div>
+          <div class="frow"><div class="flbl">边界校验<small>超界输入阻止保存并提示</small></div><div class="toggle on" onclick="tg(this)"></div><span class="fhint">强烈建议开启</span></div>
+          <div class="frow"><div class="flbl">修改需二次确认<small>影响补货量的关键项</small></div><div class="toggle on" onclick="tg(this)"></div></div>
+          <div class="frow"><div class="flbl">灰度范围<small>新规则先对试点大区生效</small></div><select><option>全部大区</option><option>仅华东试点</option><option>仅华南试点</option></select></div>
+          <div style="margin-top:12px;padding:10px 12px;background:#FFF7E6;border-radius:8px;font-size:12px;color:#B26A00;">⚠️ 昨日 09:51 检测到「安全库存天数 = 30」超出建议上限，已由操作员 chen.wei 改回 7。<span style="text-decoration:underline;cursor:pointer">查看血缘</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== P1 技能货架 ===== -->
+    <div class="page" id="p-shelf">
+      <div class="section-title">技能货架管理 <span class="p-tag">P1</span><span style="font-size:11px;color:var(--sub);font-weight:400">控制前台商店「精选」与「我的技能」展示内容</span></div>
+      <div class="grid g2">
+        <div class="card">
+          <h3>🧩 在售技能包（7）<span class="more">+ 新建技能包</span></h3>
+          <div class="shelf-item"><div class="ic">📦</div><div><div class="nm">补货与库存包</div><div class="ds">A2 · A18 · S39 · S21 ｜ 添加人数 214</div></div><div style="margin-left:auto" class="toggle on" onclick="tg(this)"></div></div>
+          <div class="shelf-item"><div class="ic">🏪</div><div><div class="nm">巡店执行包</div><div class="ds">S1 · A20 · A30 · S14 ｜ 添加人数 167</div></div><div style="margin-left:auto" class="toggle on" onclick="tg(this)"></div></div>
+          <div class="shelf-item"><div class="ic">🎯</div><div><div class="nm">促销管理包</div><div class="ds">S2 · A4 · A14 · S33 ｜ 添加人数 158</div></div><div style="margin-left:auto" class="toggle on" onclick="tg(this)"></div></div>
+          <div class="shelf-item"><div class="ic">📊</div><div><div class="nm">经营分析包</div><div class="ds">S10 · A11 · S5 · A7 ｜ 添加人数 141</div></div><div style="margin-left:auto" class="toggle on" onclick="tg(this)"></div></div>
+          <div class="shelf-item"><div class="ic">🤝</div><div><div class="nm">经销商管理包</div><div class="ds">A25 · A27 · S19 · S26 ｜ 添加人数 96</div></div><div style="margin-left:auto" class="toggle" onclick="tg(this)"></div></div>
+        </div>
+        <div class="card">
+          <h3>🔧 技能包编排器 · 补货与库存包</h3>
+          <table>
+            <tr><th>技能</th><th>类型</th><th>状态</th><th>操作</th></tr>
+            <tr><td>A2 智能补货建议</td><td><span class="tag agent">Agent</span></td><td><span class="pill ok">已上架</span></td><td><button class="btn sm ghost" onclick="toast('已下架 A2（演示）')">下架</button></td></tr>
+            <tr><td>A18 滞销预警</td><td><span class="tag agent">Agent</span></td><td><span class="pill ok">已上架</span></td><td><button class="btn sm ghost">下架</button></td></tr>
+            <tr><td>S39 库存健康检查</td><td><span class="tag skill">Skill</span></td><td><span class="pill ok">已上架</span></td><td><button class="btn sm ghost">下架</button></td></tr>
+            <tr><td>S21 新鲜度看板</td><td><span class="tag skill">Skill</span></td><td><span class="pill warn">待审核</span></td><td><button class="btn sm pri" onclick="toast('S21 已审核上架')">审核上架</button></td></tr>
+          </table>
+          <div style="margin-top:12px;display:flex;gap:10px;"><button class="btn pri sm" onclick="toast('已打开技能选择器（演示）')">+ 添加技能到包</button><button class="btn ghost sm">编辑预设问题</button></div>
+          <div style="margin-top:12px;padding:10px 12px;background:#F0F7FF;border-radius:8px;font-size:12px;color:#1B5FD9;">💡 预设问题：「帮我做一遍补货与库存健康检查，找出需要优先处理的SKU」</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== P1 知识库与检索 ===== -->
+    <div class="page" id="p-kb">
+      <div class="section-title">知识库与检索测试台 <span class="p-tag">P1</span></div>
+      <div class="grid g2">
+        <div class="card">
+          <h3>📚 知识库文档（128 篇）<span class="more">+ 上传文档</span></h3>
+          <table>
+            <tr><th>文档</th><th>分片</th><th>更新</th><th>状态</th></tr>
+            <tr><td>RTM 渠道操作手册 v3.2</td><td>86</td><td>07-15</td><td><span class="pill ok">已索引</span></td></tr>
+            <tr><td>促销费用核销流程</td><td>42</td><td>07-11</td><td><span class="pill ok">已索引</span></td></tr>
+            <tr><td>经销商分级政策 2026H2</td><td>31</td><td>07-08</td><td><span class="pill ok">已索引</span></td></tr>
+            <tr><td>新品上市 SOP（饮料线）</td><td>27</td><td>07-02</td><td><span class="pill warn">索引中</span></td></tr>
+          </table>
+        </div>
+        <div class="card">
+          <h3>🔍 检索测试台</h3>
+          <div class="testbox"><input id="kbq" value="临期品如何处理" placeholder="输入业务问题，测试召回质量"><button class="btn pri" onclick="kbTest()">测试召回</button></div>
+          <div id="kbhits">
+            <div class="hit"><span class="score">0.91</span><div class="src">RTM 渠道操作手册 v3.2 · 第4章 库存管理</div>临期品（剩余保质期&lt;60天）应停止补货，优先通过搭赠、特价渠道清库……</div>
+            <div class="hit"><span class="score">0.84</span><div class="src">促销费用核销流程 · 2.3 节</div>临期清库产生的折价费用归入促销费用池，按月度核销……</div>
+            <div class="hit"><span class="score">0.72</span><div class="src">经销商分级政策 · 附件B</div>C 级经销商临期品退换货比例上限为 3%……</div>
+          </div>
+          <div style="margin-top:10px;font-size:11px;color:var(--sub)">召回分数低于 0.6 的查询建议补充知识库文档或调整分片策略。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== P1 数据质量 ===== -->
+    <div class="page" id="p-data">
+      <div class="section-title">数据质量管理 <span class="p-tag">P1</span><span class="pill err" style="margin-left:6px">3 项待处理</span></div>
+      <div class="grid g3">
+        <div class="card kpi"><div class="lbl">数据源在线率</div><div class="num">5/6</div><div class="trend down">华东 DMS 断连 2 天</div></div>
+        <div class="card kpi"><div class="lbl">SKU 主数据完整度</div><div class="num">97.4%</div><div class="trend down">缺箱规字段 ×3</div></div>
+        <div class="card kpi"><div class="lbl">T+1 同步达成率</div><div class="num">98.1%</div><div class="trend up">近 30 天</div></div>
+      </div>
+      <div class="card" style="margin-top:14px;">
+        <h3>🗄 数据源连接状态</h3>
+        <table>
+          <tr><th>数据源</th><th>类型</th><th>最近同步</th><th>记录数</th><th>状态</th><th>操作</th></tr>
+          <tr><td>SAP ERP（订单/出库）</td><td>API</td><td>今天 06:00</td><td>1.2M</td><td><span class="pill ok"><i class="dot g"></i>正常</span></td><td><button class="btn sm ghost">重跑</button></td></tr>
+          <tr><td>DMS 经销商库存（华东）</td><td>SFTP</td><td>07-17 06:00</td><td>—</td><td><span class="pill err"><i class="dot r"></i>断连 2 天</span></td><td><button class="btn sm pri" onclick="toast('已触发重连任务')">重连</button></td></tr>
+          <tr><td>DMS 经销商库存（其他大区）</td><td>SFTP</td><td>今天 06:00</td><td>860K</td><td><span class="pill ok"><i class="dot g"></i>正常</span></td><td><button class="btn sm ghost">重跑</button></td></tr>
+          <tr><td>eB2B 平台订单</td><td>API</td><td>今天 06:05</td><td>310K</td><td><span class="pill ok"><i class="dot g"></i>正常</span></td><td><button class="btn sm ghost">重跑</button></td></tr>
+          <tr><td>终端门店 POS 抽样</td><td>手工导入</td><td>07-18</td><td>45K</td><td><span class="pill warn"><i class="dot y"></i>待更新</span></td><td><button class="btn sm ghost">导入</button></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== P2 LLM 端点 ===== -->
+    <div class="page" id="p-llm">
+      <div class="section-title">LLM 服务端点管理 <span class="p-tag">P2</span></div>
+      <div class="grid g3">
+        <div class="card kpi"><div class="lbl">今日 Token 消耗</div><div class="num">2.1M</div><div class="trend up">≈ ¥ 38.6</div></div>
+        <div class="card kpi"><div class="lbl">平均首字延迟</div><div class="num">2.3s</div><div class="trend down">昨日峰值 6.8s</div></div>
+        <div class="card kpi"><div class="lbl">调用成功率</div><div class="num">99.2%</div><div class="trend up">失败自动切端点</div></div>
+      </div>
+      <div class="card" style="margin-top:14px;">
+        <h3>🤖 端点列表（故障转移顺序）<span class="more">+ 添加端点</span></h3>
+        <table>
+          <tr><th>优先级</th><th>端点</th><th>模型</th><th>今日调用</th><th>成功率</th><th>延迟</th><th>状态</th><th>操作</th></tr>
+          <tr><td>①</td><td class="mono">qwen-proxy…fcapp.run</td><td>qwen-plus</td><td>3,402</td><td>99.4%</td><td>2.1s</td><td><span class="pill ok"><i class="dot g"></i>主用</span></td><td><button class="btn sm ghost">测试</button></td></tr>
+          <tr><td>②</td><td class="mono">ebest-llm…workers.dev</td><td>deepseek-chat</td><td>115</td><td>97.8%</td><td>4.6s</td><td><span class="pill warn"><i class="dot y"></i>兜底</span></td><td><button class="btn sm ghost">测试</button></td></tr>
+        </table>
+        <div style="margin-top:12px;display:flex;gap:10px;align-items:center;font-size:12px;color:var(--sub)">
+          <span>max_tokens 上限</span><input type="number" value="2048" style="width:90px;padding:5px 8px;border:1px solid var(--line);border-radius:6px;">
+          <span>温度</span><input type="number" value="0.7" step="0.1" style="width:70px;padding:5px 8px;border:1px solid var(--line);border-radius:6px;">
+          <button class="btn pri sm" onclick="toast('✅ 端点参数已保存')">保存</button>
+          <span style="margin-left:auto">🔑 API Key 托管在 FC 环境变量，前端不可见</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== P3 RBAC ===== -->
+    <div class="page" id="p-rbac">
+      <div class="section-title">角色与权限 <span class="p-tag">P3 · 规划中</span></div>
+      <div class="card">
+        <h3>👥 角色 × 权限矩阵</h3>
+        <table>
+          <tr><th>角色</th><th>使用技能</th><th>管理货架</th><th>修改阈值</th><th>查看血缘</th><th>管理租户</th></tr>
+          <tr><td>一线业务（业代/主管）</td><td>✅</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+          <tr><td>大区运营经理</td><td>✅</td><td>✅ 本大区</td><td>✅ 申请制</td><td>✅</td><td>—</td></tr>
+          <tr><td>RTM 管理员</td><td>✅</td><td>✅ 全部</td><td>✅</td><td>✅</td><td>—</td></tr>
+          <tr><td>系统超管</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+        </table>
+        <div style="margin-top:12px;font-size:12px;color:var(--sub)">P3 阶段接入企业 SSO 与多租户隔离；当前为演示数据。</div>
+      </div>
+    </div>
+
+    <!-- ===== P3 审计血缘 ===== -->
+    <div class="page" id="p-audit">
+      <div class="section-title">审计与可解释血缘 <span class="p-tag">P3 · 规划中</span></div>
+      <div class="card">
+        <h3>🧾 关键操作审计日志</h3>
+        <div class="logline"><span class="t">07-19 09:51</span><span>chen.wei</span><span>修改「安全库存天数」30 → 7（触发边界告警后回改）</span></div>
+        <div class="logline"><span class="t">07-18 16:20</span><span>li.na</span><span>上架技能 S33「促销 ROI 测算」至促销管理包</span></div>
+        <div class="logline"><span class="t">07-18 11:05</span><span>admin</span><span>更新知识库《RTM 渠道操作手册》v3.1 → v3.2（86 分片重建索引）</span></div>
+        <div class="logline"><span class="t">07-17 15:44</span><span>wang.fang</span><span>导出华东大区补货建议明细（2,172 条）</span></div>
+        <div class="logline"><span class="t">07-17 10:02</span><span>系统</span><span>华东 DMS 数据源连续 2 次同步失败，触发告警</span></div>
+      </div>
+    </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div>
+
+<div class="toast" id="toast"></div>
+<script>
+var TITLES={dashboard:['运营仪表盘','总览 / 运营仪表盘'],rules:['规则与阈值','P0 / Rules Center'],shelf:['技能货架管理','P1 / 商店与货架'],kb:['知识库与检索','P1 / 知识与检索'],data:['数据质量管理','P1 / 数据与血缘'],llm:['LLM 服务端点','P2 / AI 服务管理'],rbac:['角色与权限','P3 / 角色权限'],audit:['审计与血缘','P3 / 可解释性']};
+document.querySelectorAll('.nav-item').forEach(function(n){
+  n.addEventListener('click',function(){
+    document.querySelectorAll('.nav-item').forEach(function(x){x.classList.remove('active');});
+    n.classList.add('active');
+    document.querySelectorAll('.page').forEach(function(p){p.classList.remove('show');});
+    var k=n.getAttribute('data-p');
+    document.getElementById('p-'+k).classList.add('show');
+    document.getElementById('pageTitle').textContent=TITLES[k][0];
+    document.getElementById('pageCrumb').textContent=TITLES[k][1];
+  });
+});
+function tg(el){el.classList.toggle('on');toast(el.classList.contains('on')?'已开启（演示）':'已关闭（演示）');}
+var _tt;function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(_tt);_tt=setTimeout(function(){t.classList.remove('show');},2200);}
+function kbTest(){var q=document.getElementById('kbq').value.trim();toast('已用「'+q+'」重新召回（演示）');}
+</script>
+</body>
+</html>
