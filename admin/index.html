@@ -105,7 +105,7 @@ tr:hover td{background:#F8FAFF;}
     <div class="nav-group">P1 · 货架与内容</div>
     <div class="nav-item" data-p="shelf">🧩 <span>技能货架管理</span></div>
     <div class="nav-item" data-p="kb">📚 <span>知识库与检索</span></div>
-    <div class="nav-item" data-p="data">🗄 <span>数据质量管理</span><span class="badge">3</span></div>
+    <div class="nav-item" data-p="data">🗄 <span>数据接入健康</span><span class="badge">2</span></div>
     <div class="nav-group">P2 · 服务与权限</div>
     <div class="nav-item" data-p="llm">🤖 <span>LLM 服务端点</span></div>
     <div class="nav-item" data-p="rbac">👥 <span>角色与权限</span></div>
@@ -148,9 +148,9 @@ tr:hover td{background:#F8FAFF;}
         </div>
         <div class="card">
           <h3>告警与待办</h3>
-          <div class="logline"><span class="t">10:24</span><span class="pill warn">数据</span><span>华东大区 DMS 库存表 2 天未更新</span></div>
-          <div class="logline"><span class="t">09:51</span><span class="pill err">规则</span><span>安全库存天数被设为 30（超出建议上限 21）</span></div>
-          <div class="logline"><span class="t">09:12</span><span class="pill warn">数据</span><span>3 个 SKU 主数据缺失箱规字段</span></div>
+          <div class="logline"><span class="t">10:24</span><span class="pill warn">数据</span><span>租户A「dms-inv-east」断连 2 天，已通知租户处置</span></div>
+          <div class="logline"><span class="t">09:51</span><span class="pill err">规则</span><span>租户C 安全库存天数被设为 30（超界），平台已拦截并回退</span></div>
+          <div class="logline"><span class="t">09:12</span><span class="pill warn">数据</span><span>租户C「pos-sample-upload」超期未更新，已提醒</span></div>
           <div class="logline"><span class="t">08:40</span><span class="pill ok">LLM</span><span>千问端点延迟恢复至 2.3s（昨日峰值 6.8s）</span></div>
           <div class="logline"><span class="t">昨日</span><span class="pill ok">货架</span><span>「促销管理包」新增技能 S33，已上架</span></div>
         </div>
@@ -239,21 +239,39 @@ tr:hover td{background:#F8FAFF;}
 
     <!-- ===== P1 数据质量 ===== -->
     <div class="page" id="p-data">
-      <div class="section-title">数据质量管理 <span class="p-tag">P1</span><span class="pill err" style="margin-left:6px">3 项待处理</span></div>
+      <div class="section-title">数据接入健康监控 <span class="p-tag">P1</span><span class="pill warn" style="margin-left:6px">2 个租户数据源异常</span></div>
+      <div style="padding:11px 14px;background:#F0F7FF;border:1px solid #D6E8FF;border-radius:10px;font-size:12.5px;color:#1B5FD9;margin-bottom:14px;">
+        🔒 <b>数据隔离原则</b>：平台后台仅管理<b>平台数据</b>（技能、规则默认值、知识库、LLM 端点、租户配置）。租户上传及 API 接入的<b>业务数据内容对平台不可见</b>，此处仅展示各租户数据源的<b>元数据级健康状态</b>（连通性 / 同步时间 / 记录数 / 质量分），异常由平台<b>通知租户自行处置</b>。
+      </div>
       <div class="grid g3">
-        <div class="card kpi"><div class="lbl">数据源在线率</div><div class="num">5/6</div><div class="trend down">华东 DMS 断连 2 天</div></div>
-        <div class="card kpi"><div class="lbl">SKU 主数据完整度</div><div class="num">97.4%</div><div class="trend down">缺箱规字段 ×3</div></div>
-        <div class="card kpi"><div class="lbl">T+1 同步达成率</div><div class="num">98.1%</div><div class="trend up">近 30 天</div></div>
+        <div class="card kpi"><div class="lbl">接入租户数</div><div class="num">12</div><div class="trend up">活跃数据源 34 个</div></div>
+        <div class="card kpi"><div class="lbl">数据源在线率（全租户）</div><div class="num">32/34</div><div class="trend down">2 个断连 &gt; 24h</div></div>
+        <div class="card kpi"><div class="lbl">T+1 同步达成率</div><div class="num">98.1%</div><div class="trend up">近 30 天 · 全租户加权</div></div>
       </div>
       <div class="card" style="margin-top:14px;">
-        <h3>🗄 数据源连接状态</h3>
+        <h3>🗄 租户数据源健康（元数据视图）<span class="more" onclick="toast('字段映射与数据内容由租户后台自行管理')">字段映射由租户管理 →</span></h3>
         <table>
-          <tr><th>数据源</th><th>类型</th><th>最近同步</th><th>记录数</th><th>状态</th><th>操作</th></tr>
-          <tr><td>SAP ERP（订单/出库）</td><td>API</td><td>今天 06:00</td><td>1.2M</td><td><span class="pill ok"><i class="dot g"></i>正常</span></td><td><button class="btn sm ghost">重跑</button></td></tr>
-          <tr><td>DMS 经销商库存（华东）</td><td>SFTP</td><td>07-17 06:00</td><td>—</td><td><span class="pill err"><i class="dot r"></i>断连 2 天</span></td><td><button class="btn sm pri" onclick="toast('已触发重连任务')">重连</button></td></tr>
-          <tr><td>DMS 经销商库存（其他大区）</td><td>SFTP</td><td>今天 06:00</td><td>860K</td><td><span class="pill ok"><i class="dot g"></i>正常</span></td><td><button class="btn sm ghost">重跑</button></td></tr>
-          <tr><td>eB2B 平台订单</td><td>API</td><td>今天 06:05</td><td>310K</td><td><span class="pill ok"><i class="dot g"></i>正常</span></td><td><button class="btn sm ghost">重跑</button></td></tr>
-          <tr><td>终端门店 POS 抽样</td><td>手工导入</td><td>07-18</td><td>45K</td><td><span class="pill warn"><i class="dot y"></i>待更新</span></td><td><button class="btn sm ghost">导入</button></td></tr>
+          <tr><th>租户</th><th>数据源标识</th><th>接入方式</th><th>最近同步</th><th>记录数</th><th>状态</th><th>操作</th></tr>
+          <tr><td>租户A·饮品</td><td class="mono">erp-orders-01</td><td>API</td><td>今天 06:00</td><td>1.2M</td><td><span class="pill ok"><i class="dot g"></i>正常</span></td><td><span style="color:var(--sub);font-size:12px">—</span></td></tr>
+          <tr><td>租户A·饮品</td><td class="mono">dms-inv-east</td><td>SFTP</td><td>07-17 06:00</td><td>—</td><td><span class="pill err"><i class="dot r"></i>断连 2 天</span></td><td><button class="btn sm pri" onclick="toast('已向租户A管理员推送处置通知（站内+邮件）')">通知租户</button></td></tr>
+          <tr><td>租户A·饮品</td><td class="mono">dms-inv-others</td><td>SFTP</td><td>今天 06:00</td><td>860K</td><td><span class="pill ok"><i class="dot g"></i>正常</span></td><td><span style="color:var(--sub);font-size:12px">—</span></td></tr>
+          <tr><td>租户B·乳企</td><td class="mono">eb2b-orders</td><td>API</td><td>今天 06:05</td><td>310K</td><td><span class="pill ok"><i class="dot g"></i>正常</span></td><td><span style="color:var(--sub);font-size:12px">—</span></td></tr>
+          <tr><td>租户C·休食</td><td class="mono">pos-sample-upload</td><td>手工导入</td><td>07-18</td><td>45K</td><td><span class="pill warn"><i class="dot y"></i>超期未更新</span></td><td><button class="btn sm pri" onclick="toast('已提醒租户C更新 POS 抽样数据')">通知租户</button></td></tr>
+        </table>
+        <div style="margin-top:12px;font-size:11.5px;color:var(--sub);line-height:1.7">
+          · 平台侧<b>不可查看、不可导出</b>任何租户业务数据内容；记录数为租户授权上报的元数据统计。<br>
+          · 数据质量评分（字段完整度、新鲜度）由租户侧引擎计算后仅回传<b>分数</b>，不回传明细。<br>
+          · 异常处置（重跑、修复映射、重新导入）均在<b>租户后台</b>完成，平台只做通知与跟踪。
+        </div>
+      </div>
+      <div class="card" style="margin-top:14px;">
+        <h3>📦 平台数据（平台可直接管理）</h3>
+        <table>
+          <tr><th>数据资产</th><th>内容</th><th>规模</th><th>更新</th><th>操作</th></tr>
+          <tr><td>技能/Agent 注册表</td><td>30 Skills + 13 Agents 定义、参数卡</td><td>43 条</td><td>07-18</td><td><button class="btn sm ghost">编辑</button></td></tr>
+          <tr><td>规则默认值</td><td>新鲜度/安全库存/事件系数出厂默认</td><td>9 项</td><td>07-10</td><td><button class="btn sm ghost">编辑</button></td></tr>
+          <tr><td>平台公共知识库</td><td>RTM 方法论、行业通用 SOP</td><td>128 篇</td><td>07-15</td><td><button class="btn sm ghost">管理</button></td></tr>
+          <tr><td>租户配置</td><td>租户开通、配额、功能开关</td><td>12 租户</td><td>07-16</td><td><button class="btn sm ghost">管理</button></td></tr>
         </table>
       </div>
     </div>
@@ -303,11 +321,12 @@ tr:hover td{background:#F8FAFF;}
       <div class="section-title">审计与可解释血缘 <span class="p-tag">P3 · 规划中</span></div>
       <div class="card">
         <h3>🧾 关键操作审计日志</h3>
+        <div style="padding:10px 12px;background:#F0F7FF;border-radius:8px;font-size:12px;color:#1B5FD9;margin-bottom:10px;">🔒 审计范围：平台侧操作全量留痕；租户侧操作平台仅记录<b>事件类型与操作者</b>，不记录业务数据内容（明细在租户自己的审计后台）。</div>
         <div class="logline"><span class="t">07-19 09:51</span><span>chen.wei</span><span>修改「安全库存天数」30 → 7（触发边界告警后回改）</span></div>
         <div class="logline"><span class="t">07-18 16:20</span><span>li.na</span><span>上架技能 S33「促销 ROI 测算」至促销管理包</span></div>
         <div class="logline"><span class="t">07-18 11:05</span><span>admin</span><span>更新知识库《RTM 渠道操作手册》v3.1 → v3.2（86 分片重建索引）</span></div>
-        <div class="logline"><span class="t">07-17 15:44</span><span>wang.fang</span><span>导出华东大区补货建议明细（2,172 条）</span></div>
-        <div class="logline"><span class="t">07-17 10:02</span><span>系统</span><span>华东 DMS 数据源连续 2 次同步失败，触发告警</span></div>
+        <div class="logline"><span class="t">07-17 15:44</span><span>wang.fang（租户A）</span><span>导出补货建议明细 —— 平台仅见事件类型，内容不可见</span></div>
+        <div class="logline"><span class="t">07-17 10:02</span><span>系统</span><span>租户A「dms-inv-east」连续 2 次同步失败，触发告警并通知租户</span></div>
       </div>
     </div>
 
@@ -317,7 +336,7 @@ tr:hover td{background:#F8FAFF;}
 
 <div class="toast" id="toast"></div>
 <script>
-var TITLES={dashboard:['运营仪表盘','总览 / 运营仪表盘'],rules:['规则与阈值','P0 / Rules Center'],shelf:['技能货架管理','P1 / 商店与货架'],kb:['知识库与检索','P1 / 知识与检索'],data:['数据质量管理','P1 / 数据与血缘'],llm:['LLM 服务端点','P2 / AI 服务管理'],rbac:['角色与权限','P3 / 角色权限'],audit:['审计与血缘','P3 / 可解释性']};
+var TITLES={dashboard:['运营仪表盘','总览 / 运营仪表盘'],rules:['规则与阈值','P0 / Rules Center'],shelf:['技能货架管理','P1 / 商店与货架'],kb:['知识库与检索','P1 / 知识与检索'],data:['数据接入健康','P1 / 数据隔离与监控'],llm:['LLM 服务端点','P2 / AI 服务管理'],rbac:['角色与权限','P3 / 角色权限'],audit:['审计与血缘','P3 / 可解释性']};
 document.querySelectorAll('.nav-item').forEach(function(n){
   n.addEventListener('click',function(){
     document.querySelectorAll('.nav-item').forEach(function(x){x.classList.remove('active');});
