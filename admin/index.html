@@ -105,6 +105,7 @@ tr:hover td{background:#F8FAFF;}
     <div class="nav-group">P1 · 货架与内容</div>
     <div class="nav-item" data-p="shelf">🧩 <span>技能货架管理</span></div>
     <div class="nav-item" data-p="kb">📚 <span>知识库与检索</span></div>
+    <div class="nav-item" data-p="mcp">🔌 <span>MCP 连接器</span></div>
     <div class="nav-item" data-p="data">🗄 <span>数据接入健康</span><span class="badge">2</span></div>
     <div class="nav-group">P2 · 服务与权限</div>
     <div class="nav-item" data-p="llm">🤖 <span>LLM 服务端点</span></div>
@@ -237,6 +238,64 @@ tr:hover td{background:#F8FAFF;}
       </div>
     </div>
 
+    <!-- ===== P1 MCP 连接器 ===== -->
+    <div class="page" id="p-mcp">
+      <div class="section-title">MCP 连接器管理 <span class="p-tag">P1</span><span style="font-size:11px;color:var(--sub);font-weight:400">技能/Agent 与底层工具、数据源之间的标准连接层（Model Context Protocol）</span></div>
+      <div class="grid g4">
+        <div class="card kpi"><div class="lbl">已注册 MCP Server</div><div class="num">8</div><div class="trend up">平台级 5 · 租户级 3</div></div>
+        <div class="card kpi"><div class="lbl">暴露工具总数</div><div class="num">46</div><div class="trend up">tools · resources · prompts</div></div>
+        <div class="card kpi"><div class="lbl">今日工具调用</div><div class="num">2,931</div><div class="trend up">成功率 99.1%</div></div>
+        <div class="card kpi"><div class="lbl">平均调用延迟</div><div class="num">0.4s</div><div class="trend down">不含 LLM 推理</div></div>
+      </div>
+      <div class="card" style="margin-top:14px;">
+        <h3>🔌 MCP Server 注册表 <span class="more" onclick="toast('打开注册向导：填 endpoint + 凭证，自动探测 tools/list（演示）')">+ 注册新 Server</span></h3>
+        <table>
+          <tr><th>Server</th><th>传输</th><th>归属</th><th>工具数</th><th>今日调用</th><th>状态</th><th>操作</th></tr>
+          <tr><td>🗄 <b>dms-mcp</b><br><small style="color:var(--sub)">经销商库存/订单查询</small></td><td>HTTP+SSE</td><td>租户A</td><td>6</td><td>1,204</td><td><span class="pill ok"><i class="dot g"></i>在线</span></td><td><button class="btn sm ghost" onclick="toast('已重新探测 tools/list：6 个工具（演示）')">探测</button></td></tr>
+          <tr><td>🧮 <b>calc-mcp</b><br><small style="color:var(--sub)">补货/安全库存计算引擎</small></td><td>stdio</td><td>平台</td><td>4</td><td>842</td><td><span class="pill ok"><i class="dot g"></i>在线</span></td><td><button class="btn sm ghost">探测</button></td></tr>
+          <tr><td>📚 <b>kb-mcp</b><br><small style="color:var(--sub)">知识库检索（召回包装为工具）</small></td><td>HTTP+SSE</td><td>平台</td><td>3</td><td>655</td><td><span class="pill ok"><i class="dot g"></i>在线</span></td><td><button class="btn sm ghost">探测</button></td></tr>
+          <tr><td>🎨 <b>poster-mcp</b><br><small style="color:var(--sub)">海报/内容生成</small></td><td>HTTP</td><td>平台</td><td>5</td><td>96</td><td><span class="pill ok"><i class="dot g"></i>在线</span></td><td><button class="btn sm ghost">探测</button></td></tr>
+          <tr><td>🏪 <b>pos-mcp</b><br><small style="color:var(--sub)">终端门店 POS 数据</small></td><td>HTTP+SSE</td><td>租户C</td><td>4</td><td>—</td><td><span class="pill err"><i class="dot r"></i>断连</span></td><td><button class="btn sm pri" onclick="toast('已通知租户C检查 pos-mcp 凭证（演示）')">通知租户</button></td></tr>
+          <tr><td>📦 <b>eb2b-mcp</b><br><small style="color:var(--sub)">eB2B 订单/商品</small></td><td>HTTP+SSE</td><td>租户B</td><td>7</td><td>134</td><td><span class="pill warn"><i class="dot y"></i>延迟高</span></td><td><button class="btn sm ghost">探测</button></td></tr>
+        </table>
+      </div>
+      <div class="grid g2" style="margin-top:14px;">
+        <div class="card">
+          <h3>🧰 工具清单 · dms-mcp（tools/list 实测返回）</h3>
+          <table>
+            <tr><th>工具</th><th>说明</th><th>被哪些技能引用</th></tr>
+            <tr><td class="mono">get_inventory</td><td>按 SKU/仓库查实时库存</td><td>A2 · S39 · S21</td></tr>
+            <tr><td class="mono">get_sales_history</td><td>历史销量（可带周期/事件）</td><td>A2 · A11 · S5</td></tr>
+            <tr><td class="mono">get_freshness</td><td>批次剩余保质期</td><td>S21 · A18</td></tr>
+            <tr><td class="mono">list_stores</td><td>门店主数据查询</td><td>S1 · A20</td></tr>
+            <tr><td class="mono">get_orders</td><td>在途订单/发货状态</td><td>A2 · S3</td></tr>
+            <tr><td class="mono">submit_order</td><td>下单（需二次确认）</td><td>A2</td></tr>
+          </table>
+          <div style="margin-top:10px;font-size:11.5px;color:var(--sub)">⚠️ 技能上架前置校验：技能引用的所有工具必须来自「在线」状态的 Server；<span class="mono">submit_order</span> 等写操作强制走审批。</div>
+        </div>
+        <div class="card">
+          <h3>👥 按租户启用（凭证各自隔离）</h3>
+          <table>
+            <tr><th>Server</th><th>租户A</th><th>租户B</th><th>租户C</th></tr>
+            <tr><td>calc-mcp（平台）</td><td>✅</td><td>✅</td><td>✅</td></tr>
+            <tr><td>kb-mcp（平台）</td><td>✅</td><td>✅</td><td>✅</td></tr>
+            <tr><td>poster-mcp（平台）</td><td>✅</td><td>✅</td><td>⬜ 未开通</td></tr>
+            <tr><td>dms-mcp（租户A私有）</td><td>✅</td><td>—</td><td>—</td></tr>
+            <tr><td>eb2b-mcp（租户B私有）</td><td>—</td><td>✅</td><td>—</td></tr>
+            <tr><td>pos-mcp（租户C私有）</td><td>—</td><td>—</td><td>✅ 断连</td></tr>
+          </table>
+          <div style="margin-top:10px;padding:10px 12px;background:#F0F7FF;border-radius:8px;font-size:12px;color:#1B5FD9;">🔒 租户私有 Server 的 endpoint 与凭证（Token/账号）加密存储在租户命名空间，平台仅见连通状态，不可见凭证与数据内容。</div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:14px;">
+        <h3>🧾 最近工具调用（审计摘要 · 不含业务内容）</h3>
+        <div class="logline"><span class="t">16:42:11</span><span class="mono">dms-mcp.get_inventory</span><span>租户A · A2 补货建议 · 312ms · ✅</span></div>
+        <div class="logline"><span class="t">16:42:09</span><span class="mono">calc-mcp.replenish</span><span>租户A · A2 补货建议 · 88ms · ✅</span></div>
+        <div class="logline"><span class="t">16:41:55</span><span class="mono">kb-mcp.search</span><span>租户B · 对话检索 · 145ms · ✅</span></div>
+        <div class="logline"><span class="t">16:41:02</span><span class="mono">pos-mcp.get_daily_sales</span><span>租户C · 超时 30s · ❌ 已告警</span></div>
+      </div>
+    </div>
+
     <!-- ===== P1 数据质量 ===== -->
     <div class="page" id="p-data">
       <div class="section-title">数据接入健康监控 <span class="p-tag">P1</span><span class="pill warn" style="margin-left:6px">2 个租户数据源异常</span></div>
@@ -336,7 +395,7 @@ tr:hover td{background:#F8FAFF;}
 
 <div class="toast" id="toast"></div>
 <script>
-var TITLES={dashboard:['运营仪表盘','总览 / 运营仪表盘'],rules:['规则与阈值','P0 / Rules Center'],shelf:['技能货架管理','P1 / 商店与货架'],kb:['知识库与检索','P1 / 知识与检索'],data:['数据接入健康','P1 / 数据隔离与监控'],llm:['LLM 服务端点','P2 / AI 服务管理'],rbac:['角色与权限','P3 / 角色权限'],audit:['审计与血缘','P3 / 可解释性']};
+var TITLES={dashboard:['运营仪表盘','总览 / 运营仪表盘'],rules:['规则与阈值','P0 / Rules Center'],shelf:['技能货架管理','P1 / 商店与货架'],kb:['知识库与检索','P1 / 知识与检索'],mcp:['MCP 连接器','P1 / MCP 连接层'],data:['数据接入健康','P1 / 数据隔离与监控'],llm:['LLM 服务端点','P2 / AI 服务管理'],rbac:['角色与权限','P3 / 角色权限'],audit:['审计与血缘','P3 / 可解释性']};
 document.querySelectorAll('.nav-item').forEach(function(n){
   n.addEventListener('click',function(){
     document.querySelectorAll('.nav-item').forEach(function(x){x.classList.remove('active');});
