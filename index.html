@@ -643,6 +643,7 @@ document.addEventListener('DOMContentLoaded',function(){
       </div>
     </div>
     <div class="input-bar">
+      <div id="chipBar" class="chip-bar"></div>
       <div class="input-wrapper" id="inputWrapper">
         <textarea class="input-textarea" id="chatInput" placeholder="输入消息，使用 @ 调用Agent或Skill..." rows="1"></textarea>
         <button class="at-btn" onclick="document.getElementById('fileInput').click()" title="上传数据(CSV/TXT)" style="right:48px;">📎</button>
@@ -1187,7 +1188,7 @@ var EN_FIX3={
 "\u00a51\u4e07": "\u00a510K",
 "\u00a56\u4e07": "\u00a560K",
 "\u3010\u7ade\u54c1\u5e94\u5bf9\u8bdd\u672f\u5305 \u00b7 \u5143\u6c14\u68ee\u6797\u964d\u4ef7\u3011<br>\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501<br><strong>\u7ade\u54c1\u52a8\u4f5c:</strong> \u5143\u6c14\u68ee\u6797\u6c14\u6ce1\u6c34\u964d\u4ef7\u81f34\u5143(-10%),\u534e\u4e1cCVS\u52a0\u5927\u94fa\u8d27<br><strong>\u672c\u54c1\u4f18\u52bf:</strong> 0\u7cd60\u8102\u540c\u7ea7,\u5355\u7bb1\u6bdb\u5229\u9ad82.3\u5143;\u4e70\u4e8c\u9001\u4e00\u671f\u5185\u5355\u74f6\u6298\u540e\u66f4\u4f4e<br><br><strong>\u5206\u5c42\u8bdd\u672f:</strong><br>\u00b7 <strong>\u4e00\u7ebf\u7248(\u5bf9\u5e97\u4e3b):</strong> \"\u738b\u59d0,\u4ed6\u5bb6\u964d\u4ef7\u662f\u6e05\u5e93\u5b58,\u54b1\u8fd9\u6b3e\u5229\u6da6\u53cd\u800c\u66f4\u9ad8,\u4e70\u4e8c\u9001\u4e00\u8fd9\u5468\u8d70\u91cf,\u6211\u5e2e\u60a8\u5148\u4e0a\u4e24\u4ef6\u8bd5\u8bd5?\"<br>\u00b7 <strong>\u7ecf\u7406\u7248(\u5bf9KA):</strong> \"\u77ed\u671f\u4ef7\u683c\u6218\u4e0d\u53ef\u6301\u7eed,\u6211\u4eec\u7528\u9648\u5217+\u8d60\u54c1\u9501\u5ba2\u6d41,\u4fdd\u60a8\u5355\u5e97\u6bdb\u5229\u4e0d\u964d\u53cd\u5347\"<br>\u00b7 <strong>\u9ad8\u7ba1\u7248(\u5bf9\u5185):</strong> \"\u4e0d\u8ddf\u4ef7,\u4ee5\u4fc3\u9500\u8282\u594f+\u9648\u5217\u4efd\u989d\u5e94\u5bf9,\u5b88\u4f4f\u4ef7\u76d8\"<br><br><strong>\u53cd\u51fb\u65b9\u6848:</strong> \u9ec4\u91d1\u4f4d\u9648\u5217 + \u9650\u65f6\u4e70\u8d60 + \u8bd5\u996e\u8f6c\u5316,\u9884\u8ba1\u62b5\u6d88\u7ade\u54c1\u964d\u4ef7\u5f71\u54cd\u7ea670%": "\u3010Competitor Response Scripts \u00b7 Genki Forest price cut\u3011<br>\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501<br><strong>Competitor move:</strong> Genki Forest sparkling water cut to \u00a54 (-10%), ramping distribution in East China CVS<br><strong>Our advantage:</strong> 0-sugar/0-fat same tier, \u00a52.3 higher margin per case; with Buy 2 Get 1 the net per-bottle price is even lower<br><br><strong>Tiered scripts:</strong><br>\u00b7 <strong>Field (to owner):</strong> \"Sis Wang, their price cut is to clear stock; ours actually has higher margin. Buy 2 Get 1 moves volume this week \u2014 let me put two cases in first to test?\"<br>\u00b7 <strong>Manager (to KA):</strong> \"A short-term price war isn't sustainable; we lock in foot traffic with display + gifts and keep your per-store margin rising, not falling\"<br>\u00b7 <strong>Exec (internal):</strong> \"Don't match price; respond with promo cadence + display share and hold the price line\"<br><br><strong>Counter plan:</strong> Prime-spot display + limited-time GWP + sampling conversion, expected to offset ~70% of the competitor's price-cut impact",
-"\u3010\u9ad8\u7ba1\u95ee\u7b54 \u00b7 \u534e\u4e1c\u533a \u00b7 \u4e0a\u6708\u3011<br>\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501<br><strong>\u4f60\u95ee:</strong> \u534e\u4e1c\u533a\u4e0a\u6708\u54ea\u4e2a\u54c1\u7c7b\u4e0b\u6ed1\u6700\u5389\u5bb3,\u4e3a\u4ec0\u4e48?<br><br><strong>\u4e8b\u5b9e:</strong> \u679c\u6c41\u54c1\u7c7b\u73af\u6bd4 -12.3%(\u534e\u4e1c),\u4e0b\u6ed1\u6700\u5927;\u6c14\u6ce1\u8336 +6%,\u77ff\u6cc9\u6c34\u6301\u5e73<br><strong>\u8d8b\u52bf:</strong> \u679c\u6c41\u8fde\u7eed2\u4e2a\u6708\u4e0b\u6ed1,\u4e3b\u8981\u96c6\u4e2d\u5728GT\u4f20\u7edf\u6e20\u9053(-18%),CVS\u57fa\u672c\u6301\u5e73<br><strong>\u6839\u56e0\u63a8\u65ad(\u7f6e\u4fe1\u5ea6):</strong><br>\u00b7 \u7ade\u54c1\u679c\u6c415\u6708\u5bc6\u96c6\u4fc3\u9500,\u4ef7\u683c\u5e26\u4e0b\u63a2\u3000(\u9ad8)<br>\u00b7 \u6211\u65b9GT\u94fa\u8d27\u7387\u4ece72%\u964d\u81f364%,\u65ad\u8d27\u95e8\u5e97\u589e\u591a\u3000(\u9ad8)<br>\u00b7 \u5929\u6c14\u504f\u51c9,\u679c\u6c41\u5b63\u8282\u6027\u9700\u6c42\u672a\u8d77\u3000(\u4e2d)<br><br><strong>\u5efa\u8bae:</strong> \u4f18\u5148\u8865GT\u65ad\u8d27\u95e8\u5e97 + \u8ddf\u8fdb\u679c\u6c41\u4fc3\u9500;\u53ef\u4e00\u952e\u8c03\u7528 @A1 \u6f5c\u529b\u95e8\u5e97\u3001@S5 \u673a\u4f1a\u95e8\u5e97\u5206\u6790 \u6df1\u5165": "\u3010Executive Q&A \u00b7 East China \u00b7 Last month\u3011<br>\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501<br><strong>You asked:</strong> Which category declined most in East China last month, and why?<br><br><strong>Facts:</strong> Juice -12.3% MoM (East China), the biggest drop; sparkling tea +6%, mineral water flat<br><strong>Trend:</strong> Juice down two months straight, mainly in GT traditional channel (-18%); CVS roughly flat<br><strong>Root-cause inference (confidence):</strong><br>\u00b7 Competitor juice ran heavy promotions in May, pushing the price band down\u3000(high)<br>\u00b7 Our GT distribution rate fell from 72% to 64%, with more out-of-stock stores\u3000(high)<br>\u00b7 Cool weather; seasonal juice demand hasn't kicked in\u3000(medium)<br><br><strong>Advice:</strong> Prioritize restocking out-of-stock GT stores + follow up on juice promotions; tap @A1 Potential Stores and @S5 Opportunity Store Analysis to go deeper",
+
 "\u3010\u7ecf\u8425\u5229\u6da6\u5206\u6790 \u00b7 \u534e\u4e1c\u603b\u7ecf\u9500 \u00b7 \u672c\u6708 \u00b7 \u5206\u54c1\u7c7b\u3011<br>\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501<br><strong>\u6574\u4f53:</strong> \u8425\u6536580\u4e07\u3000\u6bdb\u5229\u738718.2%\u3000\u51c0\u5229\u73876.5%<br><strong>\u54c1\u7c7b\u5229\u6da6\u8d21\u732e:</strong><br>\u00b7 \u6c14\u6ce1\u8336: \u8d21\u732e\u6bdb\u522952%(\u6bdb\u5229\u738721%,\u4e3b\u529b)<br>\u00b7 \u77ff\u6cc9\u6c34: \u8d21\u732e\u6bdb\u522928%(\u6bdb\u5229\u738712%,\u8d70\u91cf)<br>\u00b7 \u679c\u6c41: \u8d21\u732e\u6bdb\u522920%(\u6bdb\u5229\u738716%,\u4f46\u73af\u6bd4\u4e0b\u6ed1)<br><strong>\u8d39\u7528\u7ed3\u6784:</strong> \u7269\u6d416.1% / \u4eba\u5de53.4% / \u4fc3\u95002.9%(\u4fc3\u9500\u8d39\u7387\u504f\u9ad8)<br><strong>\u6539\u8fdb\u5efa\u8bae:</strong> \u77ff\u6cc9\u6c34\u6bdb\u5229\u504f\u4f4e,\u5efa\u8bae\u4f18\u5316\u8fdb\u8d27\u4ef7\u6216\u8c03\u4ef7\u76d8;\u4fc3\u9500\u8d39\u7387\u538b\u7f291\u4e2a\u70b9,\u7ea6\u589e\u51c0\u52295.8\u4e07/\u6708": "\u3010Profit Analysis \u00b7 East China Distributor \u00b7 This month \u00b7 By category\u3011<br>\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501<br><strong>Overall:</strong> Revenue \u00a55.8M\u3000Gross margin 18.2%\u3000Net margin 6.5%<br><strong>Category profit contribution:</strong><br>\u00b7 Sparkling tea: 52% of gross profit (21% margin, lead)<br>\u00b7 Mineral water: 28% of gross profit (12% margin, volume)<br>\u00b7 Juice: 20% of gross profit (16% margin, but declining MoM)<br><strong>Cost structure:</strong> Logistics 6.1% / labor 3.4% / promo 2.9% (promo ratio is high)<br><strong>Improvement advice:</strong> Mineral-water margin is low \u2014 optimize cost price or reprice; trimming the promo ratio by 1 pt adds ~\u00a558K net profit/month",
 "\u3010\u73b0\u573a\u5f02\u8bae\u5904\u7406 \u00b7 \u5b9e\u65f6\u3011<br>\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501<br><strong>\u5e97\u4e3b\u5f02\u8bae:</strong> \"\u4f60\u4eec\u6c14\u6ce1\u6c34\u6bd4\u5143\u6c14\u68ee\u6797\u8d35,\u5356\u4e0d\u52a8\"<br><br><strong>\u5373\u65f6\u56de\u5e94(\u4eb2\u5207\u7248):</strong> \"\u60a8\u8bf4\u7684\u662f\u5355\u4ef7,\u4f46\u54b1\u8fd9\u6b3e\u5229\u6da6\u7a7a\u95f4\u59272\u5757\u591a,\u800c\u4e14\u8fd9\u5468\u4e70\u4e8c\u9001\u4e00,\u6298\u4e0b\u6765\u6bd4\u4ed6\u5bb6\u8fd8\u5212\u7b97,\u6211\u7ed9\u60a8\u7b97\u7b14\u8d26\u2014\u2014\"<br><strong>\u8bc1\u636e\u6750\u6599:</strong> \u540c\u5546\u57083\u5bb6\u5e97\u4e0a\u6708\u8be5\u6b3e\u52a8\u9500 +22%;\u5355\u7bb1\u6bdb\u5229\u5bf9\u6bd4(\u672c\u54c155\u5143 vs \u7ade\u54c142\u5143)<br><strong>\u66ff\u4ee3\u65b9\u6848:</strong> \u5148\u4e0a1\u7ec4\u8bd5\u53562\u5468,\u4e0d\u52a8\u9500\u6211\u5e2e\u60a8\u8c03\u6362;\u6216\u6362\u5c0f\u89c4\u683c\u964d\u5ba2\u5355\u95e8\u69db<br><strong>\u5347\u7ea7\u8def\u5f84:</strong> \u82e5\u575a\u6301,\u7533\u8bf7\u9996\u5355\u8d60\u54c1\u653f\u7b56(\u7ecf\u7406\u5ba1\u6279)": "\u3010On-site Objection Handling \u00b7 Live\u3011<br>\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501<br><strong>Owner objection:</strong> \"Your sparkling water is pricier than Genki Forest and won't sell\"<br><br><strong>Instant response (warm):</strong> \"You're looking at unit price, but this one has \u00a52+ more profit room, and with Buy 2 Get 1 this week it's actually cheaper than theirs \u2014 let me run the numbers for you\u2014\"<br><strong>Evidence:</strong> 3 stores in the same trade area saw +22% sell-through last month; per-case margin (ours \u00a555 vs competitor \u00a542)<br><strong>Alternative:</strong> Put one set on a 2-week trial; if it doesn't move I'll swap it; or switch to a smaller pack to lower the price threshold<br><strong>Escalation:</strong> If they insist, apply for a first-order gift policy (manager approval)",
 "\u3010\u5c0f\u7f8e \u00b7 \u4eca\u65e5\u5b9e\u65f6\u770b\u677f\u3011<br>\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501<br><strong>\u4eca\u65e5\u9500\u91cf:</strong> 128\u74f6\u3000<strong>\u65e5\u76ee\u6807:</strong> 150\u74f6\u3000<strong>\u8fbe\u6210\u7387:</strong> 85%\u3000\u25ae\u25ae\u25ae\u25ae\u25ae\u25ae\u25ae\u25ae\u25af\u25af<br><strong>\u63d0\u6210\u9884\u4f30:</strong> +256\u5143(\u518d\u535622\u74f6\u89e3\u9501\u4e0b\u4e00\u6863 +80\u5143)<br><strong>\u56e2\u961f\u6392\u540d:</strong> \u7b2c3\u540d / \u51718\u4eba(\u8ddd\u7b2c2\u540d\u4ec5\u5dee9\u74f6)<br><strong>\u91cc\u7a0b\u7891:</strong> \u8ddd\"\u6708\u95003000\u74f6\"\u8fd8\u5dee240\u74f6,\u8fbe\u6210\u5956\u52b1\u4eac\u4e1c\u5361200\u5143<br><br>\ud83d\udd25 \u52a0\u6cb9!\u5348\u9ad8\u5cf0\u524d\u518d\u63a8\u4e00\u7ec4\u8bd5\u996e,\u51b2\u8fdb\u524d\u4e8c\u5f88\u6709\u620f!": "\u3010Mei \u00b7 Today live dashboard\u3011<br>\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501<br><strong>Today's sales:</strong> 128 bottles\u3000<strong>Daily target:</strong> 150 bottles\u3000<strong>Attainment:</strong> 85%\u3000\u25ae\u25ae\u25ae\u25ae\u25ae\u25ae\u25ae\u25ae\u25af\u25af<br><strong>Est. commission:</strong> +\u00a5256 (sell 22 more bottles to unlock the next tier +\u00a580)<br><strong>Team rank:</strong> #3 of 8 (only 9 bottles behind #2)<br><strong>Milestone:</strong> 240 bottles to \"3,000/month\", reward: \u00a5200 JD card<br><br>\ud83d\udd25 Keep going! One more sampling set before the lunch peak and a top-2 finish is well within reach!",
@@ -1745,7 +1746,7 @@ const agents = [
     dataSources:{internal:'ERP(进货成本)/DMS(历史不同价格下销量)/TPM(品类利润率目标)', external:'周边竞品价格-爬虫采集(低成本)'},
     output:'建议零售价 + 价格弹性系数 + 预期销量 + 预期利润 + 风险提示'
   },
-  {id:'A30', name:'门店三维重建', desc:'如视VR空间重建+3DGS+CV货架识别,手机拍照生成门店数字孪生', status:'new', roleTags:['salesrep'],
+  {id:'A30', name:'门店三维重建', desc:'CV货架识别+空间重建,手机拍照生成门店数字孪生', status:'new', roleTags:['salesrep'],
     params:[
       {name:'storeId', label:'目标门店', type:'select', options:['全家-南京西路店','罗森-淮海中路店','7-Eleven-西湖大道店','喜士多-解放路店'], default:'全家-南京西路店'},
       {name:'captureMode', label:'采集方式', type:'select', options:['多点拍照(8-12张)','环拍视频','全景相机'], default:'多点拍照(8-12张)'},
@@ -3237,16 +3238,18 @@ function renderResultBody(item, values){
           chart='<div style="font-size:12px;font-weight:600;margin:6px 0 0;">'+t0.sku+' 销量走势（趋势 '+trendBadge(t0.trendPct)+'）</div>'+rForecastChart(hv,fv,days);
         }
         var eventExpl=t0?eventExplainHtml(skuCat(t0.sku),(t0.daily&&t0.daily[0]?t0.daily[0].date:_fcToday()),days,_fcRegion):'';
+        var gateHtml=a2GateSummaryHtml(fc,days,sd);
         var bars=top.map(function(o){
-          return {label:o.sku+' \u00b7 日均'+o.avg+' '+trendBadge(o.trendPct)+' \u00b7 库存'+o.stock,value:'建议补'+o.rep,pct:Math.max(6,Math.round(o.rep/maxRep*100)),color:(o.cover<days?'#FAAD14':'#00C39A')};
+          return {label:o.sku+' \u00b7 日均'+o.avg+o.unit+' '+trendBadge(o.trendPct)+' \u00b7 库存'+o.stock+o.unit,value:(o.repBox>0?'建议补'+o.repBox+'箱':'暂不补'),pct:Math.max(6,Math.round(o.rep/maxRep*100)),color:(o.cover<days?'#FAAD14':'#00C39A')};
         });
         var risk=top.some(function(o){return o.cover<days;});
-        var rows=top.map(function(o){return [o.sku,String(o.avg),String(o.need),String(o.stock)+(o.stockDate?' <span style="color:#999;font-size:11px;">截至'+_fmtRange(o.stockDate)+'</span>':''),(o.cover>=999?'充足':o.cover.toFixed(1)+'天'),'<b>'+o.rep+'</b>'];});
-        return '<div style="margin-bottom:6px;">'+((typeof localStorage!=='undefined'&&localStorage.getItem('ebest_sales_src')==='default')?'基于平台默认演示数据（'+(sd.store||'演示门店')+'）':'基于你上传的')+' <b>'+sd.rows.length+'</b> 行历史销量（'+sd.skus.length+' 个SKU，'+(sd.minDate||'')+'~'+(sd.maxDate||'')+'），用 <b>趋势+周季节性+事件加权</b> 预测未来 <b>'+days+'</b> 天：</div>'+
+        var rows=top.map(function(o){return [o.sku,String(o.avg)+o.unit,String(o.need)+o.unit,String(o.stock)+o.unit+(o.stockDate?' <span style="color:#999;font-size:11px;">截至'+_fmtRange(o.stockDate)+'</span>':''),(o.cover>=999?'充足':o.cover.toFixed(1)+'天'),(o.repBox>0?('<b>'+o.repBox+'箱</b> <span style="color:#999;font-size:11px;">\u2248'+o.repUnits+o.unit+'\u00b7\u591f'+o.repDays.toFixed(1)+'天</span>'):'<b>暂不补</b>')];});
+        return '<div style="margin-bottom:6px;">'+((typeof localStorage!=='undefined'&&localStorage.getItem('ebest_sales_src')==='default')?'基于平台默认演示数据（'+(sd.store||'演示门店')+'）':'基于你上传的')+' <b>'+sd.rows.length+'</b> 行历史销量（'+sd.skus.length+' 个SKU，'+(sd.minDate||'')+'~'+(sd.maxDate||'')+'），按 <b>最近销售走势+周末规律+天气/活动影响</b> 预测未来 <b>'+days+'</b> 天：</div>'+
+          gateHtml+
           eventExpl+
           chart+
           rBars(bars)+
-          rTable(['SKU','日均(预测)',days+'天需求','当前库存','可撑','建议补货'],rows)+
+          rTable(['SKU','日均(预测)',days+'天需求','当前库存','可撑','建议补货(按箱下单)'],rows)+
           '<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">库存风险：'+(risk?'<span style="color:#FAAD14;font-weight:600;">\ud83d\udfe1 部分SKU可撑天数 < 预测周期，需尽快补货</span>':'<span style="color:#52C41A;font-weight:600;">\ud83d\udfe2 绿色（安全）</span>')+'</div>';
       }
       var cat=v.skuCategory||'气泡茶', days2=v.forecastDays||'7天';
@@ -3440,8 +3443,11 @@ function renderResultBody(item, values){
       {h:'反击方案',body:'A 级店同步买赠 7 天 + 试饮，避免直接降价伤毛利。'}]); }
     case 'S8': return rKPI([{label:'拜访',value:'8家',sub:'计划8'},{label:'订单',value:'6单',color:'#52C41A'},{label:'金额',value:'¥1.2万'},{label:'问题',value:'2项',color:'#FAAD14'}])+
       rDoc([{h:'拜访汇总',body:'8 家全访，6 家下单；2 家缺货已补。'},{h:'问题反馈',body:'全家-南京西路端架被竞品占；罗森价签错误。'},{h:'明日计划',body:'回访 2 家未下单门店 + 新店开发 1 家。'}]);
-    case 'S9': { var q9=v.question||v.query||'华东区为何未达标';
-      return rDoc([{h:'问题',body:q9},{h:'数据事实',body:'华东达成 92%，其中 C 区仅 78% 拖累整体。'},{h:'趋势分析',body:'C 区连续 3 周下滑，与竞品 5 月降价时点吻合。'},{h:'根因推断',body:'竞品降价 + C 区 3 家门店陈列丢失。'},{h:'关联 Agent',body:'建议联动 A5 沙盘推演测算反击、A7 持续预警。'}]); }
+    case 'S9': { var q9=v.question||v.query||'华东区上月为何下滑';
+      var rg9=(q9.match(/华东|华南|华北|华西/)||[(v.region||'').match(/华东|华南|华北|华西/)?v.region.match(/华东|华南|华北|华西/)[0]:'华东'])[0];
+      var r9=(typeof attrEngine==='function')?attrEngine(rg9):null;
+      if(r9)return attrCardHtml(r9);
+      return rDoc([{h:'问题',body:q9},{h:'提示',body:'归因引擎暂无可用数据，请先确认平台数据集已生成。'}]); }
     case 'S10': return '<div style="margin-bottom:6px;">订单趋势（近 8 周）：</div>'+
       rBars([{label:'第20周',value:'¥620万',pct:62},{label:'第21周',value:'¥680万',pct:68},{label:'第22周',value:'¥810万',pct:81,color:'#00C39A'},{label:'第23周',value:'¥860万',pct:86,color:'#00C39A'}])+
       rDoc([{h:'异常检测 / 根因',body:'第22周跳增源于气泡茶促销；同比 +14%、环比 +6%。'}]);
@@ -3611,7 +3617,7 @@ function generateMockOutput(item) {
     'S6': '经营周报已生成(2026年第23周):<br>本周销量: 1,250万(目标达成98%)<br>费用率: 12.5%(预算内)<br>异常: 华东区气泡茶销量下滑5%',
     'S7': '【竞品应对话术包 · 元气森林降价】<br>━━━━━━━━━<br><strong>竞品动作:</strong> 元气森林气泡水降价至4元(-10%),华东CVS加大铺货<br><strong>本品优势:</strong> 0糖0脂同级,单箱毛利高2.3元;买二送一期内单瓶折后更低<br><br><strong>分层话术:</strong><br>· <strong>一线版(对店主):</strong> "王姐,他家降价是清库存,咱这款利润反而更高,买二送一这周走量,我帮您先上两件试试?"<br>· <strong>经理版(对KA):</strong> "短期价格战不可持续,我们用陈列+赠品锁客流,保您单店毛利不降反升"<br>· <strong>高管版(对内):</strong> "不跟价,以促销节奏+陈列份额应对,守住价盘"<br><br><strong>反击方案:</strong> 黄金位陈列 + 限时买赠 + 试饮转化,预计抵消竞品降价影响约70%',
     'S8': '一线日报汇总(2026-06-09):<br>拜访总计: 128家 | 订单: 86笔<br>问题反馈: 5条(3条陈列问题/2条价格问题)',
-    'S9': '【高管问答 · 华东区 · 上月】<br>━━━━━━━━━<br><strong>你问:</strong> 华东区上月哪个品类下滑最厉害,为什么?<br><br><strong>事实:</strong> 果汁品类环比 -12.3%(华东),下滑最大;气泡茶 +6%,矿泉水持平<br><strong>趋势:</strong> 果汁连续2个月下滑,主要集中在GT传统渠道(-18%),CVS基本持平<br><strong>根因推断(置信度):</strong><br>· 竞品果汁5月密集促销,价格带下探　(高)<br>· 我方GT铺货率从72%降至64%,断货门店增多　(高)<br>· 天气偏凉,果汁季节性需求未起　(中)<br><br><strong>建议:</strong> 优先补GT断货门店 + 跟进果汁促销;可一键调用 @A1 潜力门店、@S5 机会门店分析 深入',
+    'S9': '【高管问答 · 归因引擎真算】<br>━━━━━━━━━<br>该区域环比、拖累项与亮点均由归因引擎按平台数据贡献度分解得出（见结果卡片）。<br><strong>诚实边界:</strong> 能定位「跌在哪」；「为什么跌」需竞品价格与客流数据，目前未接入，不下结论。可点卡片中的按钮把数据源加入待接清单。',
     'S10': '全家-南京西路店订单趋势(最近90天):<br>周均订单: 12.5万(环比+5%)<br>异常点: 5月1日销量突增(假期因素)<br>预测: 下周订单13万',
     'S11': '竞品动态追踪(元气森林-华东):<br>价格变动: 气泡茶降价至4元(-10%)<br>促销: 7月有大型活动计划<br>新品: 柠檬味气泡茶即将上市<br>威胁评级: 高',
     'S12': '合规巡检报告(本月):<br>总体合规率: 94%<br>费用合规: 96% | 照片合规: 92%<br>异常: 8笔,已下发整改通知',
@@ -3645,6 +3651,7 @@ function generateMockOutput(item) {
     'S40': '门店报修工单已提交:<br>工单号: WX20240609001<br>类型: 冰柜故障<br>预计处理: 24小时内<br>状态: 已派单',
     'A30': '门店三维数字孪生已生成(可旋转漫游):<br>识别SKU: 28个<br>本品货架占比: 31%(目标40%)<br>缺货被占位: 3处<br>陈列合规分: 76/100<br>建议: 补货黄金视线位+收回入口端架'
   };
+  if(item.id==='S9'&&typeof attrEngine==='function'){var _r9=attrEngine('华东');if(_r9)return attrCardHtml(_r9);}
   return outputs[item.id] || (item.output ? item.output.substring(0, 200) + '...' : '执行完成,详细结果请查看输出中心。');
 }
 
@@ -3656,7 +3663,7 @@ function generateMockLLM(item, values) {
     case 'A2': { _fcRegion=v.region||''; var sd2=loadSales('A2'); if(sd2&&sd2.rows&&sd2.rows.length){ var _d=parseInt((v.forecastDays||'7天'),10)||7; var fc2=computeForecast(sd2,_d); var topo=fc2[0]; var urg=fc2.filter(function(x){return x.cover<_d;}); var trd=topo?(topo.trendPct>5?('呈上升趋势(+'+topo.trendPct+'%)'):(topo.trendPct<-5?('呈下降趋势('+topo.trendPct+'%)'):'走势平稳')):''; var _cat=topo?skuCat(topo.sku):'饮料'; var _evs=activeEvents(_cat,_fcToday(),_d); var _evTxt=''; if(_evs.length){ var _s2=0; for(var _k=0;_k<_d;_k++){var _dd=_fcAddDays(_fcToday(),_k);_s2+=externalDayFactor(topo?topo.sku:'',_dd);} var _net=Math.round((_s2/_d-1)*100); _evTxt='当前（'+_fmtRange(_fcToday())+'）命中 '+_evs.map(function(e){return e.name;}).join('、')+' 等事件，综合净效应 '+(_net>=0?'+':'')+_net+'%，已计入预测。'; } var _ud2=(typeof localStorage!=='undefined'&&localStorage.getItem('ebest_sales_src')==='user');
       var _gapD2=sd2.maxDate?Math.round((Date.parse(_fcToday())-Date.parse(sd2.maxDate))/86400000):0;
       var _gapHint=(_ud2&&_gapD2>14)?(' ⚠️ 你传的是 '+sd2.maxDate.slice(0,7)+' 的数据，到今天隔了 '+_gapD2+' 天——建议先更新数据再按量下单，本次结果只作保守参考。'):'';
-      return '已按'+(_ud2?'你上传的 ':'平台默认演示数据 ')+sd2.rows.length+' 行历史销量（'+sd2.minDate+'~'+sd2.maxDate+'），用趋势+周季节性+事件加权预测。最需补货的是 '+(topo?topo.sku:'-')+'（'+trd+'，建议补 '+(topo?topo.rep:0)+'）。'+_evTxt+(urg.length?('有 '+urg.length+' 个SKU库存可撑天数低于预测周期，建议优先补货以防断货。'):'整体库存可支撑预测周期，按建议量补货即可。')+_gapHint; } var c2=v.skuCategory||'气泡茶', d2=v.forecastDays||'7天'; return '未来'+d2+'，'+c2+'受高温推动需求上行，建议提前增加安全库存；其余品类按常规补货，避免资金占用。'; }
+      return '已按'+(_ud2?'你上传的 ':'平台默认演示数据 ')+sd2.rows.length+' 行历史销量（'+sd2.minDate+'~'+sd2.maxDate+'），按最近销售走势+周末规律+天气/活动影响预测。最需补货的是 '+(topo?topo.sku:'-')+'（'+trd+'，建议补 '+(topo?(topo.repBox+'箱（\u2248'+topo.repUnits+topo.unit+'，\u591f'+topo.repDays.toFixed(1)+'天）'):0)+'）。'+_evTxt+(urg.length?('有 '+urg.length+' 个SKU库存可撑天数低于预测周期，建议优先补货以防断货。'):'整体库存可支撑预测周期，按建议量补货即可。')+_gapHint; } var c2=v.skuCategory||'气泡茶', d2=v.forecastDays||'7天'; return '未来'+d2+'，'+c2+'受高温推动需求上行，建议提前增加安全库存；其余品类按常规补货，避免资金占用。'; }
     case 'A4': { var ct=v.checkType||'两者都执行'; if(ct==='ROI费效计算') return 'ROI 1.35 表现良好，增量销量 +12.5%（vs 对照组）。建议把预算向高 ROI 活动集中，低效活动及时止损。'; if(ct==='照片合规审核') return '陈列合规通过率 85%，10% 驳回多因排面不足。建议对驳回门店限期整改并复查照片真实性。'; return '费效与合规一并核验：ROI 1.35 良好，仍有 10% 陈列驳回需跟进，建议对存疑门店复查。'; }
     case 'A5': { var sc=v.scenario||'买二送一'; return '在所选「'+sc+'」等方案中，买二送一达成概率最高(78%)、性价比最优，建议采用；注意备货以防旺季缺货。'; }
     case 'A14': { var c14=v.category||'全部品类'; if(c14==='全部品类') return '促销日历已平衡各品类冲突；果汁新品推广 ROI 最高(2.1)，建议配合中秋节点加大投入。'; return '已按「'+c14+'」筛选排期，该品类活动 ROI 稳健；建议聚焦其旺季节点，避免与竞品同期撞档。'; }
@@ -3705,7 +3712,7 @@ function generateMockLLM(item, values) {
     'S6': '周报显示整体经营平稳,华东区气泡茶下滑需关注。建议结合A11品类趋势分析下滑原因。',
     'S7': '不跟价是对的——价格战拼现金流我们不占优。建议把"高毛利+买赠"打包给一线,重点守住黄金陈列位,7天后复盘动销再决定是否加码。',
     'S8': '日报汇总显示一线工作效率良好,5条问题反馈需及时跟进。建议每日下班前处理问题反馈。',
-    'S9': '果汁下滑主因更可能是渠道断货而非需求,GT铺货率掉了8个点最值得先查。建议本周先解决断货,再看促销是否要跟。',
+    'S9': '已按归因引擎真算解读：本次下滑约一半来自 KA×碳酸；「为什么跌」需竞品价格与客流数据（未接入），只能定位不能下结论。建议先按亮点 CVS×气泡茶 加投，KA 碳酸做促销复盘。',
     'S10': '订单趋势整体向好,5月1日异常峰值已标注。预测下周订单13万建议提前备货。',
     'S11': '元气森林降价和新品上市是重大威胁,建议加快我方新品推出节奏并考虑针对性促销。',
     'S12': '合规率94%整体良好,照片合规是主要问题。建议加强一线人员培训,提高拍照规范意识。',
@@ -4052,6 +4059,9 @@ var EN_FIX14={"引导环拍360°（站着原地转一圈·自动拍）":"Guided 
 var EN_FIX15={"AI 货架识别（本品 vs 竞品 · 缺货位）":"AI Shelf Reading (ours vs competitors · OOS)","的三维重建与货架智能分析":"3D reconstruction & shelf intelligence","门店数字孪生 · 8 个点位":"Store digital twin · 8 spots","进入3D漫游":"Enter 3D Walkthrough","点击看大图":"Tap to enlarge","本品货架占比":"Our share of shelf","缺货/问题点":"OOS / issues","陈列合规分":"Compliance score","3 处":"3"};for(var _f15 in EN_FIX15){EN_DICT[_f15]=EN_FIX15[_f15];}EN_KEYS=Object.keys(EN_DICT).sort(function(a,b){return b.length-a.length;});
 var EN_FIX16={"门店实拍（点击放大）":"Store photos (tap to enlarge)"};for(var _f16 in EN_FIX16){EN_DICT[_f16]=EN_FIX16[_f16];}EN_KEYS=Object.keys(EN_DICT).sort(function(a,b){return b.length-a.length;});
 var EN_FIX17={"平台默认数据集":"Platform default datasets","平台默认知识库":"Platform default knowledge base","查看":"View","查看/编辑":"View / Edit","编辑":"Edit","保存":"Save","未接入":"Not connected","维度表":"Dimension","事实表":"Fact","政策规则":"Policy","外部表":"External","CV货架识别模型":"CV shelf recognition model","每日自动更新，上传你自己的数据即可替换":"auto-refreshed daily; upload your own data to replace","平台默认演示数据":"Platform default demo data"};for(var _f17 in EN_FIX17){EN_DICT[_f17]=EN_FIX17[_f17];}EN_KEYS=Object.keys(EN_DICT).sort(function(a,b){return b.length-a.length;});
+var EN_FIX20={"CV货架识别+空间重建,手机拍照生成门店数字孪生":"CV shelf recognition + spatial capture; phone photos build a store digital twin","区域下滑归因":"Decline Attribution","正在调用 归因引擎":"Calling Attribution Engine","归因引擎 · 区域下滑归因":"Attribution Engine","真计算":"computed","已加入 ✓":"Added ✓"};for(var _f20 in EN_FIX20){EN_DICT[_f20]=EN_FIX20[_f20];}EN_KEYS=Object.keys(EN_DICT).sort(function(a,b){return b.length-a.length;});
+var EN_FIX19={"建议补货(按箱下单)":"Replenishment (order by case)","建议下单(箱)":"Suggested order (cases)","暂不补":"No replenishment needed","天的销售记录":" days of sales history","先更新销量数据再谈补货":"Update sales data before replenishment","这个数只能当参考，不能直接下单":"Reference only — do not order by this","看不出周末和平时的差别":"Weekend vs weekday pattern unclear","看不出最近是在涨还是在跌":"No clear recent trend","数据新鲜（截止到今天隔了 ":"Data is fresh ("};for(var _f19 in EN_FIX19){EN_DICT[_f19]=EN_FIX19[_f19];}EN_KEYS=Object.keys(EN_DICT).sort(function(a,b){return b.length-a.length;});
+var EN_FIX18={"编辑配置":"Edit config","保存配置":"Save config","恢复默认":"Restore defaults","业务规则与口径":"Business Rules & Calibre","近90天明细":"90-day detail","单位与箱规换算":"Units & Case-Pack Conversion","补货SOP":"Replenishment SOP","巡店SOP":"Store-Visit SOP","促销执行SOP":"Promo Execution SOP","促销与返利政策":"Promo & Rebate Policy","箱规版本化":"versioned case-pack","计划拜访":"Planned visit","临时拜访":"Ad-hoc visit"};for(var _f18 in EN_FIX18){EN_DICT[_f18]=EN_FIX18[_f18];}EN_KEYS=Object.keys(EN_DICT).sort(function(a,b){return b.length-a.length;});
 // ==================== 平台默认数据集（RTM）· 锚定今天动态生成 ====================
 /* 交接文档第4/5节落地：维度表(D01-D05)+事实表(F01/F02/F04b/F06/F09)+政策规则+外部表。
    F01 是地基（32个技能共用）。数据为合成演示数据，每日锚定 new Date() 自动更新，保证数据新鲜度。 */
@@ -4086,7 +4096,11 @@ var RTM = (function(){
     ['苏打饼干100g','饼干糕点','100g','袋',30,3.5,0.62,1200,360,0,'中老年客群，GT复购稳定'],
     ['每日坚果25g','坚果炒货','25g','袋',60,5.5,0.66,1400,300,1,'每日一袋健康概念，礼盒/年节爆发力强'],
     ['瓜子110g','坚果炒货','110g','袋',40,4.0,0.64,1300,300,0,'看电视/聚会场景，GT传统强项'],
-    ['卤香豆干80g','休闲卤味','80g','袋',50,3.0,0.62,1000,240,0,'高蛋白咸口零食，加班/夜宵场景']
+    ['卤香豆干80g','休闲卤味','80g','袋',50,3.0,0.62,1000,240,0,'高蛋白咸口零食，加班/夜宵场景'],
+    ['葡萄汁300ml','果汁','300ml','瓶',12,3.2,0.60,1500,270,0,'NFC葡萄汁，便利店冷柜高毛利款'],
+    ['盐汽水600ml','功能性饮料','600ml','瓶',15,2.5,0.58,2600,540,0,'高温补水硬通货，工地/户外场景'],
+    ['虾条50g','膨化食品','50g','袋',30,3.2,0.63,1150,270,0,'童年回忆款，校园店/网吧渠道走量'],
+    ['香辣鸭脖70g','休闲卤味','70g','袋',40,4.0,0.62,850,240,0,'夜宵场景高复购，CVS冷藏柜主推']
   ];
   var PRODUCTS=P_ROWS.map(function(r,i){
     return {sku:r[0],cat:r[1],spec:r[2],minUnit:r[3],pack:r[4],price:r[5],costRate:r[6],base:r[7],shelf:r[8],focus:r[9],point:r[10],
@@ -4150,7 +4164,7 @@ var RTM = (function(){
     return qty;
   }
 
-  /* ---------- F01 销售/订单明细（日×SKU×区域×渠道 聚合，近90天） ---------- */
+  /* ---------- 区域×渠道×SKU×日 汇总（内部中间层，供 F01M/F09；门店级明细见 buildF01D） ---------- */
   var F01=null,F01M=null;
   function buildF01(){
     if(F01)return;
@@ -4171,14 +4185,15 @@ var RTM = (function(){
     F01M=Object.keys(agg).sort().map(function(k){var a=agg[k];a.box=+a.box.toFixed(0);return a;});
   }
 
-  /* ---------- D02 门店（160家样板） ---------- */
+  /* ---------- D02 门店（200家样板：4区×(KA13+CVS13+GT12+餐饮12)） ---------- */
   var STORE_NAMES={KA:['大润发','永辉超市','沃尔玛','盒马鲜生','华润万家'],CVS:['全家','罗森','7-Eleven','便利蜂','美宜佳'],GT:['鑫源烟酒店','惠民便利店','街坊食杂店','阳光社区超市','老李副食店'],'餐饮':['川香楼','蜀味观','江南小厨','粤港茶餐厅','西北面馆']};
   var STORES=[];
   (function(){
     var n=0;
     REGIONS.forEach(function(rg,ri){
       CHANNELS.forEach(function(ch,ci){
-        for(var i=0;i<10;i++){
+        var nPer=(ch==='KA'||ch==='CVS')?13:12;
+        for(var i=0;i<nPer;i++){
           n++;
           var brand=STORE_NAMES[ch][i%5],city=R_CITIES[rg][Math.floor(i/5)+(i%2)*2]||R_CITIES[rg][0];
           var cust=(ch==='KA')?'总部直供':'C'+(100+ri*3+(i%3));
@@ -4201,20 +4216,165 @@ var RTM = (function(){
   });});
   var ORG=REGIONS.map(function(rg,ri){return {rg:rg,provs:{'华东':'沪/苏/浙/皖','华南':'粤/闽/桂','华北':'京/津/冀/鲁','华西':'川/渝/滇/黔/陕'}[rg],cities:R_CITIES[rg].join('/'),head:REP_N[ri][0]};});
 
-  /* ---------- F02 库存快照（今日·SKU×区域，单位：箱） ---------- */
-  function buildF02(){
-    buildF01();
-    var rows=[];
-    for(var i=0;i<PRODUCTS.length;i++){var p=PRODUCTS[i];
-      REGIONS.forEach(function(rg){
-        var s14=0;
-        for(var k=14;k>=1;k--){var ds=addDays(TODAY,-k);CHANNELS.forEach(function(ch){s14+=cellDaily(p,rg,ch,ds);});}
-        var avgBox=s14/14/p.pack;
-        var cover=5+Math.floor(mulberry32(hstr('cov'+p.sku+rg))()*21);
-        var box=Math.round(avgBox*cover);
-        rows.push({rg:rg,sku:p.sku,cat:p.cat,box:box,qty:box*p.pack,cover:cover,status:(cover<7?'偏低':(cover>25?'偏高':'健康'))});
+  /* ---------- 门店↔业务员/铺货映射（F01明细/F02/F03 共用） ---------- */
+  function repFor(rg,ch){
+    for(var i=0;i<REPS.length;i++)if(REPS[i].rg===rg&&REPS[i].ch===ch)return REPS[i];
+    for(var j=0;j<REPS.length;j++)if(REPS[j].rg===rg)return REPS[j];
+    return REPS[0];
+  }
+  var S_F={A:1.5,B:1.0,C:0.6};
+  function storeSf(s){return S_F[s.level]||1.0;}
+  /* 每个门店经营的 SKU 子集（KA 全品；CVS/GT/餐饮 按确定性子集，餐饮饮料优先） */
+  var CARRY_N={KA:99,CVS:13,GT:10,'餐饮':8};
+  function storeSkus(s){
+    var n=CARRY_N[s.ch]||10;
+    if(n>=PRODUCTS.length)return PRODUCTS;
+    var rng=mulberry32(hstr('carry'+s.id));
+    var scored=PRODUCTS.map(function(p){
+      var w=1.0;
+      if(s.ch==='餐饮'&&p.cat!=='碳酸饮料'&&p.cat!=='气泡茶'&&p.cat!=='矿泉水'&&p.cat!=='果汁'&&p.cat!=='功能性饮料')w=0.35;
+      if(s.ch==='GT'&&p.price>=4.5)w=0.6;
+      return {p:p,k:rng()*w};
+    });
+    scored.sort(function(a,b){return b.k-a.k;});
+    return scored.slice(0,n).map(function(x){return x.p;});
+  }
+  /* (渠道×区域×SKU) → 经营门店列表与规模系数和：门店明细加总≈区域汇总，归因故事线不失真 */
+  var CARRY_MAP=null;
+  function carryMap(){
+    if(CARRY_MAP)return CARRY_MAP;
+    CARRY_MAP={};
+    STORES.forEach(function(s){
+      storeSkus(s).forEach(function(p){
+        var k=s.ch+'|'+s.rg+'|'+p.sku;var e=CARRY_MAP[k]||(CARRY_MAP[k]={list:[],sumSf:0});
+        e.list.push(s);e.sumSf+=storeSf(s);
       });
-    }
+    });
+    return CARRY_MAP;
+  }
+
+  /* ---------- F01 门店级销售明细（懒加载：日期×门店×SKU，三列数量冗余，近90天） ---------- */
+  var F01D=null;
+  function buildF01D(){
+    if(F01D)return F01D;
+    buildF01();carryMap();
+    var rows=[];
+    for(var k=90;k>=1;k--){
+      var ds=addDays(TODAY,-k),m=ds.slice(0,7);
+      var promoDay=(ds.slice(5)>='06-01'&&ds.slice(5)<='06-18');
+      for(var i=0;i<PRODUCTS.length;i++){var p=PRODUCTS[i];
+        for(var r=0;r<REGIONS.length;r++){var rg=REGIONS[r];
+          for(var c=0;c<CHANNELS.length;c++){var ch=CHANNELS[c];
+            var e=CARRY_MAP[ch+'|'+rg+'|'+p.sku];if(!e)continue;
+            var cell=cellDaily(p,rg,ch,ds);
+            var promo=(promoDay&&(ch==='KA'||ch==='CVS'))?1:0;
+            var rep=repFor(rg,ch);
+            for(var si=0;si<e.list.length;si++){var s=e.list[si];
+              var rng=mulberry32(hstr('d'+s.id+p.sku+ds));
+              var qty=Math.round(cell*storeSf(s)/e.sumSf*(0.85+0.30*rng()));
+              if(qty<1)continue;
+              var amt=+(qty*p.price).toFixed(0),cst=+(qty*p.cost).toFixed(0);
+              rows.push([ds,m,rg,s.city,ch,s.id,s.cust,p.sku,p.cat,qty,+(qty/p.pack).toFixed(1),amt,cst,(promo?'促销':'-'),rep.id]);
+            }
+          }}}}
+    F01D=rows;return rows;
+  }
+
+  /* ---------- F02 库存快照（今日·门店×SKU，按最小单位盘点——已拍板：门店盘点按听/袋） ---------- */
+  var F02R=null;
+  function buildF02(){
+    if(F02R)return F02R;
+    buildF01();carryMap();
+    var rows=[];
+    STORES.forEach(function(s){
+      storeSkus(s).forEach(function(p){
+        var e=CARRY_MAP[s.ch+'|'+s.rg+'|'+p.sku];if(!e)return;
+        var avg7=0;
+        for(var k=7;k>=1;k--){avg7+=cellDaily(p,s.rg,s.ch,addDays(TODAY,-k));}
+        avg7=avg7/7*storeSf(s)/e.sumSf;
+        var cover=2+Math.floor(mulberry32(hstr('cov'+s.id+p.sku))()*19);
+        var qty=Math.max(0,Math.round(avg7*cover));
+        rows.push([s.id,s.rg,s.ch,p.sku,p.cat,qty,+(qty/p.pack).toFixed(1),cover,(cover<5?'偏低':(cover>16?'偏高':'健康')),TODAY]);
+      });
+    });
+    F02R=rows;return rows;
+  }
+
+  /* ---------- F03 拜访记录（近90天·计划+临时拜访） ---------- */
+  function buildF03(){
+    var rows=[],n=0;
+    var ITEMS=['铺货检查','陈列维护','库存盘点','促销执行','订单跟进','客情维护'];
+    var RES=['正常','已补货','已下单','陈列待整改','缺货预警','店主不在，改约'];
+    STORES.forEach(function(s){
+      var rng=mulberry32(hstr('vis'+s.id));
+      var rep=repFor(s.rg,s.ch);
+      var interval=6+Math.floor(rng()*5);
+      var off=Math.floor(rng()*interval);
+      for(var k=89-off;k>=1;k-=interval){
+        var ds=addDays(TODAY,-k);n++;
+        var r2=mulberry32(hstr('vr'+s.id+ds));
+        rows.push(['V'+(10000+n),ds,s.id,s.name,rep.id,rep.name,(r2()<0.85?'计划拜访':'临时拜访'),ITEMS[Math.floor(r2()*6)],RES[Math.floor(r2()*6)],Math.floor(r2()*6)]);
+      }
+    });
+    return rows;
+  }
+
+  /* ---------- F04a eB2B行为事件明细（近30天；华东6月起下单走弱、加购未下单增多） ---------- */
+  function buildF04a(){
+    var rows=[],n=0;
+    var EVW=[['浏览',42],['停留',24],['加购',14],['下单',12],['取消',8]];
+    var PAGES=['首页','分类页','促销页','搜索','订单页'];
+    CUSTOMERS.forEach(function(c){
+      var rng=mulberry32(hstr('eba'+c.id));
+      var evN=110+Math.floor(rng()*50);
+      for(var i=0;i<evN;i++){
+        n++;
+        var dayAgo=1+Math.floor(rng()*30),ds=addDays(TODAY,-dayAgo);
+        var ts=ds+' '+pad2(8+Math.floor(rng()*13))+':'+pad2(Math.floor(rng()*60))+':'+pad2(Math.floor(rng()*60));
+        var weak=(c.rg==='华东'&&ds>=YY+'-06-01')?1:0;
+        var roll=rng()*100,et='浏览',acc=0;
+        for(var w=0;w<EVW.length;w++){var wt=EVW[w][1];if(weak&&EVW[w][0]==='加购')wt+=6;if(weak&&EVW[w][0]==='下单')wt-=4;acc+=wt;if(roll<acc){et=EVW[w][0];break;}}
+        var p=PRODUCTS[Math.floor(rng()*PRODUCTS.length)];
+        rows.push(['E'+(100000+n),c.id,ts,et,p.sku,((et==='浏览'||et==='停留')?Math.floor(3+rng()*120):0),PAGES[Math.floor(rng()*5)]]);
+      }
+    });
+    return rows;
+  }
+
+  /* ---------- D01b 单位阶梯（链式：序号1=最小销售单位；饮料3级/休闲食品4级；箱规版本化） ---------- */
+  var SNACK_LADDER={'薯片原味70g':[6,4],'薯片番茄味70g':[6,4],'玉米片40g':[6,6],'苏打饼干100g':[6,5],'每日坚果25g':[10,6],'瓜子110g':[8,5],'卤香豆干80g':[10,5],'虾条50g':[6,5],'香辣鸭脖70g':[8,5]};
+  function buildD01b(){
+    var rows=[],from=YY+'-01-01';
+    PRODUCTS.forEach(function(p){
+      var bev=(p.minUnit==='听'||p.minUnit==='瓶'||p.minUnit==='罐');
+      if(bev){
+        rows.push([p.sku,1,p.minUnit,'箱',p.pack,from,'-','箱规=引擎默认因子（版本化）']);
+        rows.push([p.sku,2,'箱','托',50,from,'-','仅WMS/配送(A26)使用']);
+      }else if(p.minUnit==='袋'){
+        var ab=SNACK_LADDER[p.sku]||[6,Math.max(1,Math.round(p.pack/6))];
+        rows.push([p.sku,1,'袋','条',ab[0],from,'-','条/排只影响陈列盘点，非交易单位']);
+        rows.push([p.sku,2,'条','箱',ab[1],from,'-','1箱='+ab[0]+'条×'+ab[1]+'='+(ab[0]*ab[1])+'袋，与D01箱规一致']);
+        rows.push([p.sku,3,'箱','托',40,from,'-','仅WMS/配送(A26)使用']);
+      }else{
+        rows.push([p.sku,1,p.minUnit,'箱',p.pack,from,'-','箱规=引擎默认因子（版本化）']);
+        rows.push([p.sku,2,'箱','托',40,from,'-','仅WMS/配送(A26)使用']);
+      }
+    });
+    rows.push(['可乐330ml',1,'听','箱',26,YY+'-06-01',YY+'-06-18','618促销装「买24送2」：该批次按26听/箱换算，历史同比须按各自版本']);
+    return rows;
+  }
+
+  /* ---------- P00 价格体系（SKU×渠道出货价/建议零售价） ---------- */
+  var CH_PRICE={KA:1.00,CVS:1.04,GT:0.97,'餐饮':1.08};
+  function buildP00(){
+    var rows=[];
+    PRODUCTS.forEach(function(p){
+      CHANNELS.forEach(function(ch){
+        var ex=+(p.price*CH_PRICE[ch]).toFixed(2);
+        var rr=+(ex*1.3).toFixed(1);
+        rows.push([p.sku,p.cat,ch,ex,rr,Math.round((rr-p.cost)/rr*100)+'%']);
+      });
+    });
     return rows;
   }
 
@@ -4289,29 +4449,49 @@ var RTM = (function(){
   buildF01();
   var T={
     D01:{name:'D01 产品主数据',type:'维度表',cols:['编码','SKU','品类','规格','最小单位','订货单位','箱规','出厂价(元)','成本(元)','保质期(天)','主推'],rows:PRODUCTS.map(function(p){return [p.code,p.sku,p.cat,p.spec,p.minUnit,'箱',p.pack,p.price,p.cost,p.shelf,p.focus?'是':'否'];})},
+    D01b:{name:'D01b 单位阶梯(链式·箱规版本化)',type:'维度表',cols:['SKU','序号','单位','上级单位','换算因子','生效日期','失效日期','备注'],rows:buildD01b()},
     D02:{name:'D02 门店主数据',type:'维度表',cols:['门店ID','门店名称','渠道','区域','城市','客户ID','门店等级','开业日期'],rows:STORES.map(function(s){return [s.id,s.name,s.ch,s.rg,s.city,s.cust,s.level,s.openDate];})},
     D03:{name:'D03 客户/经销商',type:'维度表',cols:['客户ID','名称','区域','层级','签约日期','信用额度(万)','账期(天)'],rows:CUSTOMERS.map(function(c){return [c.id,c.name,c.rg,c.level,c.sign,c.credit,c.terms];})},
     D04:{name:'D04 人员档案',type:'维度表',cols:['工号','姓名','角色','区域','负责渠道','入职日期'],rows:REPS.map(function(r){return [r.id,r.name,r.role,r.rg,r.ch,r.hire];})},
     D05:{name:'D05 组织区域',type:'维度表',cols:['区域','覆盖省份','核心城市','大区负责人'],rows:ORG.map(function(o){return [o.rg,o.provs,o.cities,o.head];})},
-    F01:{name:'F01 销售/订单明细(近90天)',type:'事实表',cols:['日期','月份','区域','渠道','SKU','品类','数量(最小单位)','数量(箱)','销售额(元)','成本额(元)','促销标识'],rows:F01.map(function(r){return [r.d,r.m,r.rg,r.ch,r.sku,r.cat,r.qty,r.box,r.amt,r.cost,r.promo?'促销':'-'];})},
+    F01:{name:'F01 销售/订单明细(近90天·门店级)',type:'事实表',lazy:1,cols:['日期','月份','区域','城市','渠道','门店ID','客户ID','SKU','品类','数量(最小单位)','数量(箱)','销售额(元)','成本额(元)','促销标识','业务员ID'],rows:[]},
     F01M:{name:'F01M 销售月度汇总(品类级)',type:'事实表',cols:['月份','区域','渠道','品类','数量(最小单位)','数量(箱)','销售额(元)','成本额(元)'],rows:F01M.map(function(a){return [a.m,a.rg,a.ch,a.cat,a.qty,a.box,a.amt,a.cost];})},
-    F02:{name:'F02 库存快照(今日)',type:'事实表',cols:['区域','SKU','品类','库存(箱)','约合(最小单位)','可售天数','状态'],rows:buildF02().map(function(r){return [r.rg,r.sku,r.cat,r.box,r.qty,r.cover,r.status];})},
+    F02:{name:'F02 库存快照(今日·门店级·最小单位)',type:'事实表',lazy:1,cols:['门店ID','区域','渠道','SKU','品类','库存(最小单位)','约合(箱)','可售天数','状态','盘点日期'],rows:[]},
+    F03:{name:'F03 拜访记录(近90天)',type:'事实表',cols:['拜访ID','日期','门店ID','门店名称','业务员ID','业务员','类型','事项','结果','照片数'],rows:buildF03()},
+    F04a:{name:'F04a eB2B行为事件明细(近30天)',type:'事实表',cols:['事件ID','客户ID','时间戳','事件类型','SKU','停留秒数','来源页面'],rows:buildF04a()},
     F04b:{name:'F04b eB2B客户行为(月度)',type:'事实表',cols:['客户ID','客户名称','区域','月份','活跃天数','访问次数','订货频次(次/月)','加购未下单','访问→下单时长(h)','偏好促销','客单价(元)'],rows:buildF04b().map(function(r){return [r.cust,r.name,r.rg,r.m,r.active,r.visits,r.orders,r.abandon,r.hours,r.pref,r.aov];})},
     F06:{name:'F06 促销活动',type:'事实表',cols:['活动ID','名称','渠道','区域','开始','结束','机制','预算','状态'],rows:buildF06().map(function(r){return [r.id,r.name,r.ch,r.rg,r.from,r.to,r.mech,r.budget,r.status];})},
     F09:{name:'F09 目标与达成',type:'事实表',cols:['区域','月份','目标额(元)','达成额(元)','达成率'],rows:buildF09().map(function(r){return [r.rg,r.m,r.target,r.actual,r.rate];})},
+    P00:{name:'P00 价格体系',type:'政策规则',cols:['SKU','品类','渠道','出货价(元/最小单位)','建议零售价(元)','渠道毛利空间'],rows:buildP00()},
     P01:{name:'P01 促销政策',type:'政策规则',cols:['政策ID','名称','渠道','机制','有效期','状态'],rows:POLICY_PROMO.map(function(r){return [r.id,r.name,r.ch,r.mech,r.valid,r.status];})},
     P02:{name:'P02 返利政策',type:'政策规则',cols:['适用层级','达成条件','返利率','兑付方式'],rows:POLICY_REBATE.map(function(r){return [r.level,r.cond,r.rate,r.pay];})},
     E01:{name:'E01 天气与节假日事件',type:'外部表',cols:['事件','时间','区域','对销量影响'],rows:EXT_EVENTS.map(function(r){return [r.name,r.period,r.rg,r.effect];})},
     E02:{name:'E02 竞品动态',type:'外部表',na:1,note:'待接入：竞品终端价将由巡店拍照识别(A30)产出；竞品促销由业代上报'},
     E03:{name:'E03 市场份额',type:'外部表',na:1,note:'待接入：尼尔森/凯度数据需采购'}
   };
-  var ORDER=['D01','D02','D03','D04','D05','F01','F01M','F02','F04b','F06','F09','P01','P02','E01','E02','E03'];
+  var ORDER=['D01','D01b','D02','D03','D04','D05','F01','F01M','F02','F03','F04a','F04b','F06','F09','P00','P01','P02','E01','E02','E03'];
   return {
     TODAY:TODAY,YEST:YEST,PRODUCTS:PRODUCTS,STORES:STORES,CUSTOMERS:CUSTOMERS,REPS:REPS,
     tables:T,order:ORDER,prod:prod,cellDaily:cellDaily,
+    ensure:function(tid){
+      var t=T[tid];if(!t||!t.lazy||t._done)return;
+      if(tid==='F01')t.rows=buildF01D();
+      else if(tid==='F02')t.rows=buildF02();
+      t._done=1;
+    },
     /* A2 演示门店默认销量（华东 CVS 样板店·近35天·10个SKU） */
     buildA2Default:function(){
       var SK=[['矿泉水550ml',180],['可乐330ml',95],['可乐500ml',72],['矿泉水350ml',60],['白桃气泡茶330ml',45],['能量饮料250ml',36],['青梅气泡茶330ml',33],['橙汁300ml',30],['电解质水500ml',28],['气泡茶480ml',24]];
+      /* 选一家经营这些SKU最多的华东CVS真实门店；库存读 F02（最小单位口径） */
+      var bestSt=null,bestOv=-1;
+      STORES.forEach(function(s){
+        if(s.ch!=='CVS'||s.rg!=='华东')return;
+        var carry=storeSkus(s),ov=0;
+        SK.forEach(function(pair){for(var ci=0;ci<carry.length;ci++)if(carry[ci].sku===pair[0]){ov++;break;}});
+        if(ov>bestOv){bestOv=ov;bestSt=s;}
+      });
+      var f02q={};
+      if(bestSt){try{buildF02().forEach(function(r){if(r[0]===bestSt.id)f02q[r[3]]=r[5];});}catch(e){}}
       var rows=[],skus=[];
       SK.forEach(function(pair){
         var sku=pair[0],base=pair[1],p=prod(sku),cat=p?p.cat:'饮料';
@@ -4329,25 +4509,168 @@ var RTM = (function(){
           rows.push({sku:sku,date:ds,sales:sale,stock:stock});
           if(!minD)minD=ds;maxD=ds;
         }
+        if(f02q[sku]!==undefined)rows[rows.length-1].stock=f02q[sku];   // 最新库存以 F02 快照（最小单位）为准
         skus.push(sku);
       });
-      return {rows:rows,skus:skus,minDate:rows.length?rows[0].date:'',maxDate:rows.length?rows[rows.length-1].date:'',src:'default',store:'演示门店 · 全家-上海南京西路店(华东·CVS)'};
+      return {rows:rows,skus:skus,minDate:rows.length?rows[0].date:'',maxDate:rows.length?rows[rows.length-1].date:'',src:'default',store:'演示门店 · '+(bestSt?bestSt.name:'全家-上海南京西路店')+'(华东·CVS)'};
     }
   };
 })();
 
+// ==================== 平台级数据共享层（ebest_ds_<表名>） ====================
+/* 交接第6步并行项：把 ebest_sales__shared 的共享概念扶正为通用机制。技能/归因引擎一律经 dsGet 读平台数据，
+   不再各存各的副本（旧 ebest_dh_<agentId> 私有存储保留不动）。小表持久化 localStorage（当天有效，跨会话复用）；
+   F01 门店级明细量太大不持久化——但生成是确定性且锚定 new Date() 的，每次会话重建结果一致，新鲜度闸永远通过。 */
+var DS_MEM={};
+function dsKey(t){return 'ebest_ds_'+t;}
+function dsGet(tid){
+  if(DS_MEM[tid])return DS_MEM[tid];
+  var t=RTM.tables[tid];if(!t||t.na)return null;
+  if(tid!=='F01'){
+    try{
+      var raw=localStorage.getItem(dsKey(tid));
+      if(raw){var o=JSON.parse(raw);if(o&&o.d===RTM.TODAY&&o.rows){DS_MEM[tid]=o;return o;}}
+    }catch(e){}
+  }
+  if(typeof RTM.ensure==='function')RTM.ensure(tid);
+  var obj={name:t.name,type:t.type,cols:t.cols,rows:t.rows,d:RTM.TODAY};
+  DS_MEM[tid]=obj;
+  if(tid!=='F01'){try{localStorage.setItem(dsKey(tid),JSON.stringify(obj));}catch(e){}}
+  return obj;
+}
+function dsWarm(){RTM.order.forEach(function(id){if(id==='F01')return;try{dsGet(id);}catch(e){}});}
+
 // ==================== 平台默认知识库（快消 RTM · 口径/阈值/SOP/卖点） ====================
 /* 交接文档3.8：阈值/口径/政策进KB（表单可改），算法不进KB。文档注入 ebest_kb，RAG 可检索，可查看可编辑。 */
-var RTM_KB_VERSION='2026-07-16.v1';
+/* 交接3.8兑现：阈值/口径做成结构化配置对象（表单可改 + 边界校验 + 一键恢复默认），KB词条 content 由配置渲染。
+   能进KB：阈值14/60/7/3×、安全库存×3天、事件系数、字段口径；不能进KB：算法怎么算（不在此配置）。 */
+var RTM_RULES_DEF={
+  freshHealthy:3,freshWarn:14,freshRefuse:60,
+  histMult:3,weekMin:14,weekGood:28,trendMin:7,
+  safetyDays:3,
+  evHeatWater:15,evHeatTea:12,evHeatCola:10,evHeatJuice:8,
+  evMeiyuMax:-8,evMeiyuMin:-12,
+  ev618:10,evD11:25,evD12:12,evGuoqing:20,evNyDrink:28,evNyGift:30,
+  mSeasonFull:24,mSeasonMin:12
+};
+var RTM_RULES_META=[
+  ['freshHealthy','数据新鲜度·健康线（≤N天可直接用）','天',1,7],
+  ['freshWarn','数据新鲜度·提醒线（超过只给参考）','天',8,30],
+  ['freshRefuse','数据新鲜度·拒算线（超过不给数字）','天',31,120],
+  ['histMult','历史长度倍数（预测N天需N×倍历史）','倍',2,5],
+  ['weekMin','看周末/平日差别·最少天数','天',10,21],
+  ['weekGood','看周末/平日差别·可靠天数','天',22,60],
+  ['trendMin','看涨跌趋势·最少天数','天',5,13],
+  ['safetyDays','安全库存（×天预测日均）','天',1,7],
+  ['evHeatWater','高温·矿泉水系数','%',0,50],
+  ['evHeatTea','高温·气泡茶系数','%',0,50],
+  ['evHeatCola','高温·碳酸系数','%',0,50],
+  ['evHeatJuice','高温·果汁系数','%',0,50],
+  ['evMeiyuMax','梅雨季·饮料系数（上限）','%',-30,0],
+  ['evMeiyuMin','梅雨季·饮料系数（下限）','%',-30,0],
+  ['ev618','618大促·全品系数','%',0,60],
+  ['evD11','双11·全品系数','%',0,60],
+  ['evD12','双12·全品系数','%',0,60],
+  ['evGuoqing','国庆黄金周·饮料系数','%',0,60],
+  ['evNyDrink','春节·饮料系数','%',0,60],
+  ['evNyGift','春节·坚果礼盒系数','%',0,60],
+  ['mSeasonFull','月粒度·有年份规律最少月数','月',18,36],
+  ['mSeasonMin','月粒度·勉强可用月数','月',6,23]
+];
+function rtmRulesGet(){
+  var c={};for(var k in RTM_RULES_DEF)c[k]=RTM_RULES_DEF[k];
+  try{var raw=localStorage.getItem('ebest_rules_cfg');if(raw){var o=JSON.parse(raw);for(var k2 in o)if(c[k2]!==undefined&&isFinite(+o[k2]))c[k2]=+o[k2];}}catch(e){}
+  return c;
+}
+function rtmRulesValidate(c){
+  var errs=[];
+  RTM_RULES_META.forEach(function(m){
+    var v=c[m[0]];
+    if(v===undefined||!isFinite(v)){errs.push(m[1]+'：请输入数字');return;}
+    if(v<m[3]||v>m[4])errs.push(m[1]+' 需在 '+m[3]+'~'+m[4]+' 之间');
+  });
+  if(isFinite(c.freshHealthy)&&isFinite(c.freshWarn)&&isFinite(c.freshRefuse)&&!(c.freshHealthy<c.freshWarn&&c.freshWarn<c.freshRefuse))errs.push('三条新鲜度线必须满足 健康线 < 提醒线 < 拒算线');
+  if(isFinite(c.weekMin)&&isFinite(c.weekGood)&&!(c.weekMin<c.weekGood))errs.push('「看周末/平日差别」的最少天数必须小于可靠天数');
+  if(isFinite(c.trendMin)&&isFinite(c.weekMin)&&c.trendMin>=c.weekMin)errs.push('「看涨跌趋势最少天数」应小于「看周末/平日差别最少天数」');
+  if(isFinite(c.evMeiyuMin)&&isFinite(c.evMeiyuMax)&&!(c.evMeiyuMin<=c.evMeiyuMax))errs.push('梅雨季系数下限应≤上限');
+  if(isFinite(c.mSeasonMin)&&isFinite(c.mSeasonFull)&&!(c.mSeasonMin<c.mSeasonFull))errs.push('月粒度「勉强可用月数」必须小于「有年份规律最少月数」');
+  return errs;
+}
+function rtmRulesText(c){
+  return '# 业务规则与口径\n（平台默认 · 阈值类规则按业务可调整；本页只规定「什么算好数据、怎么下结论」，不涉及计算逻辑）\n\n'+
+  '## 一、数据新鲜度\n- 数据截止日距今天 ≤'+c.freshHealthy+' 天：健康，可用于预测与分析\n- '+(c.freshHealthy+1)+'~'+c.freshWarn+' 天：提醒「数据不是最近的」，结果仅供参考\n- 超过 '+c.freshWarn+' 天：不做趋势推断，只给保守参考量\n- 超过 '+c.freshRefuse+' 天：不给补货数字，请先更新数据\n- 对业务的话术口径：不说「数据滞后」，说「你传的是 X 月的数据，到今天隔了 N 天」\n\n'+
+  '## 二、历史长度要求\n- 预测几天，历史至少要有 '+c.histMult+' 倍天数（预测 7 天 → 至少 '+(7*c.histMult)+' 天历史）\n- 要看「周末和平时的差别」：至少 '+c.weekMin+' 天（2 个完整周），'+c.weekGood+' 天以上才可靠\n- 历史不足 '+c.trendMin+' 天：不看涨跌趋势，只按日均给保守量\n\n'+
+  '## 三、安全库存与订货\n- 安全库存 = '+c.safetyDays+' 天预测日均销量\n- 建议补货量 = 预测需求 + 安全库存 − 当前库存（小于 0 按 0 计）\n- 下单按箱取整，并校验最小起订量与订货步长（见 D01 产品主数据）\n- 慢动销小店（日销<2 听/袋）慎推整箱：24 听一箱要压 12 天以上，建议引导小箱规\n\n'+
+  '## 四、事件系数（可按大区调整）\n- 持续高温（6/15–8/31）：矿泉水 +'+c.evHeatWater+'%、气泡茶 +'+c.evHeatTea+'%、碳酸 +'+c.evHeatCola+'%、果汁 +'+c.evHeatJuice+'%\n- 梅雨季（华东 6/10–7/15）：饮料类 '+c.evMeiyuMin+'%~'+c.evMeiyuMax+'%\n- 618 / 双11 / 双12：全品 +'+c.ev618+'% / +'+c.evD11+'% / +'+c.evD12+'%\n- 国庆黄金周：饮料 +'+c.evGuoqing+'%；春节：饮料 +'+c.evNyDrink+'%、坚果礼盒 +'+c.evNyGift+'%\n\n'+
+  '## 五、字段口径\n- 当日销量：按最小销售单位计（饮料=听/瓶，食品=袋/盒）\n- 当前库存：期末库存，同样按最小销售单位计（门店盘点按听/袋，不按箱）\n- 销售额：含税出货额（元）；成本额按 D01 成本价核算\n- 单位换算：1 箱 = N 个最小单位，箱规见 D01（版本化；促销装/改版缩量按批次换算，阶梯见 D01b）\n- 硬约束：跨品类汇总只能加销售额，不能加件数/箱数（听和袋加不起来）\n\n'+
+  '## 六、归因口径\n- 贡献度(pp) = 该组合涨跌额 ÷ 上期总额 × 100%\n- 平台能定位「跌在哪」（区域×渠道×品类），不直接断言「为什么跌」\n- 「为什么跌」需要外部数据（竞品价、客流），未接入前不做结论，只列出待接入清单';
+}
+function rtmRulesApplyToKB(){
+  var txt=rtmRulesText(rtmRulesGet());
+  try{
+    var arr=_kbRead('ebest_kb');
+    for(var i=0;i<arr.length;i++)if(arr[i].id==='kbdef_rules'){arr[i].text=txt;arr[i].chunks=_chunk(txt);arr[i].size=txt.length;arr[i].at=Date.now();}
+    _kbWrite('ebest_kb',arr);
+  }catch(e){}
+  return txt;
+}
+/* ---------- 业务规则与口径 · 配置表单（带边界校验 + 一键恢复默认） ---------- */
+function rtmRulesForm(kb,dh){
+  var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
+  var c=rtmRulesGet();
+  var h='<div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">'+(EN?'Numeric thresholds & coefficients with boundary checks. Algorithm logic is not configurable here.':'阈值/系数都是数字配置，带边界校验；算法逻辑（怎么算）不在此配置。')+'</div>';
+  h+='<div id="rtmRulesErr" style="display:none;font-size:12px;color:#F5222D;background:#FFF1F0;border:1px solid #FFCCC7;border-radius:8px;padding:8px 10px;margin-bottom:10px;"></div>';
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;max-height:48vh;overflow:auto;padding:2px;">';
+  RTM_RULES_META.forEach(function(m){
+    h+='<label style="font-size:12px;color:var(--text);">'+m[1]+'<span style="color:var(--text-muted);">（'+m[3]+'~'+m[4]+' '+m[2]+'）</span><br>'+
+      '<input type="number" data-rk="'+m[0]+'" value="'+c[m[0]]+'" min="'+m[3]+'" max="'+m[4]+'" style="width:100%;box-sizing:border-box;margin-top:3px;border:1px solid var(--border);border-radius:8px;padding:6px 8px;font-size:13px;"></label>';
+  });
+  h+='</div>';
+  var f='<button onclick="rtmRulesSaveUI(\''+kb+'\',\''+dh+'\')" style="border:none;background:#722ED1;color:#fff;font-size:12px;border-radius:14px;padding:6px 16px;cursor:pointer;font-weight:600;">'+(EN?'Save':'保存配置')+'</button>'+
+    '<button onclick="rtmRulesResetUI(\''+kb+'\',\''+dh+'\')" style="border:1px solid #FA8C16;background:#fff;color:#FA8C16;font-size:12px;border-radius:14px;padding:6px 16px;cursor:pointer;font-weight:600;">'+(EN?'Restore defaults':'恢复默认')+'</button>'+
+    '<button onclick="rtmRulesBack(\''+kb+'\',\''+dh+'\')" style="border:1px solid var(--border);background:#fff;color:var(--text-muted);font-size:12px;border-radius:14px;padding:6px 16px;cursor:pointer;">'+(EN?'Back':'返回')+'</button>';
+  rtmOpenModal((EN?'Business Rules & Calibre · Config':'业务规则与口径 · 配置'),h,f);
+}
+function rtmRulesCollect(){
+  var c={},inputs=document.querySelectorAll('#rtmViewerBody input[data-rk]');
+  for(var i=0;i<inputs.length;i++)c[inputs[i].getAttribute('data-rk')]=parseFloat(inputs[i].value);
+  return c;
+}
+function rtmRulesSaveUI(kb,dh){
+  var c=rtmRulesCollect();var errs=rtmRulesValidate(c);
+  var eb=document.getElementById('rtmRulesErr');
+  if(errs.length){if(eb){eb.style.display='';eb.innerHTML=errs.map(function(e){return '· '+e;}).join('<br>');}return;}
+  try{localStorage.setItem('ebest_rules_cfg',JSON.stringify(c));}catch(e){}
+  var txt=rtmRulesApplyToKB();
+  if(dh){try{var d=dhLoad(dhCurrent);var k=d.kb.filter(function(y){return y.id===dh;})[0];if(k&&k.title.indexOf('业务规则与口径')>=0){k.content=txt;dhSave(dhCurrent,d);}}catch(e){}}
+  if(typeof renderKBList==='function'){try{renderKBList();}catch(e){}}
+  rtmRulesBack(kb,dh);
+}
+function rtmRulesResetUI(kb,dh){
+  try{localStorage.removeItem('ebest_rules_cfg');}catch(e){}
+  var txt=rtmRulesApplyToKB();
+  if(dh){try{var d=dhLoad(dhCurrent);var k=d.kb.filter(function(y){return y.id===dh;})[0];if(k&&k.title.indexOf('业务规则与口径')>=0){k.content=txt;dhSave(dhCurrent,d);}}catch(e){}}
+  rtmRulesForm(kb,dh);
+}
+function rtmRulesBack(kb,dh){if(dh){dhViewDoc(dh);}else if(kb){rtmViewDoc(kb);}else{rtmCloseModal();}}
+
+/* ---------- SKU卖点手册：由 D01 主数据动态渲染（24个SKU全覆盖，随主数据自动更新） ---------- */
+function rtmSkuPointsText(){
+  var byCat={};
+  RTM.PRODUCTS.forEach(function(p){(byCat[p.cat]||(byCat[p.cat]=[])).push(p);});
+  var t='# SKU 卖点手册（覆盖 D01 全部 '+RTM.PRODUCTS.length+' 个 SKU · 随产品主数据自动更新）\n';
+  Object.keys(byCat).forEach(function(cat){
+    t+='\n## '+cat+'\n';
+    byCat[cat].forEach(function(p){
+      t+='- '+p.sku+'（'+p.spec+' · '+p.minUnit+' · 箱规'+p.pack+(p.focus?' · 主推':'')+'）：'+p.point+'\n';
+    });
+  });
+  return t;
+}
+
+var RTM_KB_VERSION='2026-07-16.v2';
 var RTM_KB_DOCS=[
-{id:'kbdef_rules',name:'业务规则与口径.md',text:
-'# 业务规则与口径\n（平台默认 · 阈值类规则可按业务调整；本页只规定「什么算好数据、怎么下结论」，不涉及计算逻辑）\n\n'+
-'## 一、数据新鲜度\n- 数据截止日距今天 ≤3 天：健康，可用于预测与分析\n- 4~14 天：提醒「数据不是最近的」，结果仅供参考\n- 超过 14 天：不做趋势推断，只给保守参考量\n- 超过 60 天：不给补货数字，请先更新数据\n- 对业务的话术口径：不说「数据滞后」，说「你传的是 X 月的数据，到今天隔了 N 天」\n\n'+
-'## 二、历史长度要求\n- 预测几天，历史至少要有 3 倍天数（预测 7 天 → 至少 21 天历史）\n- 要看「周末和平时的差别」：至少 14 天（2 个完整周），28 天以上才可靠\n- 历史不足 7 天：不看涨跌趋势，只按日均给保守量\n\n'+
-'## 三、安全库存与订货\n- 安全库存 = 3 天预测日均销量\n- 建议补货量 = 预测需求 + 安全库存 − 当前库存（小于 0 按 0 计）\n- 下单按箱取整，并校验最小起订量与订货步长（见 D01 产品主数据）\n- 慢动销小店（日销<2 听/袋）慎推整箱：24 听一箱要压 12 天以上，建议引导小箱规\n\n'+
-'## 四、事件系数（可按大区调整）\n- 持续高温（6/15–8/31）：矿泉水 +15%、气泡茶 +12%、碳酸 +10%、果汁 +8%\n- 梅雨季（华东 6/10–7/15）：饮料类 −8%~−12%\n- 618 / 双11 / 双12：全品 +10% / +25% / +12%\n- 国庆黄金周：饮料 +20%；春节：饮料 +28%、坚果礼盒 +30%\n\n'+
-'## 五、字段口径\n- 当日销量：按最小销售单位计（饮料=听/瓶，食品=袋/盒）\n- 当前库存：期末库存，同样按最小销售单位计\n- 销售额：含税出货额（元）；成本额按 D01 成本价核算\n- 硬约束：跨品类汇总只能加销售额，不能加件数/箱数（听和袋加不起来）\n\n'+
-'## 六、归因口径\n- 贡献度(pp) = 该组合涨跌额 ÷ 上期总额 × 100%\n- 平台能定位「跌在哪」（区域×渠道×品类），不直接断言「为什么跌」\n- 「为什么跌」需要外部数据（竞品价、客流），未接入前不做结论，只列出待接入清单\n'},
+{id:'kbdef_rules',name:'业务规则与口径.md',text:rtmRulesText(rtmRulesGet())},
 {id:'kbdef_uom',name:'单位与箱规换算.md',text:
 '# 单位与箱规换算\n\n## 一、单位阶梯（按品类不同，层级数不同）\n- 饮料：听/瓶/罐 → 箱 → 托（3 级）\n- 休闲食品：袋/包/盒 → 条/排 → 箱 → 托（4 级）\n- 条/排只影响陈列和盘点，不是交易单位；托只有仓储配送(A26)使用\n\n## 二、交易口径（门店进货一律下箱）\n- 订货：所有品类、所有门店，一律按「箱」下单\n- 售卖：门店按最小单位卖（听/袋）\n- 日常引擎只认一个换算因子：箱规（1 箱 = N 个最小单位），见 D01 产品主数据\n\n## 三、箱规版本化（重要）\n- 促销装「买 24 送 2」：该批次按 26 听/箱计\n- 改版缩量（如 24 听/箱 → 20 听/箱）：属于变相提价，历史同比必须按各自版本换算\n- 不版本化的后果：去年 6 月 1000 箱×24 = 24,000 听，今年 6 月 1000 箱×20 = 20,000 听——报表显示箱数持平，实际跌 17%\n\n## 四、预测值 ≠ 可下单量\n- 引擎预测的是最小单位需求，下单前要：÷箱规 → 向上取整 → 校验最小起订量/订货步长\n- 示例：预测需补 8089 听 ÷ 24 = 337.04 箱 → 建议补 338 箱（≈8112 听，约够 8.9 天）\n\n## 五、跨品类硬约束\n- 1 听可乐 + 1 袋薯片加不起来，没有共同物理单位\n- 跨品类聚合只能用销售额；只有单品类内部才能用件数/箱数\n'},
 {id:'kbdef_sop_replenish',name:'补货SOP.md',text:
@@ -4356,8 +4679,7 @@ var RTM_KB_DOCS=[
 '# 巡店作业 SOP\n\n## 适用场景\n业代/督导门店拜访（S1 拜访任务包、A20 巡店评分、A30 货架智能）\n\n## 拍照点位（进到店出店固定 5 个点）\n1. 入口：端架/堆头\n2. 主货架：本品排面（与竞品同框）\n3. 陈列：堆头/侧架/冰柜\n4. 竞品：竞品排面与价签（务必拍清价签——竞品终端价由此识别，比爬虫可靠）\n5. 收银台：收银台陈列与促销物料\n\n## 现场核对\n- 货架份额：本品排面占比 vs 上次拜访\n- 缺货：空位/挂缺货卡的 SKU 逐个记录\n- 价签：本品实际成交价 vs 指导价；竞品实际成交价\n- 陈列合规：按陈列标准打分（A30 自动识别评分）\n\n## 离店前\n- 与店主确认订单与库存，同步促销政策\n- 异常（竞品大促/堆头被抢）当日上报\n'},
 {id:'kbdef_sop_promo',name:'促销执行SOP.md',text:
 '# 促销执行 SOP\n\n## 流程（Brief → 执行 → 核销）\n1. Brief：明确目的（拉新/清库/抢份额）、机制、预算、目标门店清单（S2 促销 Brief）\n2. 排期：避开竞品大促正面冲突，或针对性对标（参考促销日历与 E02 竞品动态）\n3. 执行：门店陈列+价签+物料三到位，巡店拍照留证\n4. 监测：活动期间每日看动销与库存，断货=白投费用\n5. 核销：凭照片/小票/出货数据核销量、算费效（A4 核销费效）\n\n## 费效口径\n- 促销 ROI = 增量毛利 ÷ 促销费用；ROI<1 的活动下期停掉或改机制\n- 增量 = 活动期间动销 − 基线动销（前 4 周均值）\n'},
-{id:'kbdef_sku_points',name:'主推SKU卖点手册.md',text:
-'# 主推 SKU 卖点手册\n\n## 白桃气泡茶 330ml（听）\n- 0 糖 0 脂 + 真实白桃果汁，年轻客群复购率第一\n- 话术：「元气森林同赛道，我们价格低 15%，毛利反而高 3 个点」\n\n## 电解质水 500ml（瓶）\n- 运动补水新赛道，夏季增速最快的 SKU\n- 话术：「健身房/球场周边店必配，7–8 月动销能翻一倍」\n\n## 每日坚果 25g（袋）\n- 每日一袋健康概念，礼盒/年节爆发力强（春节 +30%）\n- 话术：「客单价最高的零食 SKU，收银台小袋装连带率最高」\n\n## 薯片原味 70g（袋）\n- 经典原味，货架渗透率最高的零食 SKU\n- 话术：「膨化区流量款，没它货架就是缺的」\n\n## 可乐 330ml（听）\n- 流通硬通货，餐饮/GT 动销王\n- 话术：「餐饮开瓶费补贴 0.3 元/听，按实际开瓶数结算」\n'},
+{id:'kbdef_sku_points',name:'SKU卖点手册.md',text:rtmSkuPointsText()},
 {id:'kbdef_policy',name:'促销与返利政策.md',text:
 '# 促销与返利政策（现行）\n\n## 促销政策（详见数据集 P01）\n- CVS 冰柜陈列奖励：指定 SKU 冰柜第一层陈列，0.5 元/听/月\n- KA 堆头费：端架/堆头按店按月付费，需陈列照片核销\n- GT 整箱进货奖励：单月满 50 箱返 2%，满 100 箱返 3.5%\n- 餐饮开瓶费：碳酸/气泡茶按实际开瓶 0.3 元/听\n\n## 返利政策（详见数据集 P02）\n- 一级经销商季度回款完成率 ≥100%：返 2.0%，次季度首月货补兑付\n- 年度销量同比增长 ≥15%：追加 1.0%，年度核算兑付\n- 门店月度进货达标且陈列合规：返 1.5%，月度随单兑付\n\n## 红线\n- 所有费用核销必须留证（照片/小票/出货数据），无证不核销\n- 返利与促销费用不重复计提同一笔销量\n'}];
 
@@ -4392,8 +4714,8 @@ function rtmSeedDS(){
     var stamp='dsv_'+RTM.TODAY;
     if(localStorage.getItem('ebest_ds_defv')===stamp)return;
     var arr=_kbRead('ebest_ds').filter(function(f){return String(f.id).indexOf('dsdef_')!==0;});
-    function csvOf(tid){var t=RTM.tables[tid];var lines=[t.cols.join(',')];t.rows.forEach(function(r){lines.push(r.join(','));});return lines.join('\n');}
-    [['dsdef_d01','D01产品主数据.csv','D01'],['dsdef_d02','D02门店主数据.csv','D02'],['dsdef_f01m','F01销售月度汇总.csv','F01M'],['dsdef_f04b','F04b客户行为月度汇总.csv','F04b']].forEach(function(x){
+    function csvOf(tid){if(typeof RTM.ensure==='function')RTM.ensure(tid);var t=RTM.tables[tid];var lines=[t.cols.join(',')];t.rows.forEach(function(r){lines.push(r.join(','));});return lines.join('\n');}
+    [['dsdef_d01','D01产品主数据.csv','D01'],['dsdef_d01b','D01b单位阶梯.csv','D01b'],['dsdef_d02','D02门店主数据.csv','D02'],['dsdef_d03','D03客户经销商.csv','D03'],['dsdef_f01m','F01销售月度汇总.csv','F01M'],['dsdef_f02','F02库存快照.csv','F02'],['dsdef_f04b','F04b客户行为月度汇总.csv','F04b'],['dsdef_f09','F09目标达成.csv','F09']].forEach(function(x){
       var text=csvOf(x[2]);
       arr.push({id:x[0],name:x[1],type:'text/csv',size:text.length,text:text,chunks:_chunk(text),at:Date.now(),def:1});
     });
@@ -4419,7 +4741,7 @@ function rtmRenderDSDefault(){
       h+='<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;background:#fafbfc;">'+
         (t.na?rtmBadge((EN?'N/A':'未接入'),'#FA8C16'):rtmBadge('默认','#1890FF'))+
         '<div style="flex:1;min-width:0;"><div style="font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+t.name+'</div>'+
-        '<div style="font-size:10.5px;color:var(--text-muted);">'+(t.na?t.note:(t.rows.length+(EN?' rows':' 行')+' · '+RTM.TODAY+(EN?' updated':' 更新')))+'</div></div>'+
+        '<div style="font-size:10.5px;color:var(--text-muted);">'+(t.na?t.note:((t.lazy?(EN?'generated on demand':'点击「查看」即时生成'):(t.rows.length+(EN?' rows':' 行')))+' · '+RTM.TODAY+(EN?' updated':' 更新')))+'</div></div>'+
         (t.na?'':'<button onclick="rtmViewTable(\''+id+'\')" style="border:1px solid #1890FF;background:#fff;color:#1890FF;font-size:11px;border-radius:12px;padding:3px 10px;cursor:pointer;font-weight:600;flex:none;">'+(EN?'View':'查看')+'</button>')+
         '</div>';
     });
@@ -4452,6 +4774,7 @@ function rtmOpenModal(title,bodyHtml,footerHtml){
 function rtmCloseModal(){var m=document.getElementById('rtmViewer');if(m)m.style.display='none';}
 function rtmViewTable(tid){
   var t=RTM.tables[tid];if(!t||t.na)return;
+  if(typeof RTM.ensure==='function')RTM.ensure(tid);
   var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
   var MAX=50;
   var h='<div style="font-size:11.5px;color:var(--text-muted);margin-bottom:8px;">'+(EN?'Total ':'共 ')+t.rows.length+(EN?' rows · preview first '+MAX:' 行 · 预览前 '+MAX+' 行')+' · '+RTM.TODAY+(EN?' refreshed':' 更新')+'</div>';
@@ -4468,10 +4791,14 @@ function rtmViewDoc(docId){
   for(var i=0;i<arr.length;i++)if(arr[i].id===docId)d=arr[i];
   if(!d)return;
   var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
+  var isRules=(docId==='kbdef_rules');
+  if(isRules)d.text=rtmRulesText(rtmRulesGet());   // 内容始终由配置渲染，不落旧快照
   var h='<div id="rtmDocView" style="font-size:13px;line-height:1.8;white-space:pre-wrap;max-height:56vh;overflow:auto;padding:2px;">'+escapeHtml(d.text||'')+'</div>'+
-    '<textarea id="rtmDocEdit" style="display:none;width:100%;box-sizing:border-box;height:56vh;border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12.5px;line-height:1.7;font-family:inherit;">'+escapeHtml(d.text||'')+'</textarea>';
-  var f='<button onclick="rtmDocToggleEdit(\''+docId+'\')" id="rtmDocEditBtn" style="border:1px solid #722ED1;background:#fff;color:#722ED1;font-size:12px;border-radius:14px;padding:5px 14px;cursor:pointer;font-weight:600;">'+(EN?'Edit':'编辑')+'</button>'+
-    '<button onclick="rtmDocSave(\''+docId+'\')" id="rtmDocSaveBtn" style="display:none;border:none;background:#722ED1;color:#fff;font-size:12px;border-radius:14px;padding:5px 14px;cursor:pointer;font-weight:600;">'+(EN?'Save':'保存')+'</button>';
+    (isRules?'':'<textarea id="rtmDocEdit" style="display:none;width:100%;box-sizing:border-box;height:56vh;border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12.5px;line-height:1.7;font-family:inherit;">'+escapeHtml(d.text||'')+'</textarea>');
+  var f=isRules?
+    ('<button onclick="rtmRulesForm(\''+docId+'\',\'\')" style="border:1px solid #722ED1;background:#fff;color:#722ED1;font-size:12px;border-radius:14px;padding:5px 14px;cursor:pointer;font-weight:600;">'+(EN?'Edit config':'编辑配置')+'</button>'):
+    ('<button onclick="rtmDocToggleEdit(\''+docId+'\')" id="rtmDocEditBtn" style="border:1px solid #722ED1;background:#fff;color:#722ED1;font-size:12px;border-radius:14px;padding:5px 14px;cursor:pointer;font-weight:600;">'+(EN?'Edit':'编辑')+'</button>'+
+    '<button onclick="rtmDocSave(\''+docId+'\')" id="rtmDocSaveBtn" style="display:none;border:none;background:#722ED1;color:#fff;font-size:12px;border-radius:14px;padding:5px 14px;cursor:pointer;font-weight:600;">'+(EN?'Save':'保存')+'</button>');
   rtmOpenModal(d.name,h,f);
 }
 function rtmDocToggleEdit(docId){
@@ -4512,10 +4839,14 @@ function dhViewDoc(kid){
   var d=rtmDhBackfill(dhCurrent,dhLoad(dhCurrent));
   var k=d.kb.filter(function(y){return y.id===kid;})[0];if(!k)return;
   var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
+  var isRules=(k.title||'').indexOf('业务规则与口径')>=0;
+  if(isRules){k.content=rtmRulesText(rtmRulesGet());dhSave(dhCurrent,d);}   // 内容始终由配置渲染
   var h='<div id="rtmDocView" style="font-size:13px;line-height:1.8;white-space:pre-wrap;max-height:52vh;overflow:auto;padding:2px;">'+escapeHtml(k.content||'(暂无内容)')+'</div>'+
-    '<textarea id="rtmDocEdit" style="display:none;width:100%;box-sizing:border-box;height:52vh;border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12.5px;line-height:1.7;font-family:inherit;">'+escapeHtml(k.content||'')+'</textarea>';
-  var f='<button onclick="rtmDocToggleEdit(\''+kid+'\')" id="rtmDocEditBtn" style="border:1px solid #722ED1;background:#fff;color:#722ED1;font-size:12px;border-radius:14px;padding:5px 14px;cursor:pointer;font-weight:600;">'+(EN?'Edit':'编辑')+'</button>'+
-    '<button onclick="dhDocSave(\''+kid+'\')" id="rtmDocSaveBtn" style="display:none;border:none;background:#722ED1;color:#fff;font-size:12px;border-radius:14px;padding:5px 14px;cursor:pointer;font-weight:600;">'+(EN?'Save':'保存')+'</button>';
+    (isRules?'':'<textarea id="rtmDocEdit" style="display:none;width:100%;box-sizing:border-box;height:52vh;border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12.5px;line-height:1.7;font-family:inherit;">'+escapeHtml(k.content||'')+'</textarea>');
+  var f=isRules?
+    ('<button onclick="rtmRulesForm(\'\',\''+kid+'\')" style="border:1px solid #722ED1;background:#fff;color:#722ED1;font-size:12px;border-radius:14px;padding:5px 14px;cursor:pointer;font-weight:600;">'+(EN?'Edit config':'编辑配置')+'</button>'):
+    ('<button onclick="rtmDocToggleEdit(\''+kid+'\')" id="rtmDocEditBtn" style="border:1px solid #722ED1;background:#fff;color:#722ED1;font-size:12px;border-radius:14px;padding:5px 14px;cursor:pointer;font-weight:600;">'+(EN?'Edit':'编辑')+'</button>'+
+    '<button onclick="dhDocSave(\''+kid+'\')" id="rtmDocSaveBtn" style="display:none;border:none;background:#722ED1;color:#fff;font-size:12px;border-radius:14px;padding:5px 14px;cursor:pointer;font-weight:600;">'+(EN?'Save':'保存')+'</button>');
   rtmOpenModal(k.title,h,f);
 }
 function dhDocSave(kid){
@@ -4531,6 +4862,7 @@ function rtmInit(){
   try{rtmEnsureDefaultSales();}catch(e){}
   try{rtmSeedKB();}catch(e){}
   try{rtmSeedDS();}catch(e){}
+  try{dsWarm();}catch(e){}
   try{
     var dp=document.getElementById('datasetPanel');
     if(dp&&!document.getElementById('rtmDsDefault')){
@@ -4574,10 +4906,31 @@ function msEffective(){
 function storeRoleMatch(item,roleId){var rt=item.roleTags||[];return rt.indexOf('all')>=0||rt.indexOf(roleId)>=0;}
 
 
+/* ---------- 技能 chip（参考扣子：选技能带进输入框成 chip，可×掉，可多选） ---------- */
+var chipSkills=[];
+function chipAdd(id){
+  if(id!=='decline'&&!(typeof getItemById==='function'&&getItemById(id)))return;
+  if(chipSkills.indexOf(id)<0)chipSkills.push(id);
+  chipRender();
+  var inp=document.getElementById('chatInput');if(inp)inp.focus();
+}
+function chipRemove(id){chipSkills=chipSkills.filter(function(x){return x!==id;});chipRender();}
+function chipRender(){
+  var bar=document.getElementById('chipBar');if(!bar)return;
+  var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
+  var h='';
+  chipSkills.forEach(function(id){
+    var nm;
+    if(id==='decline'){nm=EN?'Decline Attribution':'区域下滑归因';}
+    else{var it=getItemById(id);nm=it?(EN?(localizeEN(it.name||id)):(it.name||id)):id;}
+    h+='<span class="skill-chip">'+id+' '+escapeHtml(nm)+'<span class="chip-x" onclick="chipRemove(\''+id+'\')" title="'+(EN?'Remove':'移除')+'">\u00d7</span></span>';
+  });
+  bar.innerHTML=h;bar.style.display=chipSkills.length?'flex':'none';
+}
 /* ---------- 使用技能 / 技能包（进入会话） ---------- */
 function msUse(id){
   if(typeof closeSidebar==='function')closeSidebar();
-  if(typeof openToolById==='function')openToolById(id);
+  chipAdd(id);
 }
 function msUsePack(id){
   var p=null;SKILL_PACKS.forEach(function(x){if(x.id===id)p=x;});if(!p)return;
@@ -5065,18 +5418,35 @@ var EVENT_RULES=[
   {key:'cny26',name:'春节',emoji:'\ud83e\udde7',region:'*',from:'2026-02-04',to:'2026-02-18',cat:{'饮料':0.28,'*':0.30}},
   {key:'cny27',name:'春节',emoji:'\ud83e\udde7',region:'*',from:'2027-01-25',to:'2027-02-08',cat:{'饮料':0.28,'*':0.30}}
 ];
+/* 事件系数统一口径：引擎不再读自己的写死系数，改读 DataHub《业务规则与口径》配置（rtmRulesGet）。
+   EVENT_RULES 只保留事件日历（名称/日期/区域），系数列由配置注入。 */
+function eventRulesEffective(){
+  var R=(typeof _a2Rules==='function')?_a2Rules():{evHeatWater:15,evHeatTea:12,evHeatCola:10,evHeatJuice:8,evMeiyuMax:-8,evMeiyuMin:-12,ev618:10,evD11:25,evD12:12,evGuoqing:20,evNyDrink:28,evNyGift:30};
+  var mid=Math.round((R.evMeiyuMax+R.evMeiyuMin)/2);
+  return EVENT_RULES.map(function(r){
+    var c=r.cat,k=r.key;
+    if(k==='heat')c={'矿泉水':R.evHeatWater/100,'气泡茶':R.evHeatTea/100,'碳酸饮料':R.evHeatCola/100,'果汁':R.evHeatJuice/100,'饮料':R.evHeatCola/100,'*':0.06};
+    else if(k==='meiyu')c={'矿泉水':R.evMeiyuMax/100,'果汁':mid/100,'气泡茶':R.evMeiyuMin/100,'碳酸饮料':R.evMeiyuMin/100,'饮料':R.evMeiyuMin/100,'*':mid/100};
+    else if(k==='d618')c={'*':R.ev618/100};
+    else if(k==='d11')c={'*':R.evD11/100};
+    else if(k==='d12')c={'*':R.evD12/100};
+    else if(k==='nationalday')c={'饮料':R.evGuoqing/100,'*':0.18};
+    else if(k==='cny26'||k==='cny27')c={'饮料':R.evNyDrink/100,'*':R.evNyGift/100};
+    return {key:r.key,name:r.name,emoji:r.emoji,region:r.region,from:r.from,to:r.to,cat:c};
+  });
+}
 var _fcRegion='';
 function _fcToday(){var d=new Date();var m=('0'+(d.getMonth()+1)).slice(-2),day=('0'+d.getDate()).slice(-2);return d.getFullYear()+'-'+m+'-'+day;}
 function _normRegion(r){if(!r)return '';return String(r).replace(/区|大区|地区/g,'');}
 function skuCat(name){name=String(name||'');if(/饼干|糕点|苏打饼/.test(name))return '饼干糕点';if(/气泡茶|苏打水|气泡/.test(name))return '气泡茶';if(/矿泉水|纯净水|饮用水|矿泉/.test(name))return '矿泉水';if(/可乐|汽水|碳酸/.test(name))return '碳酸饮料';if(/果汁|果味|橙汁|苹果汁/.test(name))return '果汁';if(/能量|电解质|功能/.test(name))return '功能性饮料';if(/薯片|玉米片|膨化/.test(name))return '膨化食品';if(/坚果|瓜子|炒货/.test(name))return '坚果炒货';if(/豆干|卤/.test(name))return '休闲卤味';return '饮料';}
 function _ruleHit(rule,dateStr){var md=dateStr.slice(5);if(rule.from.length===10){return dateStr>=rule.from&&dateStr<=rule.to;}if(rule.from<=rule.to){return md>=rule.from&&md<=rule.to;}return md>=rule.from||md<=rule.to;}
 function _ruleCoef(rule,cat){if(rule.cat[cat]!==undefined)return rule.cat[cat];if(rule.cat['*']!==undefined)return rule.cat['*'];return 0;}
-function externalDayFactor(sku,dateStr){var cat=skuCat(sku),f=1;for(var i=0;i<EVENT_RULES.length;i++){var r=EVENT_RULES[i];if(r.region!=='*'&&_normRegion(r.region)!==_normRegion(_fcRegion))continue;if(!_ruleHit(r,dateStr))continue;f*=(1+_ruleCoef(r,cat));}return f;}
-function activeEvents(cat,fromDate,days){var hit={};for(var k=0;k<days;k++){var ds=_fcAddDays(fromDate,k);for(var i=0;i<EVENT_RULES.length;i++){var r=EVENT_RULES[i];if(r.region!=='*'&&_normRegion(r.region)!==_normRegion(_fcRegion))continue;if(!_ruleHit(r,ds))continue;var c=_ruleCoef(r,cat);if(c===0)continue;if(!hit[r.key])hit[r.key]={name:r.name,emoji:r.emoji,from:r.from,to:r.to,coef:c};}}return Object.keys(hit).map(function(k){return hit[k];});}
+function externalDayFactor(sku,dateStr){var cat=skuCat(sku),f=1;var _ER=eventRulesEffective();for(var i=0;i<_ER.length;i++){var r=_ER[i];if(r.region!=='*'&&_normRegion(r.region)!==_normRegion(_fcRegion))continue;if(!_ruleHit(r,dateStr))continue;f*=(1+_ruleCoef(r,cat));}return f;}
+function activeEvents(cat,fromDate,days){var hit={};for(var k=0;k<days;k++){var ds=_fcAddDays(fromDate,k);var _ER=eventRulesEffective();for(var i=0;i<_ER.length;i++){var r=_ER[i];if(r.region!=='*'&&_normRegion(r.region)!==_normRegion(_fcRegion))continue;if(!_ruleHit(r,ds))continue;var c=_ruleCoef(r,cat);if(c===0)continue;if(!hit[r.key])hit[r.key]={name:r.name,emoji:r.emoji,from:r.from,to:r.to,coef:c};}}return Object.keys(hit).map(function(k){return hit[k];});}
 function _fmtRange(r){var s=r.length===10?r.slice(5):r;var p=s.split('-');return parseInt(p[0],10)+'/'+parseInt(p[1],10);}
 function eventExplainHtml(cat,fromDate,days,region){
   var evs=activeEvents(cat,fromDate,days);if(!evs.length)return '';
-  var sum=0;for(var k=0;k<days;k++){var d2=_fcAddDays(fromDate,k);var f=1;for(var i=0;i<EVENT_RULES.length;i++){var r=EVENT_RULES[i];if(r.region!=='*'&&_normRegion(r.region)!==_normRegion(region))continue;if(!_ruleHit(r,d2))continue;f*=(1+_ruleCoef(r,cat));}sum+=f;}
+  var sum=0;for(var k=0;k<days;k++){var d2=_fcAddDays(fromDate,k);var f=1;var _ER=eventRulesEffective();for(var i=0;i<_ER.length;i++){var r=_ER[i];if(r.region!=='*'&&_normRegion(r.region)!==_normRegion(region))continue;if(!_ruleHit(r,d2))continue;f*=(1+_ruleCoef(r,cat));}sum+=f;}
   var net=Math.round((sum/days-1)*100);
   var rows=evs.map(function(e){var pct=Math.round(e.coef*100);var sign=pct>=0?'+':'';var col=pct>=0?'#00C39A':'#F5222D';return '<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span>'+e.emoji+' '+e.name+'（'+_fmtRange(e.from)+'\u2013'+_fmtRange(e.to)+'）</span><span style="color:'+col+';font-weight:600;">'+sign+pct+'%</span></div>';}).join('');
   var nsign=net>=0?'+':'',ncol=net>=0?'#00C39A':'#F5222D';
@@ -5084,35 +5454,76 @@ function eventExplainHtml(cat,fromDate,days,region){
     '<div style="font-size:12px;font-weight:700;color:#1E2761;margin-bottom:4px;">\ud83d\udcc5 预测说明（基准日 '+_fmtRange(fromDate)+' \u00b7 '+(region||'全国')+' \u00b7 '+cat+'）</div>'+rows+
     '<div style="border-top:1px dashed #c9d6ff;margin-top:5px;padding-top:5px;font-size:12px;font-weight:700;">\u2192 综合净效应 <span style="color:'+ncol+';">'+nsign+net+'%</span>，已计入下方预测</div></div>';
 }
+function _a2Rules(){return (typeof rtmRulesGet==='function')?rtmRulesGet():{freshHealthy:3,freshWarn:14,freshRefuse:60,histMult:3,weekMin:14,weekGood:28,trendMin:7,safetyDays:3,mSeasonFull:24,mSeasonMin:12};}
+/* 月粒度（总监版）：≥mSeasonFull 个月才有年份规律，mSeasonMin~full 勉强，<min 关闭 */
+function a2MonthlyGate(nMonths){
+  var R=_a2Rules();
+  return {mode:(nMonths>=R.mSeasonFull?'full':(nMonths>=R.mSeasonMin?'weak':'off')),months:nMonths};
+}
 function forecastSeries(pts,days,sku){
+  var R=_a2Rules();
   var n=pts.length,sx=0,sy=0,sxx=0,sxy=0;
   for(var i=0;i<n;i++){var y=pts[i].sales;sx+=i;sy+=y;sxx+=i*i;sxy+=i*y;}
   var slope=0,intercept=n?sy/n:0,denom=n*sxx-sx*sx;
   if(n>=2&&denom!==0){slope=(n*sxy-sx*sy)/denom;intercept=(sy-slope*sx)/n;}
+  /* 月粒度检测：日期形如 YYYY-MM 或全部为月初 */
+  var monthly=n>=3&&pts.every(function(p){return /^\d{4}-\d{2}$/.test(p.date)||/-01$/.test(p.date);});
+  var mGate=monthly?a2MonthlyGate(n):null;
+  /* 闸4 趋势可信度：点数闸必须排在 R² 前面——3个点拟合 R² 必然很高，那是过拟合假象 */
+  var r2=0;
+  if(n>=2){
+    var mean=sy/n,sst=0,sse=0;
+    for(var j2=0;j2<n;j2++){var fit2=intercept+slope*j2;sst+=(pts[j2].sales-mean)*(pts[j2].sales-mean);sse+=(pts[j2].sales-fit2)*(pts[j2].sales-fit2);}
+    r2=sst>0?Math.max(0,1-sse/sst):0;
+  }
+  var trendMode;
+  if(n<R.trendMin){slope=0;trendMode='off';}
+  else if(n<R.weekMin){slope=slope*0.5;trendMode='half';}
+  else if(r2>=0.3){trendMode='on';}
+  else{slope=0;trendMode='off';}
+  /* 周因子估计 */
   var wdSum={},wdCnt={};
-  for(var j=0;j<n;j++){var fit=intercept+slope*j;var wd=_fcDow(pts[j].date);if(wd<0||fit<=0)continue;var ratio=pts[j].sales/fit;wdSum[wd]=(wdSum[wd]||0)+ratio;wdCnt[wd]=(wdCnt[wd]||0)+1;}
+  for(var j=0;j<n;j++){var fit=intercept+slope*j;var pd=pts[j].date;var wd=_fcDow(/^\d{4}-\d{2}$/.test(pd)?pd+'-15':pd);if(wd<0||fit<=0)continue;var ratio=pts[j].sales/fit;wdSum[wd]=(wdSum[wd]||0)+ratio;wdCnt[wd]=(wdCnt[wd]||0)+1;}
   var wf={},fsum=0,fcn=0,d;
   for(d=0;d<7;d++){wf[d]=wdCnt[d]?wdSum[d]/wdCnt[d]:1;if(wdCnt[d]){fsum+=wf[d];fcn++;}}
   var fmean=fcn?fsum/fcn:1;
   for(d=0;d<7;d++){wf[d]=fmean>0?wf[d]/fmean:1;}
+  /* 闸3 周季节性：≥weekMin 天才估，≥weekGood 才可靠；不足=1；月粒度无周因子 */
+  var weekMode=(n>=R.weekMin)?(n>=R.weekGood?'on':'weak'):'off';
+  if(monthly||weekMode==='off'){for(d=0;d<7;d++)wf[d]=1;}
   var lastDate=n?pts[n-1].date:'';
-  /* 锚定真实今天：预测从 today 起；趋势索引跨过"数据末日→今天"的间隔 */
+  /* 锚定真实今天：预测从 today 起 */
   var today=_fcToday(),gap=0;
-  if(lastDate){var t1=Date.parse(lastDate),t2=Date.parse(today);if(!isNaN(t1)&&!isNaN(t2))gap=Math.round((t2-t1)/86400000);}
-  var startIdxBase=(n-1)+gap,daily=[],need=0;
-  for(var k=0;k<days;k++){
-    var fd=_fcAddDays(today,k),idx=startIdxBase+k;
+  if(lastDate){var t1=Date.parse(/^\d{4}-\d{2}$/.test(lastDate)?lastDate+'-28':lastDate),t2=Date.parse(today);if(!isNaN(t1)&&!isNaN(t2))gap=Math.round((t2-t1)/86400000);if(gap<0)gap=0;}
+  /* 闸1 新鲜度：≤healthy 健康 / >warn 关趋势只给参考 / >refuse 拒绝外推，只按平均给保守参考 */
+  var freshMode=(gap>R.freshRefuse)?'refuse':((gap>R.freshWarn)?'stale':((gap>R.freshHealthy)?'aging':'fresh'));
+  if(freshMode==='stale'||freshMode==='refuse'){slope=0;trendMode='off';}
+  /* 闸2 长度vs跨度：历史 ≥ histMult × 预测期 */
+  var spanOK=(n>=days*R.histMult);
+  var startIdxBase=(n-1)+(monthly?0:gap),daily=[],need=0;
+  var spanDays=monthly?days*30:days;
+  for(var k=0;k<spanDays;k++){
+    var fd=_fcAddDays(today,k),idx=startIdxBase+(monthly?Math.round(k/30):k);
     var base=intercept+slope*idx;if(base<0)base=0;
     var wdk=_fcDow(fd);
-    var val=base*(wdk>=0?wf[wdk]:1)*externalDayFactor(sku||'',fd);if(val<0)val=0;
+    var val=base*(wdk>=0?wf[wdk]:1)*(monthly?1:externalDayFactor(sku||'',fd));if(val<0)val=0;
     daily.push({date:fd,val:Math.round(val)});need+=val;
   }
   need=Math.round(need);
-  var avgDaily=days?need/days:0,histAvg=n?sy/n:0;
+  var avgDaily=spanDays?need/spanDays:0,histAvg=n?sy/n:0;
+  /* 兜底截断：预测日均 ≤ 历史日均 × 2 */
+  var capped=false;
+  if(histAvg>0&&avgDaily>histAvg*2){
+    var scale=histAvg*2/avgDaily;
+    daily=daily.map(function(x){return {date:x.date,val:Math.round(x.val*scale)};});
+    need=Math.round(need*scale);avgDaily=histAvg*2;capped=true;
+  }
   var trendPct=histAvg>0?Math.round((slope*n)/histAvg*100):0;
-  return {daily:daily,need:need,avgDaily:avgDaily,trendPct:trendPct,histAvg:histAvg,fromDate:today};
+  return {daily:daily,need:need,avgDaily:avgDaily,trendPct:trendPct,histAvg:histAvg,fromDate:today,
+    gates:{R:R,gap:gap,n:n,freshMode:freshMode,spanOK:spanOK,weekMode:weekMode,trendMode:trendMode,r2:r2,capped:capped,monthly:monthly,mGate:mGate}};
 }
 function computeForecast(p,days){
+  var R=_a2Rules();
   var by={};
   p.rows.forEach(function(r){
     if(!by[r.sku])by[r.sku]={pts:[],stock:NaN,last:'',lastT:-Infinity};
@@ -5125,11 +5536,74 @@ function computeForecast(p,days){
     o.pts.sort(function(a,b){return a.date<b.date?-1:(a.date>b.date?1:0);});
     var fs=forecastSeries(o.pts,days,s);
     var stock=isNaN(o.stock)?0:o.stock,avgDaily=fs.avgDaily,need=fs.need;
-    var safety=Math.round(avgDaily*3),rep=Math.max(0,need+safety-stock),cover=avgDaily>0?stock/avgDaily:999;
-    out.push({sku:s,avg:Math.round(avgDaily),avgHist:Math.round(fs.histAvg),need:need,stock:stock,stockDate:o.last,rep:rep,cover:cover,trendPct:fs.trendPct,daily:fs.daily,cat:skuCat(s),hist:o.pts});
+    var safety=Math.round(avgDaily*R.safetyDays),rep=Math.max(0,need+safety-stock),cover=avgDaily>0?stock/avgDaily:999;
+    /* 单位体系（交接5.5）：预测最小单位 ÷ D01箱规 → 向上取整 → 校验最小起订量/订货步长 */
+    var pr=(typeof RTM!=='undefined'&&RTM.prod)?RTM.prod(s):null;
+    var pack=pr?pr.pack:24,unit=pr?pr.minUnit:'听',moq=pr?(pr.moq||1):1,step=pr?(pr.step||1):1;
+    var repBox=rep>0?Math.max(moq,Math.ceil(Math.ceil(rep/pack)/step)*step):0;
+    var repUnits=repBox*pack,repDays=repUnits>0&&avgDaily>0?repUnits/avgDaily:0;
+    out.push({sku:s,avg:Math.round(avgDaily),avgHist:Math.round(fs.histAvg),need:need,stock:stock,stockDate:o.last,rep:rep,cover:cover,trendPct:fs.trendPct,daily:fs.daily,cat:skuCat(s),hist:o.pts,
+      pack:pack,unit:unit,repBox:repBox,repUnits:repUnits,repDays:repDays,gates:fs.gates});
   });
   out.sort(function(a,b){return b.rep-a.rep;});
   return out;
+}
+/* 四道闸 · 人话提示（禁用词：滞后/样本/置信度/外推/季节性/降级/阈值）· 每条带动作 · 三档信号灯 */
+function _a2GapTxt(gap){if(gap>=60){var mo=Math.round(gap/30.4);return mo+' 个多月';}return gap+' 天';}
+function a2GateSummaryHtml(fc,days,sd){
+  if(!fc||!fc.length)return '';
+  var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
+  var R=null,gap=0,nMin=1e9,spanBad=false,anyCapped=false;
+  var fRank={fresh:0,aging:1,stale:2,refuse:3},wRank={off:0,weak:1,on:2},tRank={off:0,half:1,on:2};
+  var fresh='fresh',week='on',trend='on';
+  fc.forEach(function(o){var g=o.gates;if(!g)return;R=g.R;
+    if(g.gap>gap)gap=g.gap;if(g.n<nMin)nMin=g.n;
+    if(!g.spanOK)spanBad=true;if(g.capped)anyCapped=true;
+    if(fRank[g.freshMode]>fRank[fresh])fresh=g.freshMode;
+    if(wRank[g.weekMode]<wRank[week])week=g.weekMode;
+    if(tRank[g.trendMode]<tRank[trend])trend=g.trendMode;
+  });
+  if(!R)return '';
+  var msgs=[],level='green';
+  var mon=(sd&&sd.maxDate)?sd.maxDate.slice(0,7):'';
+  function say(txt,act){msgs.push({txt:txt,act:act});}
+  if(fresh==='refuse'){level='red';
+    say(EN?('Your data ends in '+mon+' — '+_a2GapTxt(gap)+' away from today.'):('你传的是 '+mon+' 的数据，到今天隔了 '+_a2GapTxt(gap)+'。'),
+        EN?'Upload the latest sales first — the figures below are reference-only, do NOT order by them.':'先更新销量数据再谈补货——下面只按过去的平均销量给了保守参考，这个数只能当参考，不能直接下单。');
+  }else if(fresh==='stale'){if(level==='green')level='yellow';
+    say(EN?('Your data ends in '+mon+', '+gap+' days ago. No reliable read on recent trend — conservative average used.'):('你传的是 '+mon+' 的数据，到今天隔了 '+gap+' 天。看不出最近是在涨还是在跌，已按过去的平均销量给保守量。'),
+        EN?'Refresh the data for a sharper suggestion.':'更新数据后，建议量会更准。');
+  }else if(fresh==='aging'){if(level==='green')level='yellow';
+    say(EN?('Data is '+gap+' days old — results for reference.'):('数据截止到今天隔了 '+gap+' 天，结果仅供参考。'),
+        EN?'Update within 3 days for reliable numbers.':'建议 3 天内更新一次数据。');
+  }
+  if(spanBad){if(level==='green')level='yellow';
+    say(EN?('Only '+nMin+' days of sales history (forecasting '+days+' days works best with '+(days*R.histMult)+'+ days).'):('只有 '+nMin+' 天的销售记录（预测 '+days+' 天，最好有 '+(days*R.histMult)+' 天以上）。'),
+        EN?'Upload a longer history to improve accuracy.':'补传更长的历史记录，建议量会更准。');
+  }
+  if(week==='off'){if(level==='green')level='yellow';
+    say(EN?'Not enough history to tell weekend from weekday — flat average used.':'看不出周末和平时的差别，已按平均量估算。',
+        EN?('Accuracy improves automatically after '+R.weekMin+' days of history.'):('凑满 '+R.weekMin+' 天记录后自动更准。'));
+  }else if(week==='weak'){
+    say(EN?('Weekend/weekday pattern estimated from '+nMin+' days — steadier after '+R.weekGood+' days.'):('周末和平时的差别按最近 '+nMin+' 天估算，满 '+R.weekGood+' 天会更稳。'),'');
+  }
+  if(trend==='off'&&fresh==='fresh'&&nMin<R.trendMin){if(level==='green')level='yellow';
+    say(EN?'No clear recent trend — conservative average used.':'看不出最近是在涨还是在跌，已按平均量给保守量。','');
+  }
+  if(anyCapped&&fresh!=='refuse'){
+    say(EN?'Individual spikes were capped at 2× the historical average to stay conservative.':'个别异常放大已按历史平均的 2 倍封顶，保持保守口径。','');
+  }
+  var col=(level==='red'?'#F5222D':(level==='yellow'?'#FAAD14':'#52C41A'));
+  var dot=(level==='red'?'\ud83d\udd34':(level==='yellow'?'\ud83d\udfe1':'\ud83d\udfe2'));
+  var h='<div style="margin:8px 0;padding:10px 12px;background:#fff;border-radius:10px;border:1px solid #eee;border-left:3px solid '+col+';">';
+  if(level==='green'){
+    h+='<div style="font-size:12.5px;color:#1E2761;">'+dot+' '+(EN?('Data is fresh ('+gap+'d old), covering '+Math.floor(nMin/7)+' full weeks. Trend & weekend pattern counted — OK to order as suggested.'):('数据新鲜（截止到今天隔了 '+gap+' 天），覆盖 '+Math.floor(nMin/7)+' 个完整周，最近涨跌和周末规律都已计入，可按建议量下单。'))+'</div>';
+  }
+  msgs.forEach(function(m){
+    h+='<div style="font-size:12.5px;color:#1E2761;margin-top:4px;">'+dot+' '+m.txt+(m.act?('<br><span style="color:#8a94b8;font-size:12px;">\u2192 '+m.act+'</span>'):'')+'</div>';
+  });
+  h+='</div>';
+  return h;
 }
 function trendBadge(pct){if(pct>5)return '<span style="color:#00C39A;font-weight:600;">\u2197'+pct+'%</span>';if(pct<-5)return '<span style="color:#F5222D;font-weight:600;">\u2198'+Math.abs(pct)+'%</span>';return '<span style="color:#999;">\u2192平稳</span>';}
 function rForecastChart(histVals,fcVals,days){
@@ -5152,6 +5626,112 @@ function rForecastChart(histVals,fcVals,days){
     '</svg>'+
     '<div style="font-size:11px;color:var(--text-secondary);text-align:center;margin-top:-4px;"><span style="color:#1890FF;">\u2014 历史实绩</span>\u3000<span style="color:#00C39A;">--- 未来'+days+'天预测</span></div>';
 }
+// ==================== 归因引擎（T1 真工具 · 贡献度分解） ====================
+/* 硬约束（写死）：跨品类聚合只能用销售额——1听可乐+1袋薯片没有共同物理单位，
+   数量_最小单位/数量_箱只允许在单品类内部加总。本引擎全篇只用销售额(amt)做跨品类比较。 */
+function attrEngine(region){
+  var t=(typeof dsGet==='function')?dsGet('F01M'):null;
+  if(!t||!t.rows||!t.rows.length)return null;
+  var months=[];t.rows.forEach(function(r){if(months.indexOf(r[0])<0)months.push(r[0]);});
+  months.sort();if(months.length<2)return null;
+  /* 最新月为进行中月份，取最近两个完整月对比 */
+  var mCur=(months.length>=3)?months[months.length-2]:months[months.length-1];
+  var mPrev=(months.length>=3)?months[months.length-3]:months[months.length-2];
+  var cur={},prev={},totC=0,totP=0;
+  t.rows.forEach(function(r){
+    if(region&&r[1]!==region)return;
+    var k=r[2]+'×'+r[3];
+    if(r[0]===mCur){cur[k]=(cur[k]||0)+r[6];totC+=r[6];}
+    else if(r[0]===mPrev){prev[k]=(prev[k]||0)+r[6];totP+=r[6];}
+  });
+  if(!totP)return null;
+  var keySet={};Object.keys(cur).concat(Object.keys(prev)).forEach(function(k){keySet[k]=1;});
+  var items=Object.keys(keySet).map(function(k){
+    var c=cur[k]||0,p=prev[k]||0,d=c-p,sp=k.split('×');
+    return {key:k,ch:sp[0],cat:sp[1],cur:c,prev:p,diff:d,pp:d/totP*100};
+  });
+  var diff=totC-totP,pct=diff/totP*100;
+  var drags=items.filter(function(x){return x.diff<-1000;}).sort(function(a,b){return a.diff-b.diff;});
+  var highlights=items.filter(function(x){return x.diff>1000;}).sort(function(a,b){return b.diff-a.diff;});
+  var chAgg={},catAgg={};
+  (diff<0?drags:highlights).forEach(function(x){chAgg[x.ch]=(chAgg[x.ch]||0)+x.diff;catAgg[x.cat]=(catAgg[x.cat]||0)+x.diff;});
+  function topKey(o,neg){var k='',v=0;for(var x in o){if(neg?o[x]<v:o[x]>v){v=o[x];k=x;}}return k;}
+  var top=drags[0]||null;
+  var share=(top&&diff<0)?Math.round(top.diff/diff*100):0;
+  var oneLiner=diff<0?('这次下滑主要是 '+topKey(chAgg,true)+' 渠道拖的，集中在 '+topKey(catAgg,true)+'。'):('本期增长主要由 '+topKey(chAgg,false)+' 渠道的 '+topKey(catAgg,false)+' 带动。');
+  return {region:region||'全国',mCur:mCur,mPrev:mPrev,totPrev:totP,totCur:totC,diff:diff,pct:pct,
+    items:items,drags:drags,highlights:highlights,top:top,share:share,oneLiner:oneLiner};
+}
+function _attrW(v){var w=Math.abs(v)/10000;var s=(w>=100?Math.round(w):+w.toFixed(1))+'万';return s;}
+function attrAddPending(btn){
+  try{var arr=JSON.parse(localStorage.getItem('ebest_pending_sources')||'[]');['E02 竞品动态（终端价/促销）','E03 市场份额（尼尔森/凯度）','客流数据'].forEach(function(x){if(arr.indexOf(x)<0)arr.push(x);});localStorage.setItem('ebest_pending_sources',JSON.stringify(arr));}catch(e){}
+  if(btn){btn.textContent='已加入 ✓';btn.disabled=true;btn.style.opacity='0.6';}
+}
+function attrCardHtml(res,llmInterp){
+  var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
+  var L=function(zh,en){return EN?en:zh;};
+  var pc=+res.pct.toFixed(1),pcCol=res.diff<0?'#F5222D':'#00C39A',pcSign=res.diff<0?'':'+';
+  var h='<div class="result-card"><div class="result-header"><span style="font-size:18px;">🧮</span><span class="result-title">'+L('归因引擎 · 区域下滑归因','Attribution Engine · Decline Decomposition')+'</span><span class="result-status status-success">'+L('真计算','computed')+'</span></div><div class="result-body">';
+  h+='<div style="font-size:13px;margin-bottom:8px;"><b>'+escapeHtml(res.region)+'</b> '+res.mCur+' vs '+res.mPrev+' · '+L('销售额','Sales')+' '+_attrW(res.totPrev)+' → '+_attrW(res.totCur)+'（<span style="color:'+pcCol+';font-weight:700;">'+pcSign+pc+'% · '+pcSign+_attrW(res.diff)+'</span>）</div>';
+  if(res.drags.length){
+    var mx=Math.abs(res.drags[0].diff)||1;
+    h+='<div style="font-size:12px;font-weight:700;color:var(--text-muted);margin:8px 0 4px;">'+L('拖累项（按贡献度排序）','Drags (by contribution)')+'</div>';
+    res.drags.slice(0,5).forEach(function(x,i){
+      var w=Math.max(6,Math.round(Math.abs(x.diff)/mx*100));
+      h+='<div style="margin:5px 0;"><div style="font-size:12.5px;">'+(i+1)+'. '+escapeHtml(x.key)+' <span style="color:#F5222D;font-weight:600;">-'+_attrW(x.diff)+'</span> <span style="color:var(--text-muted);font-size:11.5px;">'+L('贡献','contrib')+' '+x.pp.toFixed(1)+'pp'+(i===0&&res.diff<0?' · '+L('占下滑','of decline')+' '+res.share+'%':'')+'</span></div>'+
+        '<div style="height:6px;border-radius:3px;background:#f0f0f0;margin-top:3px;"><div style="height:6px;border-radius:3px;background:#F5222D;width:'+w+'%;"></div></div></div>';
+    });
+  }
+  if(res.highlights.length){
+    h+='<div style="font-size:12px;font-weight:700;color:var(--text-muted);margin:10px 0 4px;">'+L('亮点','Bright spots')+'</div>';
+    res.highlights.slice(0,3).forEach(function(x,i){
+      h+='<div style="font-size:12.5px;margin:3px 0;">'+(i+1)+'. '+escapeHtml(x.key)+' <span style="color:#00C39A;font-weight:600;">+'+_attrW(x.diff)+'</span> <span style="color:var(--text-muted);font-size:11.5px;">'+L('贡献','contrib')+' +'+x.pp.toFixed(1)+'pp</span></div>';
+    });
+  }
+  h+='<div style="margin-top:10px;padding:10px 12px;background:var(--primary-light);border-radius:8px;border-left:3px solid var(--primary);font-size:13px;"><b>'+L('一句话：','In short: ')+'</b>'+escapeHtml(res.oneLiner)+'</div>';
+  /* 诚实边界：能算「跌在哪」，不能算「为什么跌」 */
+  h+='<div style="margin-top:10px;padding:10px 12px;background:#FFFBE6;border:1px solid #FFE58F;border-radius:8px;font-size:12.5px;line-height:1.7;">'+
+    '<div><b>'+L('已定位：','Located: ')+'</b>'+((res.diff<0&&res.top)?(L('下滑的 ','')+res.share+L('% 来自 ','% of the decline comes from ')+'<b>'+escapeHtml(res.top.key)+'</b>'):L('本期为增长，无下滑项需定位。','Growth period — nothing to locate.'))+'</div>'+
+    '<div style="margin-top:4px;"><b>'+L('为什么跌：','Why it fell: ')+'</b>'+L('我给不出结论——需要竞品价格和客流数据，你还没接入。','I cannot conclude — competitor pricing and foot-traffic data are not connected yet.')+'</div>'+
+    '<div style="margin-top:6px;color:#8a6d1a;">'+L('待接入：','To connect: ')+'E02 竞品动态（终端价/促销） · E03 市场份额（尼尔森/凯度） · 客流数据</div>'+
+    '<button onclick="attrAddPending(this)" style="margin-top:8px;border:1px solid #FA8C16;background:#fff;color:#FA8C16;font-size:12px;border-radius:14px;padding:4px 12px;cursor:pointer;font-weight:600;">'+L('把这两个数据源加到待接清单','Add these sources to the to-connect list')+'</button></div>';
+  if(llmInterp){h+='<div style="margin-top:10px;font-size:13px;line-height:1.8;padding:10px 12px;background:#fff;border:1px solid var(--border);border-radius:8px;"><div style="font-size:11.5px;font-weight:700;color:var(--text-muted);margin-bottom:4px;">'+L('AI 解读（只解释引擎数字，不产生新数字）','AI interpretation (explains engine numbers only)')+'</div>'+mdLite(llmInterp)+'</div>';}
+  h+='<div style="font-size:11px;color:var(--text-muted);margin-top:8px;">'+L('口径：贡献度(pp)=该组合涨跌额÷上期总额×100%；跨品类只用销售额聚合（听/袋加不起来）。','Calibre: contribution(pp)=combo Δ ÷ prev total ×100%; cross-category aggregation uses sales amount only.')+'</div>';
+  h+='</div></div>';
+  return h;
+}
+function attrDetectQuery(text){
+  if(!/(下滑|下降|下跌|跌了|跌得|未达标|没达标|没完成|掉了|低迷|不理想|归因|拖累|贡献度|为什么.{0,6}(降|滑|跌|低|差)|哪.{0,6}(拖|跌|降))/.test(text))return null;
+  if(typeof dsGet!=='function'||!dsGet('F01M'))return null;
+  var m=text.match(/华东|华南|华北|华西/);
+  return m?m[0]:'华东';   // 未指明区域默认华东（平台故事线所在大区）
+}
+/* LLM 角色：调引擎→拿结构化结果→只解释；引擎跑不了的维度才允许 LLM 自答且必须标注 */
+function runAttribution(text,region){
+  var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
+  var mid='attr_'+Date.now();
+  addAIMessage('<div style="font-size:14px;color:var(--text-muted);">🧮 '+(EN?'Calling Attribution Engine…':'正在调用 归因引擎…')+'</div>',mid);
+  var res=attrEngine(region);
+  function show(html){var el=document.getElementById(mid);if(!el)return;var b=el.querySelector('.msg-bubble')||el;b.innerHTML=html;if(currentLang==='en'){try{localizeEl(b);}catch(e){}}try{llmNoteTurn(text,_stripHtml(html));}catch(e){}scrollToBottom();}
+  if(!res){show('<div style="font-size:14px;">'+(EN?'Attribution engine has no usable data yet.':'归因引擎暂无可用数据。')+'</div>');return;}
+  window._attrLast=res;
+  if(typeof LLM_ENDPOINT!=='undefined'&&LLM_ENDPOINT){
+    var brief={region:res.region,period:res.mPrev+'→'+res.mCur,totalPct:+res.pct.toFixed(1),totalDiff:res.diff,
+      drags:res.drags.slice(0,5).map(function(x){return {combo:x.key,diff:x.diff,pp:+x.pp.toFixed(2)};}),
+      highlights:res.highlights.slice(0,3).map(function(x){return {combo:x.key,diff:x.diff,pp:+x.pp.toFixed(2)};}),
+      oneLiner:res.oneLiner,shareOfDecline:res.share};
+    var sys='你是快消经营分析解读助手。下面是平台归因引擎对 '+res.region+' 区 '+res.mPrev+' → '+res.mCur+' 的真实计算结果（贡献度分解，销售额口径，单位元）。'+
+      '规则：1)只能解释这些数字，不得修改、不得新增任何数字；2)用户若问「为什么跌」，说明「跌在哪」已定位，「为什么」需要未接入的外部数据（竞品价格/客流），不要编造原因；'+
+      '3)回答控制在 6 行以内，先结论，再给 1-2 条可执行动作；4)不要使用「方便面、膨化」等结果中不存在的品类。\n'+JSON.stringify(brief);
+    fetch(LLM_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:sys,messages:[{role:'user',content:text}]})})
+      .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+      .then(function(d){show(attrCardHtml(res,(d&&d.text)||''));})
+      .catch(function(e){show(attrCardHtml(res));});
+  }else{
+    setTimeout(function(){show(attrCardHtml(res));},500);
+  }
+}
+
 function dvSalesRender(id,mode,v){
   var sd=(typeof loadSales==='function')?loadSales(id):null;
   if(!(sd&&sd.rows&&sd.rows.length))return '';
@@ -5161,10 +5741,11 @@ function dvSalesRender(id,mode,v){
   var info='基于上传的 <b>'+sd.rows.length+'</b> 行销量（'+sd.skus.length+'个SKU，'+(sd.minDate||'')+'~'+(sd.maxDate||'')+'）';
   if(mode==='order'){
     var maxRep=Math.max.apply(null,fc.map(function(x){return x.rep||1}))||1;
-    var bars=top.map(function(o){return {label:o.sku+' \u00b7 日均'+o.avg+' '+trendBadge(o.trendPct)+' \u00b7 库存'+o.stock,value:'下单'+o.rep,pct:Math.max(6,Math.round(o.rep/maxRep*100)),color:(o.cover<days?'#FAAD14':'#00C39A')};});
-    var rows=top.map(function(o){return [o.sku,String(o.avg),String(o.need),String(o.stock),(o.cover>=999?'充足':o.cover.toFixed(1)+'天'),'<b>'+o.rep+'</b>'];});
-    var tot=top.reduce(function(a,o){return a+o.rep;},0);
-    return '<div style="margin-bottom:6px;">'+info+'，按 '+days+' 天周期生成 <b>智能订单建议</b>：</div>'+rBars(bars)+rTable(['SKU','预测日均','周期需求','现有库存','可撑','建议下单'],rows)+'<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">合计建议下单 <b>'+tot+'</b> 件；优先下单"可撑天数 < 周期"的SKU以防断货。</div>';
+    var gateHtml=a2GateSummaryHtml(fc,days,sd);
+    var bars=top.map(function(o){return {label:o.sku+' \u00b7 日均'+o.avg+o.unit+' '+trendBadge(o.trendPct)+' \u00b7 库存'+o.stock+o.unit,value:(o.repBox>0?'下单'+o.repBox+'箱':'暂不补'),pct:Math.max(6,Math.round(o.rep/maxRep*100)),color:(o.cover<days?'#FAAD14':'#00C39A')};});
+    var rows=top.map(function(o){return [o.sku,String(o.avg)+o.unit,String(o.need)+o.unit,String(o.stock)+o.unit,(o.cover>=999?'充足':o.cover.toFixed(1)+'天'),(o.repBox>0?('<b>'+o.repBox+'箱</b> <span style="color:#999;font-size:11px;">\u2248'+o.repUnits+o.unit+'</span>'):'<b>暂不补</b>')];});
+    var tot=top.reduce(function(a,o){return a+o.repBox;},0);
+    return '<div style="margin-bottom:6px;">'+info+'，按 '+days+' 天周期生成 <b>智能订单建议</b>：</div>'+gateHtml+rBars(bars)+rTable(['SKU','预测日均','周期需求','现有库存','可撑','建议下单(箱)'],rows)+'<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">合计建议下单 <b>'+tot+'</b> 箱；优先下单"可撑天数 < 周期"的SKU以防断货。</div>';
   }
   if(mode==='turnover'){
     var rows2=top.map(function(o){var st=(o.cover>=999)?'\u2014':(o.cover<7?'<span style="color:#F5222D;font-weight:600;">偏快·缺货风险</span>':(o.cover>30?'<span style="color:#FAAD14;font-weight:600;">偏慢·占用资金</span>':'<span style="color:#52C41A;">健康</span>'));return [o.sku,String(o.avg),String(o.stock),(o.cover>=999?'充足':o.cover.toFixed(1)+'天'),st];});
@@ -5179,7 +5760,7 @@ function dvSalesRender(id,mode,v){
   var eventExpl=t0?eventExplainHtml(skuCat(t0.sku),(t0.daily&&t0.daily[0]?t0.daily[0].date:_fcToday()),days,_fcRegion):'';
   var bars3=top.map(function(o){return {label:o.sku+' \u00b7 预测日均'+o.avg+' '+trendBadge(o.trendPct),value:days+'天需求'+o.need,pct:Math.max(6,Math.round(o.need/maxNeed*100)),color:'#1890FF'};});
   var rows3=top.map(function(o){return [o.sku,String(o.avg),String(o.need),(o.trendPct>5?'\u2197':(o.trendPct<-5?'\u2198':'\u2192'))+Math.abs(o.trendPct)+'%'];});
-  return '<div style="margin-bottom:6px;">'+info+'，<b>趋势+周季节性+事件加权</b> 预测未来 <b>'+days+'</b> 天需求（供产销协同）：</div>'+eventExpl+chart+rBars(bars3)+rTable(['SKU','预测日均',days+'天需求','趋势'],rows3);
+  return '<div style="margin-bottom:6px;">'+info+'，<b>最近销售走势+周末规律+天气/活动影响</b> 预测未来 <b>'+days+'</b> 天需求（供产销协同）：</div>'+a2GateSummaryHtml(fc,days,sd)+eventExpl+chart+rBars(bars3)+rTable(['SKU','预测日均',days+'天需求','趋势'],rows3);
 }
 function downloadSalesTemplate(){
   function _pd(n){return ('0'+n).slice(-2);}
@@ -5291,6 +5872,7 @@ function getItemById(id){ return agents.find(function(a){return a.id===id;})||sk
 function quickInvoke(id,type){ var arr=type==='agent'?agents:skills; var it=arr.find(function(x){return x.id===id;}); if(it) openParamPanel(it,type); }
 function detectCluster(text){ for(var i=0;i<CLUSTERS.length;i++){ if(CLUSTERS[i].match.test(text)) return CLUSTERS[i]; } return null; }
 function clusterCardHtml(cl, region){
+  if(cl&&cl.key==='decline'&&typeof attrEngine==='function'){var _ar=attrEngine(region);if(_ar)return attrCardHtml(_ar);}
   var h='<div class="result-card">';
   h+='<div class="result-header"><span style="font-size:18px;">🧩</span><span class="result-title">多Agent智能编排</span><span class="result-status status-success">自动</span></div>';
   h+='<div class="result-body">';
@@ -5359,6 +5941,27 @@ function sendMessage() {
     var _src = (window._promoBriefs && window._promoBriefs.length) ? window._promoBriefs[window._promoBriefs.length-1] : text;
     addAIMessage('<div style="font-size:14px;">'+(currentLang==='en'?'Generating your promo poster…':'正在为您生成促销海报…')+'</div>');
     posterFromText(_src);
+    document.getElementById('sendBtn').disabled = false;
+    return;
+  }
+
+  // 技能 chip：选中的技能带进对话。状态区分——LLM 自答显示"思考中"；真执行工具显示"正在调用 <工具>"
+  if (chipSkills.length && !mentionMatch) {
+    var _chip=chipSkills[0];chipSkills=chipSkills.slice(1);chipRender();
+    if(_chip==='decline'){
+      runAttribution(text,(typeof attrDetectQuery==='function'?(attrDetectQuery(text)||'华东'):'华东'));
+    }else{
+      var _it=getItemById(_chip);
+      if(_it){var _ty=(agents.indexOf(_it)>=0)?'agent':'skill';setTimeout(function(){openParamPanel(_it,_ty);},300);}
+    }
+    document.getElementById('sendBtn').disabled = false;
+    return;
+  }
+
+  // 归因类问题：先真跑归因引擎拿数字（共享层 F01M），LLM 只做解释；不再让 LLM 自己编数字
+  var _attrRg=(typeof attrDetectQuery==='function')?attrDetectQuery(text):null;
+  if (_attrRg!==null) {
+    runAttribution(text,_attrRg);
     document.getElementById('sendBtn').disabled = false;
     return;
   }
@@ -5542,7 +6145,22 @@ function dhDelFile(fid){var d=dhLoad(dhCurrent);d.files=d.files.filter(function(
 function dhPickFile(){var inp=document.getElementById('dhFileInput');if(inp){inp.value='';inp.click();}}
 function dhFileChosen(ev){var f=ev.target.files&&ev.target.files[0];if(!f||!dhCurrent)return;var kb=f.size/1024;var sz=kb<1024?(kb.toFixed(1)+' KB'):((kb/1024).toFixed(1)+' MB');var d=dhLoad(dhCurrent);var rec={id:dhRid('f'),name:f.name,size:sz,rows:0};if(/\.(csv|txt|tsv)$/i.test(f.name)){var r=new FileReader();r.onload=function(){try{rec.rows=String(r.result).split(/\r?\n/).filter(function(l){return l.trim();}).length;}catch(e){}d.files.push(rec);dhSave(dhCurrent,d);dhRender();};r.onerror=function(){d.files.push(rec);dhSave(dhCurrent,d);dhRender();};r.readAsText(f.slice(0,200000));}else{d.files.push(rec);dhSave(dhCurrent,d);dhRender();}}
 function openDataHubPicker(el){dhCurrent=null;var m=document.getElementById('dhModal');if(!m)return;m.style.display='flex';document.getElementById('dhTitle').textContent=t('dataHub');var b=document.getElementById('dhBody');b.innerHTML='<div class="dh-pick-hint">'+t('pickItem')+'</div><input id="dhPickSearch" class="dh-search" placeholder="\ud83d\udd0d" oninput="dhFilterPick(this.value)"><div id="dhPickList">'+dhPickListHtml('')+'</div>';if(currentLang==='en'){try{localizeEl(b);}catch(e){}}}
-function dhPickListHtml(q){var h='';q=(q||'').toLowerCase();dhAll().forEach(function(it){var nm=(currentLang==='en'?localizeEN(it.name):it.name)||'';if(q&&it.id.toLowerCase().indexOf(q)<0&&nm.toLowerCase().indexOf(q)<0&&(it.name||'').toLowerCase().indexOf(q)<0)return;h+='<div class="dh-pick-row" onclick="openDataHub(\''+it.id+'\')"><span class="dh-pick-id">'+it.id+'</span><span class="dh-pick-name">'+dhEsc(nm)+'</span><span class="dh-pick-arrow">\u203a</span></div>';});return h||'<div class="dh-empty">\u2014</div>';}
+function dhPlatformPickHtml(){
+  var EN=(typeof currentLang!=='undefined'&&currentLang==='en');
+  var h='<div class="dh-pick-hint" style="font-weight:700;color:#1E2761;margin:2px 0 4px;">'+(EN?'Platform default datasets':'平台默认数据集')+'</div>';
+  RTM.order.forEach(function(id){
+    var t=RTM.tables[id];
+    var sub=t.na?(EN?'Not connected':'未接入'):(t.lazy?(EN?'90-day/store-level detail · tap to load':'明细量大 · 点击即时生成'):(t.rows.length+(EN?' rows':' 行')));
+    h+='<div class="dh-pick-row"'+(t.na?'':' onclick="rtmViewTable(\''+id+'\')"')+'><span class="dh-pick-id">'+id+'</span><span class="dh-pick-name">'+dhEsc(t.name)+' <span class="dh-sub">· '+sub+'</span></span><span class="dh-pick-arrow">\u203a</span></div>';
+  });
+  h+='<div class="dh-pick-hint" style="font-weight:700;color:#1E2761;margin:12px 0 4px;">'+(EN?'Platform default knowledge base':'平台默认知识库')+'</div>';
+  RTM_KB_DOCS.forEach(function(doc){
+    h+='<div class="dh-pick-row" onclick="rtmViewDoc(\''+doc.id+'\')"><span class="dh-pick-id" style="color:#722ED1;">KB</span><span class="dh-pick-name">'+dhEsc(doc.name)+'</span><span class="dh-pick-arrow">\u203a</span></div>';
+  });
+  h+='<div class="dh-pick-hint" style="margin:12px 0 4px;">'+(EN?'Per Agent / Skill data & KB:':'按 Agent / Skill 管理数据源与知识库：')+'</div>';
+  return h;
+}
+function dhPickListHtml(q){var h='';q=(q||'').toLowerCase();if(!q)h+=dhPlatformPickHtml();dhAll().forEach(function(it){var nm=(currentLang==='en'?localizeEN(it.name):it.name)||'';if(q&&it.id.toLowerCase().indexOf(q)<0&&nm.toLowerCase().indexOf(q)<0&&(it.name||'').toLowerCase().indexOf(q)<0)return;h+='<div class="dh-pick-row" onclick="openDataHub(\''+it.id+'\')"><span class="dh-pick-id">'+it.id+'</span><span class="dh-pick-name">'+dhEsc(nm)+'</span><span class="dh-pick-arrow">\u203a</span></div>';});return h||'<div class="dh-empty">\u2014</div>';}
 function dhFilterPick(q){var l=document.getElementById('dhPickList');if(l){l.innerHTML=dhPickListHtml(q);if(currentLang==='en'){try{localizeEl(l);}catch(e){}}}}
 </script>
 <style id="dh-style">
@@ -5568,6 +6186,12 @@ function dhFilterPick(q){var l=document.getElementById('dhPickList');if(l){l.inn
 .dh-pick-id{font-size:11px;font-weight:700;color:#1890FF;min-width:34px;}
 .dh-pick-name{flex:1;font-size:13px;color:#333;}
 .dh-pick-arrow{color:#ccc;}
+</style>
+<style id="chip-style">
+.chip-bar{display:none;flex-wrap:wrap;gap:6px;padding:6px 4px 2px;max-width:760px;margin:0 auto;width:100%;}
+.skill-chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#1E2761;background:#EEF2FF;border:1px solid #C9D6FF;border-radius:14px;padding:4px 6px 4px 10px;}
+.skill-chip .chip-x{cursor:pointer;color:#8a94b8;font-size:11px;padding:0 4px;}
+.skill-chip .chip-x:hover{color:#F5222D;}
 </style>
 <div id="dhModal" class="dh-modal">
   <div class="dh-panel">
